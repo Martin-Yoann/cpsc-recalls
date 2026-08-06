@@ -1,0 +1,544 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   KOI Recall Platform — Design System v3.0
+   Clean · Warm · Professional · Sequential Flow
+   ============================================================ */
+
+@theme inline {
+  /* shadcn/ui mapped tokens */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* Brand Primitives */
+  --color-brand-teal: var(--brand-teal);
+  --color-trust-blue: var(--trust-blue);
+  --color-alert-orange: var(--alert-orange);
+  --color-completion-green: var(--completion-green);
+
+  /* Blade Tokens */
+  --color-blade-safety: var(--blade-safety);
+  --color-blade-safety-light: var(--blade-safety-light);
+  --color-blade-safety-medium: var(--blade-safety-medium);
+  --color-blade-safety-dark: var(--blade-safety-dark);
+  --color-blade-safety-text: var(--blade-safety-text);
+
+  --color-blade-verification: var(--blade-verification);
+  --color-blade-verification-light: var(--blade-verification-light);
+  --color-blade-verification-medium: var(--blade-verification-medium);
+  --color-blade-verification-dark: var(--blade-verification-dark);
+  --color-blade-verification-text: var(--blade-verification-text);
+
+  --color-blade-resolution: var(--blade-resolution);
+  --color-blade-resolution-light: var(--blade-resolution-light);
+  --color-blade-resolution-medium: var(--blade-resolution-medium);
+  --color-blade-resolution-dark: var(--blade-resolution-dark);
+  --color-blade-resolution-text: var(--blade-resolution-text);
+
+  /* Status */
+  --color-status-open: var(--status-open);
+  --color-status-reviewing: var(--status-reviewing);
+  --color-status-verified: var(--status-verified);
+  --color-status-resolved: var(--status-resolved);
+  --color-status-rejected: var(--status-rejected);
+
+  /* Surface */
+  --color-surface-primary: var(--surface-primary);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-inverse: var(--surface-inverse);
+
+  /* Text */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-on-inverse: var(--text-on-inverse);
+
+  /* Radius — softer */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* ============================================================
+   CSS Custom Properties — v3.0 Palette
+   Clean · Warm · Professional
+   ============================================================ */
+:root {
+  --font-sans: 'Hanken Grotesk', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-inter: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-jetbrains-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+
+  /* Brand — Ethereal Emerald */
+  --brand-teal: #003527;
+  --trust-blue: #2563EB;
+  --alert-orange: #EA580C;
+  --completion-green: #006c49;
+
+  /* Emerald accent */
+  --emerald-primary: #003527;
+  --emerald-secondary: #006c49;
+  --emerald-surface: #faf8ff;
+  --emerald-container: #ecfdf5;
+  --emerald-muted: #404944;
+  --emerald-glow: 0 4px 20px rgba(0, 53, 39, 0.08);
+
+  /* Blade: Safety (warm terracotta — reserved for genuine warnings) */
+  --blade-safety: #EA580C;
+  --blade-safety-light: #FFF7ED;
+  --blade-safety-medium: #FDBA74;
+  --blade-safety-dark: #C2410C;
+  --blade-safety-text: #7C2D12;
+
+  /* Blade: Verification (trust blue — professional, calm) */
+  --blade-verification: #2563EB;
+  --blade-verification-light: #EFF6FF;
+  --blade-verification-medium: #93C5FD;
+  --blade-verification-dark: #1D4ED8;
+  --blade-verification-text: #F8FAFC;
+
+  /* Blade: Resolution (teal — trustworthy completion) */
+  --blade-resolution: #0D9488;
+  --blade-resolution-light: #F0FDFA;
+  --blade-resolution-medium: #5EEAD4;
+  --blade-resolution-dark: #0F766E;
+  --blade-resolution-text: #134E4A;
+
+  /* Status */
+  --status-open: #EA580C;
+  --status-reviewing: #2563EB;
+  --status-verified: #0D9488;
+  --status-resolved: #0F766E;
+  --status-rejected: #DC2626;
+
+  /* Surface — warm neutral */
+  --surface-primary: #F9FAFB;
+  --surface-secondary: #F3F4F6;
+  --surface-elevated: #FFFFFF;
+  --surface-inverse: #111827;
+
+  /* Text */
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --text-tertiary: #9CA3AF;
+  --text-on-inverse: #F9FAFB;
+
+  /* shadcn */
+  --background: #faf8ff;
+  --foreground: #131b2e;
+  --card: #FFFFFF;
+  --card-foreground: #111827;
+  --popover: #FFFFFF;
+  --popover-foreground: #111827;
+  --primary: #0D9488;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F3F4F6;
+  --secondary-foreground: #111827;
+  --muted: #F3F4F6;
+  --muted-foreground: #6B7280;
+  --accent: #F3F4F6;
+  --accent-foreground: #111827;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #0D9488;
+  --chart-1: #0D9488;
+  --chart-2: #2563EB;
+  --chart-3: #16A34A;
+  --chart-4: #6B7280;
+  --chart-5: #EA580C;
+  --radius: 0.625rem;
+  --sidebar: #111827;
+  --sidebar-foreground: #F9FAFB;
+  --sidebar-primary: #0D9488;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #1F2937;
+  --sidebar-accent-foreground: #F9FAFB;
+  --sidebar-border: #1F2937;
+  --sidebar-ring: #0D9488;
+
+  --section-gap: 5rem;
+  --content-max: 1280px;
+}
+
+.dark {
+  --background: #111827;
+  --foreground: #F9FAFB;
+  --card: #1F2937;
+  --card-foreground: #F9FAFB;
+  --popover: #1F2937;
+  --popover-foreground: #F9FAFB;
+  --primary: #14B8A6;
+  --primary-foreground: #FFFFFF;
+  --secondary: #1F2937;
+  --secondary-foreground: #F9FAFB;
+  --muted: #1F2937;
+  --muted-foreground: #9CA3AF;
+  --accent: #1F2937;
+  --accent-foreground: #F9FAFB;
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #14B8A6;
+  --sidebar: #111827;
+  --sidebar-foreground: #F9FAFB;
+  --sidebar-primary: #14B8A6;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #1F2937;
+  --sidebar-accent-foreground: #F9FAFB;
+  --sidebar-border: #1F2937;
+  --sidebar-ring: #14B8A6;
+  --surface-primary: #111827;
+  --surface-secondary: #1F2937;
+  --surface-elevated: #1F2937;
+  --surface-inverse: #F9FAFB;
+  --text-primary: #F9FAFB;
+  --text-secondary: #9CA3AF;
+  --text-tertiary: #6B7280;
+  --text-on-inverse: #111827;
+  --blade-safety-light: #2D1B12;
+  --blade-verification-light: #1A2332;
+  --blade-resolution-light: #1A2A28;
+}
+
+/* ============================================================
+   Base Layer
+   ============================================================ */
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: color-mix(in srgb, var(--ring) 50%, transparent);
+  }
+  body {
+    background-color: var(--surface-primary);
+    color: var(--text-primary);
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+  html {
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  }
+}
+
+/* ============================================================
+   Component Utilities
+   ============================================================ */
+@layer components {
+  .blade-accent-safety {
+    border-left: 3px solid var(--blade-safety);
+  }
+  .blade-accent-verification {
+    border-left: 3px solid var(--blade-verification);
+  }
+  .blade-accent-resolution {
+    border-left: 3px solid var(--blade-resolution);
+  }
+
+  .blade-divider {
+    height: 3px;
+    width: 48px;
+    border-radius: 9999px;
+  }
+  .blade-divider-safety {
+    height: 3px;
+    width: 48px;
+    border-radius: 9999px;
+    background-color: var(--blade-safety);
+  }
+  .blade-divider-verification {
+    height: 3px;
+    width: 48px;
+    border-radius: 9999px;
+    background-color: var(--blade-verification);
+  }
+  .blade-divider-resolution {
+    height: 3px;
+    width: 48px;
+    border-radius: 9999px;
+    background-color: var(--blade-resolution);
+  }
+
+  /* Sequential connector — subtle horizontal line between step cards */
+  .step-connector {
+    position: relative;
+  }
+  .step-connector::after {
+    content: '';
+    position: absolute;
+    top: 2.5rem;
+    right: -1.5rem;
+    width: 3rem;
+    height: 1.5px;
+    background: var(--border);
+  }
+  @media (max-width: 1023px) {
+    .step-connector::after { display: none; }
+  }
+
+  .status-dot {
+    display: inline-block;
+    height: 0.5rem;
+    width: 0.5rem;
+    border-radius: 9999px;
+  }
+
+  .data-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 0.375rem;
+    font-family: var(--font-jetbrains-mono), monospace;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: var(--surface-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+
+  .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .section-tag-safety { color: var(--blade-safety); }
+  .section-tag-verification { color: var(--blade-verification); }
+  .section-tag-resolution { color: var(--blade-resolution); }
+
+  .metric-value {
+    font-family: var(--font-jetbrains-mono), monospace;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Step number badge — used in sequential flow */
+  .step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    font-family: var(--font-jetbrains-mono), monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* ============================================================
+   Three-Blade Section Utilities
+   Each blade gets: numbered header + colored strip + tinted bg
+   ============================================================ */
+@utility blade-section-safety {
+  background: linear-gradient(180deg, var(--blade-safety-light) 0%, var(--surface-primary) 50%);
+}
+@utility blade-section-verification {
+  background: linear-gradient(180deg, var(--blade-verification-light) 0%, var(--surface-primary) 50%);
+}
+@utility blade-section-resolution {
+  background: linear-gradient(180deg, var(--blade-resolution-light) 0%, var(--surface-primary) 50%);
+}
+
+@utility blade-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+@utility blade-badge-safety { color: var(--blade-safety); }
+@utility blade-badge-verification { color: var(--blade-verification); }
+@utility blade-badge-resolution { color: var(--blade-resolution); }
+
+@utility blade-step-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.625rem;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+@utility blade-step-icon-safety { background: var(--blade-safety); }
+@utility blade-step-icon-verification { background: var(--blade-verification); }
+@utility blade-step-icon-resolution { background: var(--blade-resolution); }
+
+/* ============================================================
+   Utility Extras
+   ============================================================ */
+@utility container-content {
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding-inline: 1rem;
+
+  @media (width >= 640px) {
+    padding-inline: 1.5rem;
+  }
+  @media (width >= 768px) {
+    padding-inline: 2rem;
+  }
+  @media (width >= 1024px) {
+    padding-inline: 2.5rem;
+  }
+  @media (width >= 1280px) {
+    padding-inline: 3rem;
+  }
+}
+
+/* ============================================================
+   Responsive Typography Utilities
+   ============================================================ */
+@utility text-fluid-5xl {
+  font-size: clamp(2.25rem, 5vw, 4.25rem);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+}
+
+@utility text-fluid-4xl {
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+@utility text-fluid-3xl {
+  font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  font-weight: 700;
+}
+
+/* ============================================================
+   Animation & Interaction Utilities
+   ============================================================ */
+
+@layer components {
+
+  /* ── Card lift on hover ── */
+  .card-lift {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .card-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 16px 40px rgba(0, 53, 39, 0.12);
+  }
+
+  /* ── Button press feedback ── */
+  .btn-press {
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .btn-press:active {
+    transform: scale(0.95);
+  }
+
+  /* ── Button hover lift ── */
+  .btn-lift {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .btn-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 53, 39, 0.15);
+  }
+
+  /* ── Icon hover rotate + scale ── */
+  .icon-spin {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .icon-spin:hover {
+    transform: rotate(15deg) scale(1.15);
+  }
+
+  /* ── Image zoom inside card ── */
+  .img-zoom {
+    overflow: hidden;
+  }
+  .img-zoom > img {
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .img-zoom:hover > img {
+    transform: scale(1.05);
+  }
+
+  /* ── Staggered fade-in children ── */
+  .stagger-in > * {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: staggerFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  .stagger-in > *:nth-child(1) { animation-delay: 0.05s; }
+  .stagger-in > *:nth-child(2) { animation-delay: 0.1s; }
+  .stagger-in > *:nth-child(3) { animation-delay: 0.15s; }
+  .stagger-in > *:nth-child(4) { animation-delay: 0.2s; }
+  .stagger-in > *:nth-child(5) { animation-delay: 0.25s; }
+
+  /* ── Glass card ── */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+  }
+
+}
+
+@keyframes staggerFadeIn {
+  to { opacity: 1; transform: translateY(0); }
+}
