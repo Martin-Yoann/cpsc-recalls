@@ -8,11 +8,11 @@ import type { Metadata } from 'next';
 import { fetchCampaign } from '@/lib/api-adapter';
 import {
   AlertTriangle, Barcode, Calendar, Factory, Hash, Package,
-  ShieldCheck, CheckCircle2, ArrowRight, Info, Phone, Mail,
+  ShieldCheck, CheckCircle2, ArrowRight, Info, Phone,
 } from 'lucide-react';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { RecallCheckCard } from '@/components/consumer/recall-check-card';
-import { RemedyOptions } from '@/components/consumer/remedy-options';
+import { ClaimSubmitWrapper } from '@/components/consumer/claim-submit-wrapper';
 import { RiskLevel } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -106,15 +106,16 @@ function BladeHeader({ blade, campaignTitle, risk }: { blade: typeof BLADES[numb
 
 export async function generateMetadata({ params }: RecallPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const c = await fetchCampaign(slug);
-  if (!c) return { title: 'Recall Not Found' };
-  return { title: c.title, description: c.summary };
+  const result = await fetchCampaign(slug);
+  if (result.error || !result.campaign) return { title: 'Recall Not Found' };
+  return { title: result.campaign.title, description: result.campaign.summary };
 }
 
 export default async function RecallPage({ params }: RecallPageProps) {
   const { slug } = await params;
-  const campaign = await fetchCampaign(slug);
-  if (!campaign) notFound();
+  const result = await fetchCampaign(slug);
+  if (result.error || !result.campaign) notFound();
+  const campaign = result.campaign;
   const p = campaign.affectedProducts[0];
   const risk = RISK_CONFIG[campaign.riskLevel];
 
@@ -124,7 +125,7 @@ export default async function RecallPage({ params }: RecallPageProps) {
       {/* ── Global safety strip ── */}
       <div className="sticky top-[3.75rem] z-40 bg-blade-safety text-white py-2 px-5 text-center text-[13px] font-medium flex items-center justify-center gap-2">
         <AlertTriangle className="h-4 w-4" />
-        Safety Recall — Stop using the product until you have checked the lot code below.
+        Safety Recall — Stop using the product until its status has been verified.
       </div>
 
       {/* ══════════════════════════════════════════════════════════════
@@ -215,9 +216,9 @@ export default async function RecallPage({ params }: RecallPageProps) {
                 </h4>
                 <ul className="space-y-3 text-sm text-text-secondary">
                   {[
-                    'Look near the package seal for the lot code (format ML-0000-X)',
-                    'Find the date code below it in MM/YYYY format',
-                    'Select the candy shape and flavor from the package label',
+                    'Look for product identifiers (SKU, UPC, model, style) on the package or label',
+                    'If your product has lot or date codes, enter them below',
+                    'Select any visible attributes like shape or flavor from the label',
                   ].map((step, i) => (
                     <li key={i} className="flex gap-2">
                       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blade-verification text-white text-[11px] font-bold mt-0.5">{i + 1}</span>
@@ -235,11 +236,11 @@ export default async function RecallPage({ params }: RecallPageProps) {
                 <ul className="space-y-2.5 text-sm text-text-secondary">
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-blade-resolution shrink-0" />
-                    If matched — choose a remedy in the next step
+                    If matched — your identifiers are listed in the affected scope
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-blade-resolution shrink-0" />
-                    If not matched — your product is safe to use
+                    If not matched — this does not confirm the product is safe; you may still submit for manual review
                   </li>
                 </ul>
               </div>
@@ -258,7 +259,7 @@ export default async function RecallPage({ params }: RecallPageProps) {
           {/* ── Content: 2-col balanced ── */}
           <div className="grid lg:grid-cols-2 gap-8 max-w-4xl w-full mx-auto">
             <div className="flex items-stretch">
-              <RemedyOptions remedies={campaign.remedies} />
+              <ClaimSubmitWrapper campaign={campaign} />
             </div>
             <div className="flex flex-col justify-between gap-4">
               <div className="rounded-xl border bg-surface-elevated p-5">
@@ -267,15 +268,12 @@ export default async function RecallPage({ params }: RecallPageProps) {
                   Need Help?
                 </h4>
                 <div className="space-y-2.5 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-text-tertiary shrink-0" />
-                    <span className="text-text-secondary">demo-support@example.invalid</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-text-tertiary shrink-0" />
-                    <span className="text-text-secondary">(555) 010-2042</span>
-                  </div>
-                  <p className="text-xs text-text-tertiary">Monday–Friday, 9am–5pm ET</p>
+                  {campaign.manufacturerContact && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-text-tertiary shrink-0" />
+                      <span className="text-text-secondary">{campaign.manufacturerContact}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -285,27 +283,19 @@ export default async function RecallPage({ params }: RecallPageProps) {
                   What to Expect
                 </h4>
                 <ol className="space-y-2.5 text-sm text-text-secondary">
-                  {[
-                    'Submit your claim with evidence (product photo + proof of purchase)',
-                    'Review within 3–5 business days',
-                    'Once approved, receive your replacement or refund within 7–14 business days',
-                  ].map((step, i) => (
-                    <li key={i} className="flex gap-2">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blade-resolution text-white text-[11px] font-bold mt-0.5">{i + 1}</span>
-                      <span>{step}</span>
-                    </li>
-                  ))}
+                  <li className="flex gap-2">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blade-resolution text-white text-[11px] font-bold mt-0.5">1</span>
+                    <span>Submit your claim without creating an account</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blade-resolution text-white text-[11px] font-bold mt-0.5">2</span>
+                    <span>Your submission will be reviewed by the recall team</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blade-resolution text-white text-[11px] font-bold mt-0.5">3</span>
+                    <span>You will receive confirmation and next steps after review</span>
+                  </li>
                 </ol>
-              </div>
-
-              <div className="flex items-center gap-3 rounded-xl border bg-surface-elevated p-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blade-resolution-light">
-                  <ShieldCheck className="h-5 w-5 text-blade-resolution" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-text-primary">CPSC Partner Platform</p>
-                  <p className="text-[11px] text-text-tertiary">Recall #{campaign.cpscNumber} · Valid until Dec 2027</p>
-                </div>
               </div>
             </div>
           </div>

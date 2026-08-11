@@ -12,9 +12,8 @@ import type { Remedy } from '@/types';
 import { RemedyType } from '@/types';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
-import Link from 'next/link';
 
-interface RemedyOptionsProps { remedies: Remedy[]; }
+interface RemedyOptionsProps { remedies: Remedy[]; onSelect?: (remedy: Remedy) => void; }
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   [RemedyType.REFUND]: Wallet,
@@ -24,7 +23,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   [RemedyType.VOUCHER]: Ticket,
 };
 
-export function RemedyOptions({ remedies }: RemedyOptionsProps) {
+export function RemedyOptions({ remedies, onSelect }: RemedyOptionsProps) {
   const [sel, setSel] = useState<string | null>(null);
 
   return (
@@ -57,15 +56,19 @@ export function RemedyOptions({ remedies }: RemedyOptionsProps) {
           );
         })}
       </div>
-      {sel && (
-        <div className="px-3 sm:px-4 pb-3 sm:pb-4">
-          <Link href="/login">
-            <Button className="w-full h-9 bg-blade-resolution hover:bg-blade-resolution-dark text-white font-semibold text-sm cursor-pointer btn-lift btn-press">
+      {sel && (() => {
+        const chosen = remedies.find(r => r.id === sel);
+        return (
+          <div className="px-3 sm:px-4 pb-3 sm:pb-4">
+            <Button
+              className="w-full h-9 bg-blade-resolution hover:bg-blade-resolution-dark text-white font-semibold text-sm cursor-pointer btn-lift btn-press"
+              onClick={() => { if (chosen) onSelect?.(chosen); }}
+            >
               Continue with Selected Remedy
             </Button>
-          </Link>
-        </div>
-      )}
+          </div>
+        );
+      })()}
     </div>
   );
 }

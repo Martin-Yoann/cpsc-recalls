@@ -6,7 +6,7 @@
 // ============================================================
 
 import { useState } from 'react';
-import { ShieldCheck, XCircle, Loader2 } from 'lucide-react';
+import { ShieldCheck, XCircle, Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,19 +16,21 @@ import type { Campaign, Product } from '@/types';
 
 interface RecallCheckCardProps { campaign: Campaign; product: Product; }
 
+type CheckResult = 'potential_match' | 'not_matched' | 'manual_review' | null;
+
 export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
   const [shape, setShape] = useState('');
   const [flavor, setFlavor] = useState('');
   const [lotCode, setLotCode] = useState('');
   const [dateCode, setDateCode] = useState('');
-  const [result, setResult] = useState<'match' | 'no-match' | null>(null);
+  const [result, setResult] = useState<CheckResult>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isChecking, setIsChecking] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const shapes = product?.shapes || [];
   const flavors = product?.flavors || [];
-  const lots = campaign.affectedLots || [];
-  const dates = campaign.dateCodes || [];
+  const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
   const handleCheck = async () => {
     const e: Record<string, string> = {};
@@ -40,62 +42,85 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
     if (Object.keys(e).length) return;
 
     setIsChecking(true);
+    setApiError(null);
 
-    // Phase 1: try API first, fall back to local matching on 501
     const apiResult = await checkProduct(campaign.slug, {
       shape, flavor, lotCode: lotCode.trim(), dateCode: dateCode.trim(),
     });
 
     if (apiResult.ok) {
-      setResult(apiResult.data.result === 'potential_match' ? 'match' : 'no-match');
+      // Preserve all three API result types exactly
+      setResult(apiResult.data.result);
     } else if (isPhase1NotImplemented(apiResult)) {
-      // 501 — fall back to local matching
-      const ok = lots.includes(lotCode.trim().toUpperCase())
-        && dates.includes(dateCode.trim())
-        && shapes.includes(shape)
-        && flavors.includes(flavor);
-      setResult(ok ? 'match' : 'no-match');
+      // Only allow mock fallback in explicit demo mode
+      if (isDemo) {
+        const lots = campaign.affectedLots || [];
+        const dates = campaign.dateCodes || [];
+        const ok = lots.includes(lotCode.trim().toUpperCase())
+          && dates.includes(dateCode.trim())
+          && shapes.includes(shape)
+          && flavors.includes(flavor);
+        setResult(ok ? 'potential_match' : 'not_matched');
+      } else {
+        setApiError('Product check is not available. Please try again later.');
+      }
     } else {
-      // Network error or other — still fall back to local
-      const ok = lots.includes(lotCode.trim().toUpperCase())
-        && dates.includes(dateCode.trim())
-        && shapes.includes(shape)
-        && flavors.includes(flavor);
-      setResult(ok ? 'match' : 'no-match');
+      setApiError(`Unable to verify. Please try again or contact support. Ref: ${apiResult.error.requestId?.slice(0, 8) || 'N/A'}`);
     }
 
     setIsChecking(false);
   };
 
-  const reset = () => { setShape(''); setFlavor(''); setLotCode(''); setDateCode(''); setResult(null); setErrors({}); };
+  const reset = () => { setShape(''); setFlavor(''); setLotCode(''); setDateCode(''); setResult(null); setErrors({}); setApiError(null); };
 
   return (
     <div className="w-full h-full rounded-xl border bg-surface-elevated overflow-hidden flex flex-col">
       <div className="p-4 sm:p-5 flex-1 flex flex-col justify-center">
-        {result === 'match' ? (
+        {result === 'potential_match' ? (
           <div className="text-center py-4 space-y-3">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blade-resolution-light border border-blade-resolution-medium/30">
               <ShieldCheck className="h-6 w-6 text-blade-resolution" />
             </div>
-            <h4 className="text-base font-bold text-blade-resolution">Product Is Affected</h4>
-            <p className="text-sm text-text-secondary">Your product matches the recall scope.</p>
+            <h4 className="text-base font-bold text-blade-resolution">Product Matched</h4>
+            <p className="text-sm text-text-secondary">The identifiers you entered are listed in this recall scope.</p>
             <div className="inline-flex flex-wrap justify-center gap-x-5 gap-y-1 rounded-lg bg-surface-secondary border p-2.5 text-sm">
               <span><strong>Shape:</strong> {shape}</span>
               <span><strong>Flavor:</strong> {flavor}</span>
               <span><strong>Lot:</strong> <code className="font-mono text-blade-verification">{lotCode.toUpperCase()}</code></span>
               <span><strong>Date:</strong> <code className="font-mono text-blade-verification">{dateCode}</code></span>
             </div>
-            <p className="text-xs text-text-tertiary">Scroll down to select a remedy.</p>
+            <p className="text-xs text-text-tertiary">
+              This check is preliminary and is not a final eligibility decision.
+            </p>
             <Button variant="outline" size="sm" onClick={reset}>Check Again</Button>
           </div>
-        ) : result === 'no-match' ? (
+        ) : result === 'not_matched' ? (
           <div className="text-center py-4 space-y-3">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 border border-amber-200">
               <XCircle className="h-6 w-6 text-amber-600" />
             </div>
-            <h4 className="text-base font-bold text-amber-700">No Match Found</h4>
-            <p className="text-sm text-text-secondary">Not in the affected scope for this recall.</p>
+            <h4 className="text-base font-bold text-amber-700">No Automated Match</h4>
+            <p className="text-sm text-text-secondary">
+              The identifiers you entered were not found in this recall scope. This does not confirm your product is safe — please try different identifiers, select a different entry method, or continue to manual review.
+            </p>
             <Button variant="outline" size="sm" onClick={reset}>Try Again</Button>
+          </div>
+        ) : result === 'manual_review' ? (
+          <div className="text-center py-4 space-y-3">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blade-verification-light border border-blade-verification-medium/30">
+              <AlertTriangle className="h-6 w-6 text-blade-verification" />
+            </div>
+            <h4 className="text-base font-bold text-blade-verification">Additional Review Needed</h4>
+            <p className="text-sm text-text-secondary">
+              We could not automatically confirm whether your product is affected. Your submission will be reviewed by our team.
+            </p>
+            <Button variant="outline" size="sm" onClick={reset}>Try Different Identifiers</Button>
+          </div>
+        ) : apiError ? (
+          <div className="text-center py-4 space-y-3">
+            <XCircle className="h-10 w-10 mx-auto text-red-500" />
+            <p className="text-sm text-text-secondary">{apiError}</p>
+            <Button variant="outline" size="sm" onClick={handleCheck}>Retry</Button>
           </div>
         ) : (
           <div className="space-y-5">
