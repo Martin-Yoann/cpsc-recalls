@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { checkProduct, isPhase1NotImplemented } from '@/lib/api-client';
+import { checkProduct } from '@/lib/api-client';
 import type { Campaign, Product } from '@/types';
 
 interface RecallCheckCardProps { campaign: Campaign; product: Product; }
@@ -30,7 +30,6 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
 
   const shapes = product?.shapes || [];
   const flavors = product?.flavors || [];
-  const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
   const handleCheck = async () => {
     const e: Record<string, string> = {};
@@ -49,21 +48,7 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
     });
 
     if (apiResult.ok) {
-      // Preserve all three API result types exactly
       setResult(apiResult.data.result);
-    } else if (isPhase1NotImplemented(apiResult)) {
-      // Only allow mock fallback in explicit demo mode
-      if (isDemo) {
-        const lots = campaign.affectedLots || [];
-        const dates = campaign.dateCodes || [];
-        const ok = lots.includes(lotCode.trim().toUpperCase())
-          && dates.includes(dateCode.trim())
-          && shapes.includes(shape)
-          && flavors.includes(flavor);
-        setResult(ok ? 'potential_match' : 'not_matched');
-      } else {
-        setApiError('Product check is not available. Please try again later.');
-      }
     } else {
       setApiError(`Unable to verify. Please try again or contact support. Ref: ${apiResult.error.requestId?.slice(0, 8) || 'N/A'}`);
     }

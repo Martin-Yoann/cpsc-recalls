@@ -22,8 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { useAuth } from '@/lib/auth-context';
-import { getClaimByNumber } from '@/data/mock-claims';
-import { mockCampaigns } from '@/data/mock-recalls';
+import { getClaimByNumber } from '@/lib/shared-claims-store';
 import { ClaimStatus, RemedyType } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -66,12 +65,8 @@ export default function ClaimDetailPage({
   // Verify ownership
   if (user && claim.consumerEmail !== user.email) notFound();
 
-  const campaign = mockCampaigns.find((c) => c.id === claim.campaignId);
-  const product = campaign?.affectedProducts.find((p) => p.id === claim.productId);
-  const remedy = campaign?.remedies.find((r) => r.id === claim.remedyId);
-
-  const currentStatusIdx = STATUS_ORDER.indexOf(claim.status);
-  const isRejected = claim.status === ClaimStatus.REJECTED;
+  const currentStatusIdx = STATUS_ORDER.indexOf(claim.status as ClaimStatus);
+  const isRejected = claim.status === 'rejected';
 
   return (
     <div className="space-y-6">
@@ -88,7 +83,7 @@ export default function ClaimDetailPage({
       <div>
         <div className="flex items-center gap-3 mb-2">
           <h1 className="text-xl font-bold text-text-primary font-mono">{claim.claimNumber}</h1>
-          <StatusBadge variant={claim.status as 'submitted' | 'under_review' | 'verified' | 'remedy_issued' | 'resolved' | 'rejected'} />
+          <StatusBadge variant={claim.status} />
         </div>
         <p className="text-sm text-text-secondary">
           Submitted {new Date(claim.submittedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -163,23 +158,13 @@ export default function ClaimDetailPage({
         <Card>
           <CardHeader><CardTitle className="text-base">Product Information</CardTitle></CardHeader>
           <CardContent className="space-y-2">
-            {product ? (
-              <>
-                <p className="text-sm font-semibold text-text-primary">{product.name}</p>
-                <p className="text-xs text-text-secondary">Brand: {product.brandName}</p>
-                <p className="text-xs text-text-secondary font-mono">Model: {product.modelNumber}</p>
-                <p className="text-xs text-text-secondary font-mono">UPC: {product.upc}</p>
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {product.retailerNames.map((r) => (
-                    <Badge key={r} variant="secondary" className="text-xs">{r}</Badge>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <p className="text-sm text-text-tertiary">Product information unavailable</p>
-            )}
-            {campaign && (
-              <Link href={`/recalls/${campaign.slug}`} className="inline-block text-xs text-brand-teal hover:underline mt-2">
+            <p className="text-sm font-semibold text-text-primary">{claim.productName}</p>
+            <p className="text-xs text-text-secondary font-mono">Lot: {claim.lotCode || 'N/A'}</p>
+            <p className="text-xs text-text-secondary font-mono">Date: {claim.dateCode || 'N/A'}</p>
+            {claim.shape && <p className="text-xs text-text-secondary">Shape: {claim.shape}</p>}
+            {claim.flavor && <p className="text-xs text-text-secondary">Flavor: {claim.flavor}</p>}
+            {claim.campaignSlug && (
+              <Link href={`/recalls/${claim.campaignSlug}`} className="inline-block text-xs text-brand-teal hover:underline mt-2">
                 View recall details →
               </Link>
             )}
@@ -189,48 +174,36 @@ export default function ClaimDetailPage({
         <Card>
           <CardHeader><CardTitle className="text-base">Remedy Details</CardTitle></CardHeader>
           <CardContent>
-            {remedy ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  {(() => {
-                    const IconComp = REMEDY_ICONS[remedy.type] || Package;
-                    return <IconComp className="h-4 w-4 text-brand-teal" />;
-                  })()}
-                  <Badge variant="outline">{REMEDY_DESCRIPTIONS[remedy.type] || remedy.type}</Badge>
-                </div>
-                <p className="text-sm font-semibold text-text-primary">{remedy.title}</p>
-                <p className="text-sm text-text-secondary">{remedy.description}</p>
-                {remedy.compensationAmount && (
-                  <p className="text-sm font-bold text-brand-teal">
-                    Compensation: ${remedy.compensationAmount.toFixed(2)}
-                  </p>
-                )}
-                <p className="text-xs text-text-tertiary">
-                  Deadline: {new Date(remedy.deadline).toLocaleDateString('en-US')}
-                </p>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                {(() => {
+                  const IconComp = claim.remedyType === 'refund' ? Wallet : Package;
+                  return <IconComp className="h-4 w-4 text-brand-teal" />;
+                })()}
+                <Badge variant="outline">{claim.remedyType === 'refund' ? 'Refund' : 'Replacement'}</Badge>
               </div>
-            ) : (
-              <p className="text-sm text-text-tertiary">Remedy information unavailable</p>
-            )}
+              <p className="text-sm font-semibold text-text-primary">{claim.remedyTitle}</p>
+              {claim.refundAmount && (
+                <p className="text-sm font-bold text-brand-teal">
+                  Compensation: ${claim.refundAmount.toFixed(2)}
+                </p>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Evidence */}
       <Card>
-        <CardHeader><CardTitle className="text-base">Submitted Evidence ({claim.evidence.length} file{claim.evidence.length !== 1 ? 's' : ''})</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">Submitted Evidence ({claim.evidenceCount} file{claim.evidenceCount !== 1 ? 's' : ''})</CardTitle></CardHeader>
         <CardContent>
-          {claim.evidence.length > 0 ? (
-            <div className="grid sm:grid-cols-2 gap-2">
-              {claim.evidence.map((ev) => (
-                <div key={ev.id} className="flex items-center gap-3 p-3 rounded-lg bg-surface-secondary border">
-                  <FileText className="h-5 w-5 text-text-tertiary shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-text-primary truncate">{ev.fileName}</p>
-                    <p className="text-xs text-text-tertiary">{new Date(ev.uploadedAt).toLocaleDateString('en-US')}</p>
-                  </div>
-                </div>
-              ))}
+          {claim.evidenceCount > 0 ? (
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-surface-secondary border">
+              <FileText className="h-5 w-5 text-text-tertiary shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-text-primary">{claim.evidenceCount} evidence file{claim.evidenceCount !== 1 ? 's' : ''} submitted</p>
+                <p className="text-xs text-text-tertiary">Submitted with claim on {new Date(claim.submittedAt).toLocaleDateString('en-US')}</p>
+              </div>
             </div>
           ) : (
             <p className="text-sm text-text-tertiary text-center py-4">No evidence files submitted yet</p>
@@ -239,7 +212,7 @@ export default function ClaimDetailPage({
       </Card>
 
       {/* Estimated Resolution */}
-      {!isRejected && claim.status !== ClaimStatus.RESOLVED && (
+      {!isRejected && claim.status !== 'resolved' && (
         <div className="rounded-xl bg-brand-teal/5 border border-brand-teal/20 p-5 flex items-center gap-4">
           <Clock className="h-6 w-6 text-brand-teal shrink-0" />
           <div>

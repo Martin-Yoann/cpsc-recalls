@@ -31,8 +31,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
       remedyType: remedy.type,
       refundAmount: remedy.compensationAmount,
       evidenceCount: 0,
-    });
-    setSubmitted(claim);
+    }).then((claim) => setSubmitted(claim));
   };
 
   if (submitted) {

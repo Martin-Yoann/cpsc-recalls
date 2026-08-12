@@ -16,10 +16,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { useAuth } from '@/lib/auth-context';
-import { getClaimsByEmail } from '@/data/mock-claims';
+import { getClaimsByEmail } from '@/lib/shared-claims-store';
 import { getOrdersByUserId } from '@/data/mock-orders';
-import { mockCampaigns } from '@/data/mock-recalls';
-import { ClaimStatus } from '@/types';
 import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
@@ -28,11 +26,11 @@ export default function DashboardPage() {
   const orders = user ? getOrdersByUserId(user.id) : [];
 
   const activeClaims = claims.filter((c) =>
-    [ClaimStatus.SUBMITTED, ClaimStatus.UNDER_REVIEW, ClaimStatus.VERIFIED, ClaimStatus.REMEDY_ISSUED].includes(c.status)
+    ['submitted', 'under_review', 'verified', 'remedy_issued'].includes(c.status)
   );
-  const resolvedClaims = claims.filter((c) => c.status === ClaimStatus.RESOLVED);
+  const resolvedClaims = claims.filter((c) => c.status === 'resolved');
   const pendingClaims = claims.filter((c) =>
-    [ClaimStatus.SUBMITTED, ClaimStatus.UNDER_REVIEW].includes(c.status)
+    ['submitted', 'under_review'].includes(c.status)
   );
 
   return (
@@ -80,7 +78,6 @@ export default function DashboardPage() {
         {claims.length > 0 ? (
           <div className="space-y-3">
             {claims.slice(0, 5).map((claim) => {
-              const campaign = mockCampaigns.find((c) => c.id === claim.campaignId);
               return (
                 <Link
                   key={claim.id}
@@ -90,17 +87,17 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-4 min-w-0">
                     <div className={cn(
                       'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
-                      claim.status === ClaimStatus.RESOLVED && 'bg-blade-resolution-light',
-                      claim.status === ClaimStatus.REJECTED && 'bg-red-50',
-                      [ClaimStatus.SUBMITTED, ClaimStatus.UNDER_REVIEW].includes(claim.status) && 'bg-blade-verification-light',
-                      [ClaimStatus.VERIFIED, ClaimStatus.REMEDY_ISSUED].includes(claim.status) && 'bg-blade-resolution-light',
+                      claim.status === 'resolved' && 'bg-blade-resolution-light',
+                      claim.status === 'rejected' && 'bg-red-50',
+                      ['submitted', 'under_review'].includes(claim.status) && 'bg-blade-verification-light',
+                      ['verified', 'remedy_issued'].includes(claim.status) && 'bg-blade-resolution-light',
                     )}>
                       <ClipboardList className={cn(
                         'h-4.5 w-4.5',
-                        claim.status === ClaimStatus.RESOLVED && 'text-blade-resolution',
-                        claim.status === ClaimStatus.REJECTED && 'text-red-600',
-                        [ClaimStatus.SUBMITTED, ClaimStatus.UNDER_REVIEW].includes(claim.status) && 'text-blade-verification',
-                        [ClaimStatus.VERIFIED, ClaimStatus.REMEDY_ISSUED].includes(claim.status) && 'text-blade-resolution',
+                        claim.status === 'resolved' && 'text-blade-resolution',
+                        claim.status === 'rejected' && 'text-red-600',
+                        ['submitted', 'under_review'].includes(claim.status) && 'text-blade-verification',
+                        ['verified', 'remedy_issued'].includes(claim.status) && 'text-blade-resolution',
                       )} />
                     </div>
                     <div className="min-w-0">
@@ -108,7 +105,7 @@ export default function DashboardPage() {
                         {claim.claimNumber}
                       </p>
                       <p className="text-xs text-text-secondary truncate max-w-[260px]">
-                        {campaign?.title || 'Unknown Campaign'}
+                        {claim.campaignTitle || 'Unknown Campaign'}
                       </p>
                     </div>
                   </div>

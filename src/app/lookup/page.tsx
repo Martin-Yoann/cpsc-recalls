@@ -5,8 +5,7 @@ import Link from 'next/link';
 import { Search, X } from 'lucide-react';
 import { LookupForm } from '@/components/lookup/lookup-form';
 import { LookupResult } from '@/components/lookup/lookup-result';
-import { getClaimByNumberAndPhone } from '@/data/mock-claims';
-import { mockCampaigns } from '@/data/mock-recalls';
+import { getClaimByNumber } from '@/lib/shared-claims-store';
 import { cn } from '@/lib/utils';
 
 export default function LookupPage() {
@@ -20,18 +19,15 @@ export default function LookupPage() {
     setNotFound(false);
     setResult(null);
     setTimeout(() => {
-      const claim = getClaimByNumberAndPhone(claimNumber, phone);
-      if (claim) {
-        const campaign = mockCampaigns.find((c) => c.id === claim.campaignId);
-        const product = campaign?.affectedProducts.find((p) => p.id === claim.productId);
-        const remedy = campaign?.remedies.find((r) => r.id === claim.remedyId);
+      const claim = getClaimByNumber(claimNumber);
+      if (claim && claim.consumerPhone === phone) {
         setResult({
           claim,
-          campaignTitle: campaign?.title,
-          productName: product?.name || 'Unknown Product',
-          remedyTitle: remedy?.title,
-          remedyType: remedy?.type,
-          refundAmount: remedy?.compensationAmount,
+          campaignTitle: claim.campaignTitle,
+          productName: claim.productName,
+          remedyTitle: claim.remedyTitle,
+          remedyType: claim.remedyType,
+          refundAmount: claim.refundAmount,
         });
         setDrawerOpen(true);
       } else {
@@ -89,22 +85,6 @@ export default function LookupPage() {
             Home
           </Link>
         </div>
-
-        {/* Demo hints */}
-        <div className="text-center mt-4">
-          <details className="group">
-            <summary className="text-xs cursor-pointer hover:underline transition-colors list-none select-none"
-              style={{ color: '#707974' }}>
-              Demo test data
-            </summary>
-            <div className="mt-2 inline-block p-2 rounded-lg text-[11px] font-mono space-y-0.5"
-              style={{ background: '#ffffff', border: '1px solid rgba(0,53,39,0.08)', color: '#404944' }}>
-              <p>KOI-2512-1842 / 13812341234</p>
-              <p>KOI-2601-2104 / 18611223344</p>
-              <p>KOI-2512-0412 / 13956785678</p>
-            </div>
-          </details>
-        </div>
       </div>
 
       {/* ═══ Drawer overlay ═══ */}
@@ -144,4 +124,3 @@ export default function LookupPage() {
     </div>
   );
 }
-

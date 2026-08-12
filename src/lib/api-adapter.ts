@@ -1,16 +1,13 @@
 // ============================================================
 // KOI — API Adapter
 // Bridges generated API types → frontend domain types
-// Production: API failures → explicit error state, NOT mock data
-// Demo: NEXT_PUBLIC_DEMO_MODE=true enables mock fallback
+// Connected to Neon-backed API. No mock fallback.
 // ============================================================
 
 import { RiskLevel, RecallStatus, RemedyType, EvidenceType } from '@/types';
 import type { Campaign } from '@/types';
 import type { CampaignView } from '@/lib/api-client';
 import { getCampaign as apiGetCampaign } from '@/lib/api-client';
-
-const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 // ================================================================
 // API → Domain adapter — only fill what the API provides
@@ -83,17 +80,7 @@ export async function fetchCampaign(
     return { campaign: campaignViewToCampaign(result.data.campaign) };
   }
 
-  // Demo mode only: fall back to mock data
-  if (isDemo) {
-    console.info(
-      `[API DEMO] GET /v1/recall-campaigns/${slug} → ${result.status}, using mock data`,
-    );
-    // Dynamic import only in demo mode
-    const { getCampaignBySlug } = await import('@/data/mock-recalls');
-    return { campaign: getCampaignBySlug(slug) };
-  }
-
-  // Production: return explicit error
+  // API failure — return explicit error
   const problem = result.ok ? undefined : (result as { error: { requestId?: string } }).error;
   console.error(
     `[API] GET /v1/recall-campaigns/${slug} → ${result.status}`,

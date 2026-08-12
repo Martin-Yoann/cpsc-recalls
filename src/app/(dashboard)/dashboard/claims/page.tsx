@@ -9,8 +9,7 @@ import { ClipboardList, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { useAuth } from '@/lib/auth-context';
-import { getClaimsByEmail } from '@/data/mock-claims';
-import { mockCampaigns } from '@/data/mock-recalls';
+import { getClaimsByEmail } from '@/lib/shared-claims-store';
 
 export default function MyClaimsPage() {
   const { user } = useAuth();
@@ -28,7 +27,6 @@ export default function MyClaimsPage() {
       {claims.length > 0 ? (
         <div className="space-y-3">
           {claims.map((claim) => {
-            const campaign = mockCampaigns.find((c) => c.id === claim.campaignId);
             return (
               <Link
                 key={claim.id}
@@ -43,10 +41,10 @@ export default function MyClaimsPage() {
                       </span>
                       <StatusBadge variant={claim.status as 'submitted' | 'under_review' | 'verified' | 'remedy_issued' | 'resolved' | 'rejected'} />
                     </div>
-                    <p className="text-sm text-text-secondary">{campaign?.title || 'Unknown Campaign'}</p>
+                    <p className="text-sm text-text-secondary">{claim.campaignTitle || 'Unknown Campaign'}</p>
                     <div className="flex items-center gap-4 text-xs text-text-tertiary">
                       <span>Submitted: {new Date(claim.submittedAt).toLocaleDateString('en-US')}</span>
-                      <span>Evidence: {claim.evidence.length} file{claim.evidence.length !== 1 ? 's' : ''}</span>
+                      <span>Evidence: {claim.evidenceCount} file{claim.evidenceCount !== 1 ? 's' : ''}</span>
                       {claim.resolutionDate && (
                         <span>Resolved: {new Date(claim.resolutionDate).toLocaleDateString('en-US')}</span>
                       )}

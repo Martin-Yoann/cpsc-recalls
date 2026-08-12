@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { useAuth } from '@/lib/auth-context';
 import { getOrdersByUserId } from '@/data/mock-orders';
-import { getClaimByNumber } from '@/data/mock-claims';
+import { getClaimByNumber } from '@/lib/shared-claims-store';
 
 export default function OrdersPage() {
   const { user } = useAuth();

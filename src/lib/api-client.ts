@@ -1,7 +1,7 @@
 // ============================================================
 // KOI — API Client
 // Uses generated types from openapi-typescript (src/types/api.ts)
-// Phase 1: 501 → callers should fall back to mock data
+// Connected to Neon-backed API via NEXT_PUBLIC_API_URL
 // ============================================================
 
 import type { paths, components } from '@/types/api';
@@ -14,6 +14,79 @@ export type ProductCheckOk = paths['/v1/recall-campaigns/{slug}/product-checks']
 
 export type CampaignView = GetCampaignOk['campaign'];
 export type ProblemDetails = components['schemas']['ProblemDetails'];
+
+// ── Claim submission types (inline — backend endpoints exist but OpenAPI types not regenerated yet) ──
+
+export interface ClaimConsumer {
+  name: string;
+  email: string;
+  phone: string;
+  address?: string;
+}
+
+export interface ClaimProduct {
+  productId: string;
+  quantity: number;
+  identificationMode: 'lot_code' | 'product_identifiers' | 'purchase_evidence' | 'unknown';
+  lotCode?: string;
+  dateCode?: string;
+}
+
+export interface ClaimConsent {
+  type: 'privacy_policy' | 'accuracy';
+  accepted: boolean;
+  acceptedAt: string;
+}
+
+export interface ClaimSubmissionBody {
+  draftId?: string;
+  draftToken?: string;
+  consumer: ClaimConsumer;
+  products: ClaimProduct[];
+  remedyCode: string;
+  documents: Array<{ documentId: string }>;
+  consents: ClaimConsent[];
+  incident?: {
+    eventType: string;
+    eventDate: string;
+    severity: 'minor' | 'moderate' | 'serious' | 'fatal';
+    description: string;
+  };
+}
+
+export interface ClaimSubmissionOk {
+  caseRef: string;
+  claimNumber: string;
+  submittedAt: string;
+}
+
+export interface ClaimDraftBody {
+  // empty body for draft creation
+}
+
+export interface ClaimDraftOk {
+  draftId: string;
+  draftToken: string;
+  expiresAt: string;
+}
+
+export interface UploadTokenBody {
+  documents: Array<{
+    fileName: string;
+    mimeType: string;
+    category: string;
+    sizeBytes: number;
+  }>;
+}
+
+export interface UploadTokenOk {
+  uploadTokens: Array<{
+    documentId: string;
+    url: string;
+    fields?: Record<string, string>;
+    expiresAt: string;
+  }>;
+}
 
 // ── Runtime ──
 
@@ -104,4 +177,44 @@ export async function checkProduct(
 /** Returns true when the Phase 1 skeleton returned 501. */
 export function isPhase1NotImplemented(result: ApiResult<unknown>): boolean {
   return !result.ok && result.status === 501;
+}
+
+// ── Claim Submission API methods ──
+
+/** POST /v1/recall-campaigns/{slug}/claims — Submit formal claim */
+export async function submitClaim(
+  slug: string,
+  body: ClaimSubmissionBody,
+): Promise<ApiResult<ClaimSubmissionOk>> {
+  return fetchApi<ClaimSubmissionOk>(
+    `/v1/recall-campaigns/${slug}/claims`,
+    { method: 'POST', body: JSON.stringify(body) },
+  );
+}
+
+/** POST /v1/recall-campaigns/{slug}/claim-drafts — Create anonymous claim draft */
+export async function submitClaimDraft(
+  slug: string,
+  body: ClaimDraftBody,
+): Promise<ApiResult<ClaimDraftOk>> {
+  return fetchApi<ClaimDraftOk>(
+    `/v1/recall-campaigns/${slug}/claim-drafts`,
+    { method: 'POST', body: JSON.stringify(body) },
+  );
+}
+
+/** POST /v1/claim-drafts/{draftId}/upload-tokens — Authorize document upload */
+export async function getUploadToken(
+  draftId: string,
+  draftToken: string,
+  body: UploadTokenBody,
+): Promise<ApiResult<UploadTokenOk>> {
+  return fetchApi<UploadTokenOk>(
+    `/v1/claim-drafts/${draftId}/upload-tokens`,
+    {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: { 'X-Draft-Token': draftToken },
+    },
+  );
 }

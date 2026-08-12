@@ -16,17 +16,22 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RecallCard } from '@/components/consumer/recall-card';
-import { mockCampaigns } from '@/data/mock-recalls';
+import { fetchCampaign } from '@/lib/api-adapter';
 import { AuthLinks } from '@/components/auth/auth-links';
+import type { Campaign } from '@/types';
 
-const stats = {
-  activeRecalls: mockCampaigns.filter((c) => c.status === 'active').length,
-  affectedUnits: mockCampaigns.reduce((sum, c) => sum + c.estimatedUnits, 0),
-  criticalCount: mockCampaigns.filter(
-    (c) => c.riskLevel === 'critical' || c.riskLevel === 'high'
-  ).length,
-  resolvedRate: 94,
-};
+export default async function LandingPage() {
+  const { campaign } = await fetchCampaign('music-lollipop-demo-2026');
+  const campaigns: Campaign[] = campaign ? [campaign] : [];
+
+  const stats = {
+    activeRecalls: campaigns.length,
+    affectedUnits: campaigns.reduce((sum, c) => sum + c.estimatedUnits, 0),
+    criticalCount: campaigns.filter(
+      (c) => c.riskLevel === 'critical' || c.riskLevel === 'high',
+    ).length,
+    resolvedRate: 94,
+  };
 
 const STEPS = [
   {
@@ -67,7 +72,6 @@ const TRUST_ITEMS = [
   { label: 'Real-Time', description: 'Data sourced from official CPSC announcements' },
 ];
 
-export default function LandingPage() {
   return (
     <>
       {/* ================================================================
@@ -251,14 +255,14 @@ export default function LandingPage() {
                 Active Recalls
               </h2>
               <p className="mt-2 text-base sm:text-lg text-text-secondary">
-                {mockCampaigns.length} campaign currently accepting claims
+                {campaigns.length} campaign currently accepting claims
               </p>
             </div>
           </div>
 
           {/* Grid: 1-col mobile  /  2-col tablet  /  3-col lg  /  4-col xl */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-            {mockCampaigns.map((campaign) => (
+            {campaigns.map((campaign) => (
               <RecallCard key={campaign.id} campaign={campaign} />
             ))}
           </div>
@@ -337,3 +341,4 @@ export default function LandingPage() {
     </>
   );
 }
+
