@@ -14,7 +14,7 @@ import {
 // === Campaign: Music Lollipop Safety Recall ===
 const musicLollipopCampaign: Campaign = {
   id: 'cmp_001',
-  slug: 'music-lollipop-safety-recall',
+  slug: 'music-lollipop-demo-2026',
   title: 'Music Lollipop Safety Recall',
   summary:
     'Selected fictional lots across the Candy Master Music Lollipop series are included in this demonstration. Affected products may pose a component-separation hazard.',

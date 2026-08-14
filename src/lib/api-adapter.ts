@@ -1,13 +1,17 @@
 // ============================================================
 // KOI — API Adapter
 // Bridges generated API types → frontend domain types
-// Connected to Neon-backed API. No mock fallback.
+// Connected to Neon-backed API. Demo mode: graceful mock fallback.
 // ============================================================
 
+import { cache } from 'react';
 import { RiskLevel, RecallStatus, RemedyType, EvidenceType } from '@/types';
 import type { Campaign } from '@/types';
 import type { CampaignView } from '@/lib/api-client';
 import { getCampaign as apiGetCampaign } from '@/lib/api-client';
+import { mockCampaigns, getCampaignBySlug } from '@/data/mock-recalls';
+
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 // ================================================================
 // API → Domain adapter — only fill what the API provides
@@ -71,7 +75,9 @@ function campaignViewToCampaign(view: CampaignView): Campaign {
 // Unified fetch — demo only mock, production shows errors
 // ================================================================
 
-export async function fetchCampaign(
+// `cache` dedupes the double fetch from `generateMetadata` + the page body so a
+// single recall view only hits the backend once per request.
+export const fetchCampaign = cache(async function fetchCampaign(
   slug: string,
 ): Promise<{ campaign?: Campaign; error?: { status: number; requestId?: string } }> {
   const result = await apiGetCampaign(slug);
@@ -80,11 +86,22 @@ export async function fetchCampaign(
     return { campaign: campaignViewToCampaign(result.data.campaign) };
   }
 
-  // API failure — return explicit error
+  // API failure — demo mode falls back to mock data instead of erroring
   const problem = result.ok ? undefined : (result as { error: { requestId?: string } }).error;
+
+  if (DEMO_MODE) {
+    const mock = getCampaignBySlug(slug) ?? mockCampaigns[0];
+    if (mock) {
+      console.warn(
+        `[API] GET /v1/recall-campaigns/${slug} → ${result.status}; demo mode fallback to mock campaign "${mock.slug}"`,
+      );
+      return { campaign: mock };
+    }
+  }
+
   console.error(
     `[API] GET /v1/recall-campaigns/${slug} → ${result.status}`,
     { requestId: problem?.requestId },
   );
   return { error: { status: result.status, requestId: problem?.requestId } };
-}
+});

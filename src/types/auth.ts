@@ -8,6 +8,12 @@ export interface User {
   name: string;
   phone: string;
   createdAt: string;
+  /** Base64 data-URL avatar from the backend (Phase 2 consumer auth) */
+  avatarDataUrl?: string | null;
+  /** Bearer session token for the consumer API (persisted so reloads stay logged in) */
+  token?: string;
+  /** ISO expiry of the session token */
+  expiresAt?: string;
 }
 
 export interface BoundOrder {

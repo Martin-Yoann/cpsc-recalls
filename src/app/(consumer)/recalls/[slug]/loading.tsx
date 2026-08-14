@@ -1,10 +1,29 @@
 // ============================================================
-// KOI Recall Platform — Recall Page Skeleton Loader
+// KOI Recall Platform — Recall Page Loading State
+// Branded three-blade loader + skeleton for stable layout
 // ============================================================
 
 export default function RecallLoading() {
   return (
-    <div className="animate-in fade-in duration-300">
+    <div
+      aria-busy="true"
+      aria-label="Loading recall details"
+      className="animate-in fade-in duration-300"
+    >
+      {/* ── Loader bar ── */}
+      <div className="container-content pt-10 pb-8">
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1.5" aria-hidden="true">
+            <span className="blade-dot blade-dot-safety" />
+            <span className="blade-dot blade-dot-verification" />
+            <span className="blade-dot blade-dot-resolution" />
+          </span>
+          <span className="text-sm font-medium text-text-tertiary">
+            Loading recall details…
+          </span>
+        </div>
+      </div>
+
       {/* Safety banner skeleton */}
       <div className="bg-blade-safety-light border-l-4 border-blade-safety p-4">
         <div className="container-content flex items-start gap-3">

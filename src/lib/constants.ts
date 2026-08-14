@@ -6,7 +6,7 @@ import type { BladeStage, NavItem } from '@/types';
 
 // === Navigation ===
 export const NAV_ITEMS: NavItem[] = [
-  { label: 'Safety Recall', href: '/recalls/music-lollipop-safety-recall' },
+  { label: 'Safety Recall', href: '/recalls/music-lollipop-demo-2026' },
   { label: 'How It Works', href: '/#how-it-works' },
   { label: 'Active Recalls', href: '/#active-recalls' },
 ];

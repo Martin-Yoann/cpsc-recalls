@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { NAV_ITEMS } from '@/lib/constants';
 import { useAuth } from '@/lib/auth-context';
@@ -74,6 +74,7 @@ export function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger className="ml-2 rounded-full hover:ring-2 hover:ring-brand-teal/20 transition-all">
                 <Avatar className="h-8 w-8 cursor-pointer">
+                  {user?.avatarDataUrl && <AvatarImage src={user.avatarDataUrl} alt={user.name} />}
                   <AvatarFallback className="bg-brand-teal text-white text-xs font-bold">
                     {initials}
                   </AvatarFallback>
@@ -126,6 +127,7 @@ export function Header() {
           {isAuthenticated ? (
             <Link href="/dashboard">
               <Avatar className="h-8 w-8">
+                {user?.avatarDataUrl && <AvatarImage src={user.avatarDataUrl} alt={user.name} />}
                 <AvatarFallback className="bg-brand-teal text-white text-xs font-bold">
                   {initials}
                 </AvatarFallback>

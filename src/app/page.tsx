@@ -23,6 +23,7 @@ import type { Campaign } from '@/types';
 export default async function LandingPage() {
   const { campaign } = await fetchCampaign('music-lollipop-demo-2026');
   const campaigns: Campaign[] = campaign ? [campaign] : [];
+  const recallHref = campaign ? `/recalls/${campaign.slug}` : '/#active-recalls';
 
   const stats = {
     activeRecalls: campaigns.length,
@@ -103,7 +104,7 @@ const TRUST_ITEMS = [
 
             {/* CTA entrance cards — responsive grid */}
             <div className="space-y-3 sm:space-y-4 mb-12 sm:mb-16">
-              <div className="grid sm:grid-cols-2 gap-2.5 sm:gap-3">
+              <div className="grid sm:grid-cols-2 gap-2.5 sm:gap-3 stagger-in">
                 <Link
                   href="/lookup"
                   className="flex items-center gap-3 sm:gap-4 p-4 rounded-2xl border bg-surface-elevated card-lift group cursor-pointer"
@@ -122,7 +123,7 @@ const TRUST_ITEMS = [
                   <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-brand-teal group-hover:translate-x-1 transition-all duration-250 ml-auto shrink-0 hidden sm:block" />
                 </Link>
                 <Link
-                  href="/recalls/music-lollipop-safety-recall"
+                  href={recallHref}
                   className="flex items-center gap-3 sm:gap-4 p-4 rounded-2xl border bg-surface-elevated card-lift group cursor-pointer"
                 >
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blade-resolution-light icon-spin">
@@ -145,7 +146,7 @@ const TRUST_ITEMS = [
             </div>
 
             {/* Stats Row — progressive grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 stagger-in">
               <div className="rounded-2xl border bg-surface-elevated p-4 card-lift cursor-default">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="h-2 w-2 rounded-full bg-blade-safety" />
@@ -200,7 +201,7 @@ const TRUST_ITEMS = [
           </div>
 
           {/* sm: 1-col  md: 2-col (stacked 3rd)  lg+: 3-col with connectors */}
-          <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 stagger-in">
             {STEPS.map((step, i) => {
               const Icon = step.icon;
               return (
@@ -255,17 +256,27 @@ const TRUST_ITEMS = [
                 Active Recalls
               </h2>
               <p className="mt-2 text-base sm:text-lg text-text-secondary">
-                {campaigns.length} campaign currently accepting claims
+                {campaigns.length} campaign{campaigns.length !== 1 ? 's' : ''} currently accepting claims
               </p>
             </div>
           </div>
 
           {/* Grid: 1-col mobile  /  2-col tablet  /  3-col lg  /  4-col xl */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-            {campaigns.map((campaign) => (
-              <RecallCard key={campaign.id} campaign={campaign} />
-            ))}
-          </div>
+          {campaigns.length > 0 ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 stagger-in">
+              {campaigns.map((campaign) => (
+                <RecallCard key={campaign.id} campaign={campaign} />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border bg-surface-elevated p-12 text-center">
+              <ShieldCheck className="h-10 w-10 mx-auto text-blade-resolution mb-3" />
+              <h3 className="text-base font-semibold text-text-primary mb-1">No Active Recalls</h3>
+              <p className="text-sm text-text-secondary">
+                There are no campaigns accepting claims right now. Check back soon — we monitor CPSC announcements in real time.
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -312,7 +323,7 @@ const TRUST_ITEMS = [
                   identification → verification → resolution, step by step.
                 </p>
                 <div className="flex flex-wrap gap-3">
-                  <Link href="/recalls/music-lollipop-safety-recall">
+                  <Link href={recallHref}>
                     <Button
                       size="lg"
                       className="bg-white text-brand-teal hover:bg-blade-resolution-light font-semibold h-11 sm:h-12 px-5 sm:px-6 rounded-xl shadow-sm text-sm sm:text-base cursor-pointer btn-lift btn-press"

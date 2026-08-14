@@ -22,7 +22,7 @@ const registerSchema = z.object({
   name: z.string().min(1, 'Name is required').min(2, 'Name must be at least 2 characters'),
   email: z.string().min(1, 'Email is required').email('Invalid email format'),
   phone: z.string().min(1, 'Phone number is required').refine(validatePhone, 'Please enter a valid phone number'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(12, 'Password must be at least 12 characters'),
   confirmPassword: z.string().min(1, 'Please confirm your password'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Passwords do not match',
@@ -229,7 +229,7 @@ export function AuthDrawer() {
                   <input
                     id="sd-rpw"
                     type={showPw ? 'text' : 'password'}
-                    placeholder="At least 6 characters"
+                    placeholder="At least 12 characters"
                     autoComplete="new-password"
                     className="w-full h-10 pl-3 pr-10 rounded-lg text-sm border-0 outline-none transition-colors"
                     style={{ background: 'rgba(0,53,39,0.04)', color: '#131b2e' }}

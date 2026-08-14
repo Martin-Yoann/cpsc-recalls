@@ -113,6 +113,9 @@ async function fetchApi<T>(
   try {
     const res = await fetch(url, {
       ...options,
+      // Guard against a hung API: abort after 10s so a slow/unreachable
+      // backend surfaces a fast error instead of blocking the page forever.
+      signal: options.signal ?? AbortSignal.timeout(10_000),
       headers: {
         'Content-Type': 'application/json',
         'X-Request-Id': rid,
