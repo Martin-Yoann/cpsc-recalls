@@ -9,8 +9,26 @@ import type { paths, components } from '@/types/api';
 // ── Convenience type aliases from generated paths ──
 
 export type GetCampaignOk = paths['/v1/recall-campaigns/{slug}']['get']['responses'][200]['content']['application/json'];
-export type ProductCheckBody = paths['/v1/recall-campaigns/{slug}/product-checks']['post']['requestBody']['content']['application/json'];
-export type ProductCheckOk = paths['/v1/recall-campaigns/{slug}/product-checks']['post']['responses'][200]['content']['application/json'];
+
+// ── Product check (mode-based contract — inline; generated types are stale) ──
+export type ProductIdentifierInput = {
+  type: 'sku' | 'unit_upc' | 'gtin14' | 'model' | 'style' | 'lot_code' | 'date_code';
+  value: string;
+};
+
+export type ProductCheckBody =
+  | { mode: 'product_identifiers'; identifiers: ProductIdentifierInput[] }
+  | { mode: 'legacy'; shape?: string; flavor?: string; lotCode?: string; dateCode?: string };
+
+export type ProductCheckOk = {
+  result: 'potential_match' | 'not_matched' | 'manual_review';
+  reasonCodes: string[];
+  matchedVariantIds: string[];
+  identificationMode: string;
+  messageKey: string;
+  checkedCampaignVersion: number;
+  disclaimer: string;
+};
 
 export type CampaignView = GetCampaignOk['campaign'];
 export type ProblemDetails = components['schemas']['ProblemDetails'];

@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, X } from 'lucide-react';
 import { LookupForm } from '@/components/lookup/lookup-form';
 import { LookupResult } from '@/components/lookup/lookup-result';
-import { getClaimByNumber } from '@/lib/shared-claims-store';
+import { getClaimByNumber, seedIfEmpty } from '@/lib/shared-claims-store';
 import { cn } from '@/lib/utils';
 
 export default function LookupPage() {
@@ -13,6 +13,13 @@ export default function LookupPage() {
   const [notFound, setNotFound] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Seed demo claims (if none exist) so status lookup has data to match against.
+  useEffect(() => {
+    seedIfEmpty([
+      { id: 'cmp_001', title: 'Music Lollipop Safety Recall', slug: 'music-lollipop-demo-2026' },
+    ]);
+  }, []);
 
   const handleSearch = (claimNumber: string, phone: string) => {
     setIsLoading(true);

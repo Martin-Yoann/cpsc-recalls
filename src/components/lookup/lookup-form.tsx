@@ -10,7 +10,7 @@ interface LookupFormProps {
 }
 
 export function LookupForm({ onSearch, isLoading }: LookupFormProps) {
-  const [claimNumber, setClaimNumber] = useState('KOI-2512-1842');
+  const [claimNumber, setClaimNumber] = useState('KOI-0001');
   const [phone, setPhone] = useState('13812341234');
   const [error, setError] = useState('');
 
