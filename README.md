@@ -11,7 +11,7 @@ KOI 召回平台消费者网站 — 面向终端用户的召回查询、产品�
 | 部署 | ✅ [koi-recall-web.vercel.app](https://koi-recall-web.vercel.app) |
 | 后端集成 | partial — `GET /campaigns/{slug}` & `POST /product-checks` 接通，其余 4 端点本地 mock |
 | Mock 数据 | ✅ Music Lollipop 召回活动 (1 个 campaign, 10 个 claims) |
-| 认证 | ✅ 邮箱+密码模拟登录，localStorage 持久化；支持免登录查询 |
+| 认证 | ✅ Neon 后端真实认证（`/v1/consumer-auth`），注册制；支持免登录查询 |
 | 响应式 | ✅ Mobile / Tablet / Desktop 全适配 |
 
 ### 与上下游关系
@@ -225,13 +225,7 @@ src/
 
 ## 认证
 
-| 账号 | 密码 |
-|---|---|
-| `sarah.chen@email.com` | `123456` |
-| `emily.davis@email.com` | `recall2025` |
-| `jwilson@email.com` | `mypassword` |
-
-登录入口：首页 Hero 区 + Header 右上角。登录后跳转 `/dashboard`，Header 显示头像下拉菜单。
+消费者端为**注册制**（真实 Neon 后端），无内置演示账号。首次使用请通过首页 Hero 区或 Header 右上角进入登录/注册抽屉，注册即可（密码 ≥ 12 位）。登录后跳转 `/dashboard`，Header 显示头像下拉菜单。
 
 免登录路径：`/lookup` 通过索赔编号+手机号查询，无需账户。
 
