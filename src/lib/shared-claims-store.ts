@@ -126,46 +126,59 @@ export async function submitClaim(data: {
   claims.push(claim);
   writeAll(claims);
 
-  // Fire-and-forget: also submit to backend API
+  // Fire-and-forget: also submit to backend API.
+  // This legacy bridge uses placeholder values to satisfy the current contract.
   apiSubmitClaim(data.campaignSlug, {
-    draftId: undefined, // no draft — direct submission
-    draftToken: undefined,
+    draftId: '',
+    draftToken: '',
     consumer: {
-      name: data.consumerName,
+      firstName: data.consumerName.split(' ').slice(0, 1).join('') || 'Consumer',
+      lastName: data.consumerName.split(' ').slice(1).join(' ') || 'Unknown',
       email: data.consumerEmail,
+      mailingAddress: {
+        line1: 'Unknown',
+        city: 'Unknown',
+        state: 'Unknown',
+        postalCode: '00000',
+        countryCode: 'US',
+      },
       phone: data.consumerPhone,
     },
     products: [
       {
-        productId: data.productId ?? data.campaignId, // fallback
+        campaignProductId: data.productId ?? data.campaignId,
         quantity: 1,
-        identificationMode: 'lot_code' as const,
-        lotCode: data.lotCode,
-        dateCode: data.dateCode,
+        purchaseChannel: 'other',
+        lotCode: data.lotCode || '',
+        dateCode: data.dateCode || '',
+        flavor: data.flavor || '',
+        shape: data.shape || '',
       },
     ],
     remedyCode: data.remedyId,
-    documents: [],
+    documentIds: [],
+    locale: 'en-US',
+    incidentAnswer: 'no',
     consents: [
       {
-        type: 'privacy_policy' as const,
+        type: 'privacy_notice',
+        textVersion: 'v1',
         accepted: true,
-        acceptedAt: now,
       },
       {
-        type: 'accuracy' as const,
+        type: 'information_accuracy',
+        textVersion: 'v1',
         accepted: true,
-        acceptedAt: now,
       },
     ],
   })
     .then((result) => {
       if (result.ok) {
-        // Link backend caseRef back to localStorage
+        // Link backend case reference back to localStorage
         const allClaims = readAll();
         const idx = allClaims.findIndex((c) => c.id === claim.id);
         if (idx !== -1) {
-          allClaims[idx].caseRef = result.data.caseRef;
+          allClaims[idx].caseRef = result.data.caseReference;
           writeAll(allClaims);
         }
       }

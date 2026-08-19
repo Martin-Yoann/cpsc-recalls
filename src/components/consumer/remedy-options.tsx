@@ -13,7 +13,11 @@ import { RemedyType } from '@/types';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
-interface RemedyOptionsProps { remedies: Remedy[]; onSelect?: (remedy: Remedy) => void; }
+interface RemedyOptionsProps {
+  remedies: Remedy[];
+  onSelect?: (remedy: Remedy) => void;
+  busyRemedyId?: string | null;
+}
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   [RemedyType.REFUND]: Wallet,
@@ -23,7 +27,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   [RemedyType.VOUCHER]: Ticket,
 };
 
-export function RemedyOptions({ remedies, onSelect }: RemedyOptionsProps) {
+export function RemedyOptions({ remedies, onSelect, busyRemedyId }: RemedyOptionsProps) {
   const [sel, setSel] = useState<string | null>(null);
 
   return (
@@ -63,8 +67,9 @@ export function RemedyOptions({ remedies, onSelect }: RemedyOptionsProps) {
             <Button
               className="w-full h-9 bg-blade-resolution hover:bg-blade-resolution-dark text-white font-semibold text-sm cursor-pointer btn-lift btn-press"
               onClick={() => { if (chosen) onSelect?.(chosen); }}
+              disabled={Boolean(chosen && busyRemedyId === chosen.id)}
             >
-              Continue with Selected Remedy
+              {chosen && busyRemedyId === chosen.id ? 'Preparing draft...' : 'Continue with Selected Remedy'}
             </Button>
           </div>
         );

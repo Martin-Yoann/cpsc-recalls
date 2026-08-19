@@ -9,6 +9,11 @@ import type { paths, components } from '@/types/api';
 // ── Convenience type aliases from generated paths ──
 
 export type GetCampaignOk = paths['/v1/recall-campaigns/{slug}']['get']['responses'][200]['content']['application/json'];
+export type CreateClaimDraftOk = paths['/v1/recall-campaigns/{slug}/claim-drafts']['post']['responses'][201]['content']['application/json'];
+export type ClaimSubmissionRequest = paths['/v1/recall-campaigns/{slug}/claims']['post']['requestBody']['content']['application/json'];
+export type ClaimSubmissionOk = paths['/v1/recall-campaigns/{slug}/claims']['post']['responses'][201]['content']['application/json'];
+export type UploadTokenRequest = components['schemas']['UploadTokenRequest'];
+export type UploadTokenOk = components['schemas']['UploadTokenResponse'];
 
 // ── Product check (mode-based contract — inline; generated types are stale) ──
 export type ProductIdentifierInput = {
@@ -33,82 +38,24 @@ export type ProductCheckOk = {
 export type CampaignView = GetCampaignOk['campaign'];
 export type ProblemDetails = components['schemas']['ProblemDetails'];
 
-// ── Claim submission types (inline — backend endpoints exist but OpenAPI types not regenerated yet) ──
-
-export interface ClaimConsumer {
-  name: string;
-  email: string;
-  phone: string;
-  address?: string;
-}
-
-export interface ClaimProduct {
-  productId: string;
-  quantity: number;
-  identificationMode: 'lot_code' | 'product_identifiers' | 'purchase_evidence' | 'unknown';
-  lotCode?: string;
-  dateCode?: string;
-}
-
-export interface ClaimConsent {
-  type: 'privacy_policy' | 'accuracy';
-  accepted: boolean;
-  acceptedAt: string;
-}
-
-export interface ClaimSubmissionBody {
-  draftId?: string;
-  draftToken?: string;
-  consumer: ClaimConsumer;
-  products: ClaimProduct[];
-  remedyCode: string;
-  documents: Array<{ documentId: string }>;
-  consents: ClaimConsent[];
-  incident?: {
-    eventType: string;
-    eventDate: string;
-    severity: 'minor' | 'moderate' | 'serious' | 'fatal';
-    description: string;
-  };
-}
-
-export interface ClaimSubmissionOk {
-  caseRef: string;
-  claimNumber: string;
-  submittedAt: string;
-}
-
-export interface ClaimDraftBody {
-  // empty body for draft creation
-}
-
-export interface ClaimDraftOk {
-  draftId: string;
-  draftToken: string;
-  expiresAt: string;
-}
-
-export interface UploadTokenBody {
-  documents: Array<{
-    fileName: string;
-    mimeType: string;
-    category: string;
-    sizeBytes: number;
-  }>;
-}
-
-export interface UploadTokenOk {
-  uploadTokens: Array<{
-    documentId: string;
-    url: string;
-    fields?: Record<string, string>;
-    expiresAt: string;
-  }>;
-}
-
 // ── Runtime ──
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+const LOCAL_API_BASE = 'http://localhost:3002';
+const ONLINE_API_BASE = 'https://koi-recall-backend.vercel.app';
+
+const configuredApi = (process.env.NEXT_PUBLIC_API_URL || '').trim().replace(/\/+$/, '');
+
+// Primary base: explicit NEXT_PUBLIC_API_URL when set, otherwise the local backend.
+const PRIMARY_API_BASE = configuredApi || LOCAL_API_BASE;
+
+// When the primary points at a local backend that isn't running, transparently
+// fall back to the deployed API so the app keeps working. Only localhost URLs
+// get an online fallback — an explicitly configured remote URL is used as-is.
+const isLocalPrimary = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(PRIMARY_API_BASE);
+const API_BASES: string[] =
+  isLocalPrimary && PRIMARY_API_BASE !== ONLINE_API_BASE
+    ? [PRIMARY_API_BASE, ONLINE_API_BASE]
+    : [PRIMARY_API_BASE];
 
 type ApiResult<T> =
   | { ok: true; data: T }
@@ -126,50 +73,55 @@ async function fetchApi<T>(
   options: RequestInit = {},
 ): Promise<ApiResult<T>> {
   const rid = requestId();
-  const url = `${API_BASE}${path}`;
 
-  try {
-    const res = await fetch(url, {
-      ...options,
-      // Guard against a hung API: abort after 10s so a slow/unreachable
-      // backend surfaces a fast error instead of blocking the page forever.
-      signal: options.signal ?? AbortSignal.timeout(10_000),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Request-Id': rid,
-        ...options.headers,
-      },
-    });
+  for (const base of API_BASES) {
+    const url = `${base}${path}`;
 
-    if (res.ok) {
-      const data = (await res.json()) as T;
-      return { ok: true, data };
+    try {
+      const res = await fetch(url, {
+        ...options,
+        // Guard against a hung API: abort after 10s so a slow/unreachable
+        // backend surfaces a fast error instead of blocking the page forever.
+        signal: options.signal ?? AbortSignal.timeout(10_000),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Request-Id': rid,
+          ...options.headers,
+        },
+      });
+
+      if (res.ok) {
+        const data = (await res.json()) as T;
+        return { ok: true, data };
+      }
+
+      const body = await res.json().catch(() => null);
+      const problem: ProblemDetails = body?.type
+        ? (body as ProblemDetails)
+        : {
+            type: 'about:blank',
+            title: res.statusText,
+            status: res.status,
+            detail: body?.detail ?? 'Unexpected error',
+            requestId: rid,
+          };
+      return { ok: false, error: problem, status: res.status };
+    } catch {
+      // Network error (e.g. local backend not running) — try the next base.
     }
-
-    const body = await res.json().catch(() => null);
-    const problem: ProblemDetails = body?.type
-      ? (body as ProblemDetails)
-      : {
-          type: 'about:blank',
-          title: res.statusText,
-          status: res.status,
-          detail: body?.detail ?? 'Unexpected error',
-          requestId: rid,
-        };
-    return { ok: false, error: problem, status: res.status };
-  } catch {
-    return {
-      ok: false,
-      error: {
-        type: 'about:blank',
-        title: 'Network Error',
-        status: 0,
-        detail: 'Could not reach the API server.',
-        requestId: rid,
-      },
-      status: 0,
-    };
   }
+
+  return {
+    ok: false,
+    error: {
+      type: 'about:blank',
+      title: 'Network Error',
+      status: 0,
+      detail: 'Could not reach the API server.',
+      requestId: rid,
+    },
+    status: 0,
+  };
 }
 
 // ── Public API methods ──
@@ -205,22 +157,28 @@ export function isPhase1NotImplemented(result: ApiResult<unknown>): boolean {
 /** POST /v1/recall-campaigns/{slug}/claims — Submit formal claim */
 export async function submitClaim(
   slug: string,
-  body: ClaimSubmissionBody,
+  body: ClaimSubmissionRequest,
+  options?: { idempotencyKey?: string },
 ): Promise<ApiResult<ClaimSubmissionOk>> {
   return fetchApi<ClaimSubmissionOk>(
     `/v1/recall-campaigns/${slug}/claims`,
-    { method: 'POST', body: JSON.stringify(body) },
+    {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: options?.idempotencyKey
+        ? { 'Idempotency-Key': options.idempotencyKey }
+        : undefined,
+    },
   );
 }
 
 /** POST /v1/recall-campaigns/{slug}/claim-drafts — Create anonymous claim draft */
 export async function submitClaimDraft(
   slug: string,
-  body: ClaimDraftBody,
-): Promise<ApiResult<ClaimDraftOk>> {
-  return fetchApi<ClaimDraftOk>(
+): Promise<ApiResult<CreateClaimDraftOk>> {
+  return fetchApi<CreateClaimDraftOk>(
     `/v1/recall-campaigns/${slug}/claim-drafts`,
-    { method: 'POST', body: JSON.stringify(body) },
+    { method: 'POST' },
   );
 }
 
@@ -228,7 +186,7 @@ export async function submitClaimDraft(
 export async function getUploadToken(
   draftId: string,
   draftToken: string,
-  body: UploadTokenBody,
+  body: UploadTokenRequest,
 ): Promise<ApiResult<UploadTokenOk>> {
   return fetchApi<UploadTokenOk>(
     `/v1/claim-drafts/${draftId}/upload-tokens`,

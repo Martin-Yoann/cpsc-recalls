@@ -8,7 +8,19 @@
 import type { User, RegisterData } from '@/types/auth';
 
 const STORAGE_KEY = 'koi_auth_user';
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+
+const LOCAL_API_BASE = 'http://localhost:3002';
+const ONLINE_API_BASE = 'https://koi-recall-backend.vercel.app';
+
+const configuredApi = (process.env.NEXT_PUBLIC_API_URL || '').trim().replace(/\/+$/, '');
+const PRIMARY_API_BASE = configuredApi || LOCAL_API_BASE;
+const isLocalPrimary = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(PRIMARY_API_BASE);
+// Same transparent fallback as api-client.ts: local first, then online when the
+// local backend isn't running (client-side auth calls hit this too).
+const API_BASES: string[] =
+  isLocalPrimary && PRIMARY_API_BASE !== ONLINE_API_BASE
+    ? [PRIMARY_API_BASE, ONLINE_API_BASE]
+    : [PRIMARY_API_BASE];
 
 // ── API response shapes ──
 
@@ -68,47 +80,45 @@ function mapUser(session: AuthSessionResponse, phone = ''): User {
 
 // ── API helpers ──
 
-async function postJson<T>(path: string, body: unknown, token?: string): Promise<{ ok: true; data: T } | { ok: false; status: number; detail: string }> {
-  try {
-    const res = await fetch(`${API_BASE}${path}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify(body),
-    });
-    if (res.ok) return { ok: true, data: (await res.json()) as T };
-    const errBody = await res.json().catch(() => null);
-    return { ok: false, status: res.status, detail: errBody?.detail ?? `Request failed (${res.status})` };
-  } catch {
-    return { ok: false, status: 0, detail: 'Cannot reach the server. Is the backend running?' };
+type AuthResult<T> = { ok: true; data: T } | { ok: false; status: number; detail: string };
+
+async function authFetch<T>(path: string, init: RequestInit): Promise<AuthResult<T>> {
+  for (const base of API_BASES) {
+    try {
+      const res = await fetch(`${base}${path}`, init);
+      if (res.ok) return { ok: true, data: (await res.json()) as T };
+      const errBody = await res.json().catch(() => null);
+      return { ok: false, status: res.status, detail: errBody?.detail ?? `Request failed (${res.status})` };
+    } catch {
+      // Network error (e.g. local backend not running) — try the next base.
+    }
   }
+  return { ok: false, status: 0, detail: 'Cannot reach the server. Is the backend running?' };
 }
 
-async function patchJson<T>(path: string, body: unknown, token: string): Promise<{ ok: true; data: T } | { ok: false; status: number; detail: string }> {
-  try {
-    const res = await fetch(`${API_BASE}${path}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(body),
-    });
-    if (res.ok) return { ok: true, data: (await res.json()) as T };
-    const errBody = await res.json().catch(() => null);
-    return { ok: false, status: res.status, detail: errBody?.detail ?? `Request failed (${res.status})` };
-  } catch {
-    return { ok: false, status: 0, detail: 'Cannot reach the server. Is the backend running?' };
-  }
+async function postJson<T>(path: string, body: unknown, token?: string): Promise<AuthResult<T>> {
+  return authFetch<T>(path, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  });
 }
 
-async function getJson<T>(path: string, token: string): Promise<{ ok: true; data: T } | { ok: false; status: number; detail: string }> {
-  try {
-    const res = await fetch(`${API_BASE}${path}`, { headers: { Authorization: `Bearer ${token}` } });
-    if (res.ok) return { ok: true, data: (await res.json()) as T };
-    return { ok: false, status: res.status, detail: `Request failed (${res.status})` };
-  } catch {
-    return { ok: false, status: 0, detail: 'Cannot reach the server. Is the backend running?' };
-  }
+async function patchJson<T>(path: string, body: unknown, token: string): Promise<AuthResult<T>> {
+  return authFetch<T>(path, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+  });
+}
+
+async function getJson<T>(path: string, token: string): Promise<AuthResult<T>> {
+  return authFetch<T>(path, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 }
 
 // ── Auth actions ──
