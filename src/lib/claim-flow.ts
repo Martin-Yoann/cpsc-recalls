@@ -1,5 +1,7 @@
 'use client';
 
+import { put } from '@vercel/blob/client';
+
 import {
   getUploadToken,
   submitClaim,
@@ -26,7 +28,7 @@ export type PurchaseChannel = ClaimProductInput['purchaseChannel'];
 
 export interface ClaimFlowDocumentReceipt {
   documentId: string;
-  uploadUrl: string;
+  pathname: string;
   clientToken: string;
   expiresAt: string;
   category: DocumentCategory;
@@ -258,7 +260,7 @@ export class ClaimFlowModule {
 
   async addDocument(
     session: ClaimFlowSession,
-    file: { name: string; type: string; size: number },
+    file: File,
     category: DocumentCategory,
   ): Promise<ClaimFlowResult<{ session: ClaimFlowSession; receipt: ClaimFlowDocumentReceipt }>> {
     const body: UploadTokenRequest = {
@@ -270,6 +272,25 @@ export class ClaimFlowModule {
 
     const token = await getUploadToken(session.draftId, session.draftToken, body);
     if (!token.ok) return token;
+
+    try {
+      await put(token.data.pathname, file, {
+        access: 'private',
+        token: token.data.clientToken,
+        contentType: file.type,
+      });
+    } catch (error) {
+      return {
+        ok: false,
+        status: 0,
+        error: {
+          type: 'about:blank',
+          title: 'Upload Error',
+          status: 0,
+          detail: error instanceof Error ? error.message : 'Could not upload the selected file.',
+        },
+      };
+    }
 
     const receipt = this.toDocumentReceipt(file, category, token.data);
     const nextSession = { ...session, documents: [...session.documents, receipt] };
@@ -344,7 +365,7 @@ export class ClaimFlowModule {
         firstName: session.form.consumer.firstName.trim(),
         lastName: session.form.consumer.lastName.trim(),
         email: session.form.consumer.email.trim(),
-        mailingAddress: {
+        currentDeliveryAddress: {
           line1: session.form.consumer.addressLine1.trim(),
           line2: session.form.consumer.addressLine2.trim() || undefined,
           city: session.form.consumer.city.trim(),
@@ -359,6 +380,7 @@ export class ClaimFlowModule {
           campaignProductId: session.form.product.campaignProductId,
           quantity: session.form.product.quantity,
           purchaseChannel: session.form.product.purchaseChannel,
+          identificationMode: 'unknown',
           purchaseDate: session.form.product.purchaseDate || undefined,
           orderNumber: session.form.product.orderNumber || undefined,
           lotCode: session.form.product.lotCode,
@@ -424,7 +446,7 @@ export class ClaimFlowModule {
   ): ClaimFlowDocumentReceipt {
     return {
       documentId: token.documentId,
-      uploadUrl: token.uploadUrl,
+      pathname: token.pathname,
       clientToken: token.clientToken,
       expiresAt: token.expiresAt,
       category,

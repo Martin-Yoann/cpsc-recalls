@@ -53,6 +53,16 @@ export enum IncidentSeverity {
 
 // === Core Domain Interfaces ===
 
+export interface CampaignEvidenceRequirement {
+  category: 'product_photo' | 'proof_of_purchase' | 'incident_evidence';
+  required: boolean;
+  minimumFiles: number;
+  maximumFiles: number;
+  allowedMimeTypes: string[];
+  maximumFileSizeBytes: number;
+  instructions: string;
+}
+
 export interface Campaign {
   id: string;
   slug: string;
@@ -74,6 +84,7 @@ export interface Campaign {
   images: string[];
   affectedLots?: string[];
   dateCodes?: string[];
+  evidenceRequirements?: CampaignEvidenceRequirement[];
 }
 
 export interface Product {

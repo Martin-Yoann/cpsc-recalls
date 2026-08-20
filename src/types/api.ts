@@ -662,6 +662,11 @@ export interface components {
                 hazard: string;
                 immediateAction: string;
                 locale: string;
+                privacyNotice: {
+                    /** Format: uri */
+                    url: string;
+                    version: string;
+                };
                 products: components["schemas"]["PublicCampaignProduct"][];
                 remedies: {
                     code: string;
@@ -696,11 +701,11 @@ export interface components {
                 type: "privacy_notice" | "information_accuracy";
             }[];
             consumer: {
+                currentDeliveryAddress?: components["schemas"]["ConsumerAddress"];
                 /** Format: email */
                 email: string;
                 firstName: string;
                 lastName: string;
-                mailingAddress: components["schemas"]["ConsumerAddress"];
                 phone?: string;
             };
             documentIds: string[];
@@ -726,15 +731,19 @@ export interface components {
         ClaimedProductInput: {
             /** Format: uuid */
             campaignProductId: string;
-            dateCode: string;
-            flavor: string;
-            lotCode: string;
+            dateCode?: string;
+            flavor?: string;
+            /** @enum {string} */
+            identificationMode: "product_identifiers" | "purchase_evidence" | "unknown";
+            identifiers?: components["schemas"]["ProductIdentifier"][];
+            lotCode?: string;
             orderNumber?: string;
             /** @enum {string} */
             purchaseChannel: "amazon" | "tiktok" | "koi" | "retailer" | "gift" | "other";
             purchaseDate?: string;
+            purchaseEvidence?: components["schemas"]["PurchaseEvidence"];
             quantity: number;
-            shape: string;
+            shape?: string;
         };
         ConsumerAddress: {
             city: string;
@@ -781,19 +790,64 @@ export interface components {
             /** Format: uri */
             type: string;
         };
-        ProductCheckRequest: {
-            dateCode: string;
-            flavor: string;
-            lotCode: string;
-            shape: string;
+        ProductCheckIdentifiersInput: {
+            identifiers: components["schemas"]["ProductIdentifier"][];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            mode: "product_identifiers";
+            purchaseEvidence?: components["schemas"]["PurchaseEvidence"];
         };
+        ProductCheckLegacyInput: {
+            dateCode?: string;
+            flavor?: string;
+            lotCode?: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            mode: "legacy";
+            shape?: string;
+        };
+        ProductCheckPurchaseEvidenceInput: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            mode: "purchase_evidence";
+            purchaseEvidence: components["schemas"]["PurchaseEvidence"];
+        };
+        ProductCheckRequest: components["schemas"]["ProductCheckIdentifiersInput"] | components["schemas"]["ProductCheckPurchaseEvidenceInput"] | components["schemas"]["ProductCheckUnknownInput"] | components["schemas"]["ProductCheckLegacyInput"];
         ProductCheckResponse: {
             checkedCampaignVersion: number;
             /** @enum {string} */
             disclaimer: "This check is preliminary and is not a final eligibility decision.";
-            message: string;
+            /** @enum {string} */
+            identificationMode: "product_identifiers" | "purchase_evidence" | "unknown" | "legacy";
+            matchedVariantIds: string[];
+            /** @enum {string} */
+            messageKey: "product_check.potential_match" | "product_check.manual_review.ambiguous" | "product_check.manual_review.insufficient_signals" | "product_check.not_matched";
+            /** @enum {string} */
+            purchaseCorroboration?: "verified" | "partial" | "not_provided" | "conflict";
+            reasonCodes: string[];
             /** @enum {string} */
             result: "potential_match" | "not_matched" | "manual_review";
+            riskFlags?: string[];
+        };
+        ProductCheckUnknownInput: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            mode: "unknown";
+            note?: string;
+            purchaseEvidence?: components["schemas"]["PurchaseEvidence"];
+        };
+        ProductIdentifier: {
+            /** @enum {string} */
+            type: "sku" | "unit_upc" | "gtin14" | "model" | "style" | "lot_code" | "date_code";
+            value: string;
         };
         PublicCampaignProduct: {
             affectedLots: {
@@ -811,6 +865,19 @@ export interface components {
             shapes: string[];
             sku: string;
         };
+        PurchaseEvidence: {
+            amountPaidMinor?: number;
+            currency?: string;
+            lineItemSku?: string;
+            lineItemTitle?: string;
+            orderNumber?: string;
+            /** @enum {string} */
+            platform?: "amazon" | "tiktok" | "koi" | "retailer" | "gift" | "other";
+            purchaseDate?: string;
+            quantity?: number;
+            receiptDocumentIds?: string[];
+            sellerOrStore?: string;
+        };
         UploadTokenRequest: {
             /** @enum {string} */
             category: "product_photo" | "proof_of_purchase" | "incident_evidence";
@@ -824,8 +891,7 @@ export interface components {
             documentId: string;
             /** Format: date-time */
             expiresAt: string;
-            /** Format: uri */
-            uploadUrl: string;
+            pathname: string;
         };
     };
     responses: never;

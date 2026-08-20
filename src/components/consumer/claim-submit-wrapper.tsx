@@ -18,7 +18,7 @@ import {
   type DocumentCategory,
 } from '@/lib/claim-flow';
 import type { ProblemDetails } from '@/lib/api-client';
-import type { Campaign, Product, Remedy } from '@/types';
+import type { Campaign, CampaignEvidenceRequirement, Product, Remedy } from '@/types';
 
 interface Props {
   campaign: Campaign;
@@ -51,6 +51,21 @@ const DOCUMENT_CATEGORY_OPTIONS: Array<{ value: DocumentCategory; label: string 
   { value: 'product_photo', label: 'Product photo' },
   { value: 'incident_evidence', label: 'Incident evidence' },
 ];
+
+function formatDocumentCategory(category: DocumentCategory) {
+  return DOCUMENT_CATEGORY_OPTIONS.find((option) => option.value === category)?.label ?? category;
+}
+
+function describeEvidenceRule(rule: CampaignEvidenceRequirement) {
+  const minimum = rule.minimumFiles;
+  const maximum = rule.maximumFiles;
+  const requiredLabel = rule.required || minimum > 0 ? 'Required' : 'Optional';
+  return `${requiredLabel} - ${formatDocumentCategory(rule.category)} (${minimum}-${maximum} file${maximum === 1 ? '' : 's'})`;
+}
+
+function formatMimeTypes(mimeTypes: string[]) {
+  return mimeTypes.map((mimeType) => mimeType.replace('image/', '').replace('application/', '')).join(', ');
+}
 
 function buildDefaultForm(product: Product | undefined): ClaimFlowDraftState {
   return {
@@ -103,7 +118,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
   const [isBootstrapping, setIsBootstrapping] = useState(() => !claimFlowModule.resume(campaign.slug));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [selectedDocumentCategory, setSelectedDocumentCategory] = useState<DocumentCategory>('proof_of_purchase');
+  const evidenceRequirements = campaign.evidenceRequirements ?? [];
 
   useEffect(() => {
     if (session) return;
@@ -196,6 +211,19 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
     void bootstrapFreshDraft();
   };
 
+  const validateEvidenceRequirements = (documents: ClaimFlowSession['documents']): string | null => {
+    for (const rule of evidenceRequirements) {
+      const count = documents.filter((document) => document.category === rule.category).length;
+      if (count > rule.maximumFiles) {
+        return `Too many ${formatDocumentCategory(rule.category).toLowerCase()} files. Maximum allowed is ${rule.maximumFiles}.`;
+      }
+      if (count < rule.minimumFiles || (rule.required && count === 0)) {
+        return `Please upload ${rule.minimumFiles} ${formatDocumentCategory(rule.category).toLowerCase()} file${rule.minimumFiles === 1 ? '' : 's'} before submitting.`;
+      }
+    }
+    return null;
+  };
+
   const validateBeforeSubmit = (current: ClaimFlowSession): string | null => {
     const { form } = current;
     if (!current.remedyCode) return 'Please choose a resolution option first.';
@@ -212,6 +240,8 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
     if (!form.privacyAccepted || !form.accuracyAccepted) {
       return 'Please accept both required attestations before submission.';
     }
+    const evidenceError = validateEvidenceRequirements(current.documents);
+    if (evidenceError) return evidenceError;
     if (form.incidentAnswer !== 'no') {
       if (!form.incident.occurredDate && !form.incident.occurredDateUnknown) {
         return 'For incident claims, provide an incident date or mark it as unknown.';
@@ -223,15 +253,25 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
     return null;
   };
 
-  const onUploadFiles = async (files: FileList | null) => {
+  const onUploadFiles = async (category: DocumentCategory, files: FileList | null) => {
     if (!session || !files?.length) return;
+    const selectedRule = evidenceRequirements.find((rule) => rule.category === category);
+    if (selectedRule) {
+      const existingCount = session.documents.filter((document) => document.category === category).length;
+      if (existingCount + files.length > selectedRule.maximumFiles) {
+        setValidationMessage(
+          `You can upload at most ${selectedRule.maximumFiles} ${formatDocumentCategory(category).toLowerCase()} file${selectedRule.maximumFiles === 1 ? '' : 's'}.`,
+        );
+        return;
+      }
+    }
     setIsUploading(true);
     setValidationMessage(null);
     setProblem(null);
 
     let nextSession = session;
     for (const file of Array.from(files)) {
-      const result = await claimFlowModule.addDocument(nextSession, file, selectedDocumentCategory);
+      const result = await claimFlowModule.addDocument(nextSession, file, category);
       if (!result.ok) {
         setProblem(result.error);
         setIsUploading(false);
@@ -541,25 +581,54 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
       </div>
 
       <div className="space-y-3 rounded-lg border p-4">
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="document-category">Evidence type</Label>
-            <select
-              id="document-category"
-              value={selectedDocumentCategory}
-              onChange={(event) => setSelectedDocumentCategory(event.target.value as DocumentCategory)}
-              className="h-10 rounded-md border bg-background px-3 text-sm"
-            >
-              {DOCUMENT_CATEGORY_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-          </div>
-          <label className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm cursor-pointer">
-            <Upload className="h-4 w-4" />
-            {isUploading ? 'Requesting upload tokens...' : 'Add evidence file'}
-            <input type="file" className="hidden" multiple onChange={(event) => void onUploadFiles(event.target.files)} />
-          </label>
+        <div className="space-y-3 rounded-lg border border-dashed p-4">
+          {(evidenceRequirements.length
+            ? evidenceRequirements
+            : DOCUMENT_CATEGORY_OPTIONS.map((option) => ({
+                category: option.value,
+                required: false,
+                minimumFiles: 0,
+                maximumFiles: 5,
+                allowedMimeTypes: [],
+                maximumFileSizeBytes: 0,
+                instructions: '',
+              } satisfies CampaignEvidenceRequirement))).map((rule) => {
+            const uploadedCount = session.documents.filter((document) => document.category === rule.category).length;
+            const limitReached = uploadedCount >= rule.maximumFiles;
+            return (
+              <div key={rule.category} className="rounded-md border bg-background/60 p-3">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="space-y-1 text-sm">
+                    <p className="font-medium text-text-primary">{formatDocumentCategory(rule.category)}</p>
+                    <p className="text-xs text-text-tertiary">
+                      {rule.required || rule.minimumFiles > 0 ? 'Required' : 'Optional'} | Uploaded {uploadedCount} of {rule.maximumFiles}
+                    </p>
+                    {rule.instructions ? <p className="text-xs text-text-tertiary">{rule.instructions}</p> : null}
+                    {rule.allowedMimeTypes.length ? (
+                      <p className="text-xs text-text-tertiary">Accepted: {formatMimeTypes(rule.allowedMimeTypes)}</p>
+                    ) : null}
+                  </div>
+                  <label
+                    className={`inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white ${limitReached || isUploading ? 'cursor-not-allowed bg-muted' : 'cursor-pointer bg-blade-verification'}`}
+                  >
+                    <Upload className="h-4 w-4" />
+                    {isUploading ? 'Uploading...' : limitReached ? 'Limit reached' : `Add ${formatDocumentCategory(rule.category)}`}
+                    <input
+                      type="file"
+                      className="hidden"
+                      multiple
+                      accept={rule.allowedMimeTypes.length ? rule.allowedMimeTypes.join(',') : undefined}
+                      disabled={limitReached || isUploading}
+                      onChange={(event) => {
+                        void onUploadFiles(rule.category, event.target.files);
+                        event.currentTarget.value = '';
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {session.documents.length > 0 ? (
@@ -568,7 +637,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
               <div key={document.documentId} className="flex items-center justify-between rounded border px-3 py-2 text-sm">
                 <div>
                   <p className="font-medium text-text-primary">{document.fileName}</p>
-                  <p className="text-xs text-text-tertiary">{document.category} | {document.status} | {document.documentId}</p>
+                  <p className="text-xs text-text-tertiary">{formatDocumentCategory(document.category)} | {document.status} | {document.documentId}</p>
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => setSession(claimFlowModule.removeDocument(session, document.documentId))}>
                   <X className="h-4 w-4" />
@@ -578,6 +647,22 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
           </div>
         ) : (
           <p className="text-sm text-text-secondary">No evidence receipts attached yet.</p>
+        )}
+      </div>
+
+      <div className="rounded-lg border p-4 text-sm text-text-secondary">
+        <p className="font-medium text-text-primary">Evidence requirements</p>
+        {evidenceRequirements.length ? (
+          <div className="mt-2 space-y-2 text-xs text-text-tertiary">
+            {evidenceRequirements.map((rule) => (
+              <div key={rule.category}>
+                <p className="font-medium text-text-primary">{describeEvidenceRule(rule)}</p>
+                <p>{rule.instructions}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-1 text-xs text-text-tertiary">No campaign-specific evidence requirements were returned.</p>
         )}
       </div>
 

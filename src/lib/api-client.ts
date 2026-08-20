@@ -45,12 +45,12 @@ const ONLINE_API_BASE = 'https://koi-recall-backend.vercel.app';
 
 const configuredApi = (process.env.NEXT_PUBLIC_API_URL || '').trim().replace(/\/+$/, '');
 
-// Primary base: explicit NEXT_PUBLIC_API_URL when set, otherwise the local backend.
-const PRIMARY_API_BASE = configuredApi || LOCAL_API_BASE;
+// Default to the deployed API. Localhost is opt-in via NEXT_PUBLIC_API_URL so
+// production-like verification does not silently start with an unavailable dev API.
+const PRIMARY_API_BASE = configuredApi || ONLINE_API_BASE;
 
-// When the primary points at a local backend that isn't running, transparently
-// fall back to the deployed API so the app keeps working. Only localhost URLs
-// get an online fallback — an explicitly configured remote URL is used as-is.
+// When an explicit localhost backend is selected, transparently fall back to the
+// deployed API if the local server is unreachable.
 const isLocalPrimary = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(PRIMARY_API_BASE);
 const API_BASES: string[] =
   isLocalPrimary && PRIMARY_API_BASE !== ONLINE_API_BASE

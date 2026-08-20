@@ -1,13 +1,10 @@
-// ============================================================
-// KOI — Shared Claims Store (localStorage + Backend API)
-// Bridges KOI-web ↔ KOI-admin ↔ KOI-backend
+﻿// ============================================================
+// KOI 鈥?Shared Claims Store (localStorage + Backend API)
+// Bridges KOI-web 鈫?KOI-admin 鈫?KOI-backend
 //
-// submitClaim() writes to both:
-//   1. localStorage (instant, shared with admin dashboard)
-//   2. Backend Neon DB (POST /v1/recall-campaigns/{slug}/claims)
+// submitClaim() writes to localStorage for legacy dashboard/lookup views.
+// The current claim form submits through claim-flow.ts after creating a draft.
 // ============================================================
-
-import { submitClaim as apiSubmitClaim } from '@/lib/api-client';
 
 export type ClaimStatus =
   | 'submitted' | 'under_review' | 'verified'
@@ -43,7 +40,7 @@ export interface SharedClaim {
 
 const STORAGE_KEY = 'koi_shared_claims';
 
-// ── Helpers ────────────────────────────────────────────
+// 鈹€鈹€ Helpers 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 function readAll(): SharedClaim[] {
   if (typeof window === 'undefined') return [];
@@ -63,7 +60,7 @@ function generateRef(): string {
   return `KOI-${String(seq).padStart(4, '0')}`;
 }
 
-// ── Public API ──────────────────────────────────────────
+// 鈹€鈹€ Public API 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 /** Get all claims */
 export function getAllClaims(): SharedClaim[] {
@@ -126,66 +123,6 @@ export async function submitClaim(data: {
   claims.push(claim);
   writeAll(claims);
 
-  // Fire-and-forget: also submit to backend API.
-  // This legacy bridge uses placeholder values to satisfy the current contract.
-  apiSubmitClaim(data.campaignSlug, {
-    draftId: '',
-    draftToken: '',
-    consumer: {
-      firstName: data.consumerName.split(' ').slice(0, 1).join('') || 'Consumer',
-      lastName: data.consumerName.split(' ').slice(1).join(' ') || 'Unknown',
-      email: data.consumerEmail,
-      mailingAddress: {
-        line1: 'Unknown',
-        city: 'Unknown',
-        state: 'Unknown',
-        postalCode: '00000',
-        countryCode: 'US',
-      },
-      phone: data.consumerPhone,
-    },
-    products: [
-      {
-        campaignProductId: data.productId ?? data.campaignId,
-        quantity: 1,
-        purchaseChannel: 'other',
-        lotCode: data.lotCode || '',
-        dateCode: data.dateCode || '',
-        flavor: data.flavor || '',
-        shape: data.shape || '',
-      },
-    ],
-    remedyCode: data.remedyId,
-    documentIds: [],
-    locale: 'en-US',
-    incidentAnswer: 'no',
-    consents: [
-      {
-        type: 'privacy_notice',
-        textVersion: 'v1',
-        accepted: true,
-      },
-      {
-        type: 'information_accuracy',
-        textVersion: 'v1',
-        accepted: true,
-      },
-    ],
-  })
-    .then((result) => {
-      if (result.ok) {
-        // Link backend case reference back to localStorage
-        const allClaims = readAll();
-        const idx = allClaims.findIndex((c) => c.id === claim.id);
-        if (idx !== -1) {
-          allClaims[idx].caseRef = result.data.caseReference;
-          writeAll(allClaims);
-        }
-      }
-    })
-    .catch(() => {
-      // Graceful degradation — claim is already in localStorage
-    });
 
   return claim;
 }

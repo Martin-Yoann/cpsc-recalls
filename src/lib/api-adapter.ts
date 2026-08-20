@@ -43,6 +43,15 @@ function campaignViewToCampaign(view: CampaignView): Campaign {
     images: [],
     affectedLots: lots.map((l) => l.lotCode).filter(Boolean),
     dateCodes,
+    evidenceRequirements: view.evidenceRequirements.map((requirement) => ({
+      category: requirement.category,
+      required: requirement.required,
+      minimumFiles: requirement.minimumFiles,
+      maximumFiles: requirement.maximumFiles,
+      allowedMimeTypes: requirement.allowedMimeTypes,
+      maximumFileSizeBytes: requirement.maximumFileSizeBytes,
+      instructions: requirement.instructions,
+    })),
     affectedProducts: view.products.map((p) => ({
       id: p.productId,
       name: p.name,
