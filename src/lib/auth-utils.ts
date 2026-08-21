@@ -9,11 +9,12 @@ import type { User, RegisterData } from '@/types/auth';
 
 const STORAGE_KEY = 'koi_auth_user';
 
-const LOCAL_API_BASE = 'http://localhost:3002';
 const ONLINE_API_BASE = 'https://koi-recall-backend.vercel.app';
 
 const configuredApi = (process.env.NEXT_PUBLIC_API_URL || '').trim().replace(/\/+$/, '');
-const PRIMARY_API_BASE = configuredApi || LOCAL_API_BASE;
+// Keep authentication on the same production-safe default as the business API.
+// A local backend is still available by explicitly setting NEXT_PUBLIC_API_URL.
+const PRIMARY_API_BASE = configuredApi || ONLINE_API_BASE;
 const isLocalPrimary = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(PRIMARY_API_BASE);
 // Same transparent fallback as api-client.ts: local first, then online when the
 // local backend isn't running (client-side auth calls hit this too).
@@ -85,7 +86,10 @@ type AuthResult<T> = { ok: true; data: T } | { ok: false; status: number; detail
 async function authFetch<T>(path: string, init: RequestInit): Promise<AuthResult<T>> {
   for (const base of API_BASES) {
     try {
-      const res = await fetch(`${base}${path}`, init);
+      const res = await fetch(`${base}${path}`, {
+        ...init,
+        signal: init.signal ?? AbortSignal.timeout(10_000),
+      });
       if (res.ok) return { ok: true, data: (await res.json()) as T };
       const errBody = await res.json().catch(() => null);
       return { ok: false, status: res.status, detail: errBody?.detail ?? `Request failed (${res.status})` };

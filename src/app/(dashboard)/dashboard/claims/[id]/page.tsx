@@ -4,7 +4,7 @@
 // KOI Recall Platform — Claim Detail (Dashboard)
 // ============================================================
 
-import { use } from 'react';
+import { use, useEffect, useState } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -22,7 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { useAuth } from '@/lib/auth-context';
-import { getClaimByNumber } from '@/lib/shared-claims-store';
+import { getConsumerClaim, type ConsumerClaim } from '@/lib/api-client';
 import { ClaimStatus, RemedyType } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -59,11 +59,27 @@ export default function ClaimDetailPage({
 }) {
   const { id } = use(params);
   const { user } = useAuth();
-  const claim = getClaimByNumber(id);
+  const [claim, setClaim] = useState<ConsumerClaim | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
-  if (!claim) notFound();
-  // Verify ownership
-  if (user && claim.consumerEmail !== user.email) notFound();
+  useEffect(() => {
+    let cancelled = false;
+    if (!user?.token) {
+      setLoaded(true);
+      return;
+    }
+    void getConsumerClaim(id, user.token).then((response) => {
+      if (cancelled) return;
+      if (response.ok) setClaim(response.data.claim);
+      setLoaded(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [id, user?.token]);
+
+  if (loaded && !claim) notFound();
+  if (!claim) return null;
 
   const currentStatusIdx = STATUS_ORDER.indexOf(claim.status as ClaimStatus);
   const isRejected = claim.status === 'rejected';

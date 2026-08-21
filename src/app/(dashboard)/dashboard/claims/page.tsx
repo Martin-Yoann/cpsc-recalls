@@ -5,15 +5,31 @@
 // ============================================================
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { ClipboardList, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { useAuth } from '@/lib/auth-context';
-import { getClaimsByEmail } from '@/lib/shared-claims-store';
+import { listConsumerClaims, type ConsumerClaim } from '@/lib/api-client';
 
 export default function MyClaimsPage() {
   const { user } = useAuth();
-  const claims = user ? getClaimsByEmail(user.email) : [];
+  const [claims, setClaims] = useState<ConsumerClaim[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!user?.token) {
+      setClaims([]);
+      return;
+    }
+    void listConsumerClaims(user.token).then((response) => {
+      if (!cancelled && response.ok) setClaims(response.data.claims);
+      if (!cancelled && !response.ok) setClaims([]);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.token]);
 
   return (
     <div className="space-y-6">
@@ -39,7 +55,7 @@ export default function MyClaimsPage() {
                       <span className="font-mono text-sm font-bold text-text-primary group-hover:text-brand-teal transition-colors">
                         {claim.claimNumber}
                       </span>
-                      <StatusBadge variant={claim.status as 'submitted' | 'under_review' | 'verified' | 'remedy_issued' | 'resolved' | 'rejected'} />
+                      <StatusBadge variant={claim.status} />
                     </div>
                     <p className="text-sm text-text-secondary">{claim.campaignTitle || 'Unknown Campaign'}</p>
                     <div className="flex items-center gap-4 text-xs text-text-tertiary">

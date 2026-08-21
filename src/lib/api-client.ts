@@ -37,6 +37,32 @@ export type ProductCheckOk = {
 
 export type CampaignView = GetCampaignOk['campaign'];
 export type ProblemDetails = components['schemas']['ProblemDetails'];
+export type ConsumerClaim = {
+  id: string;
+  claimNumber: string;
+  caseRef: string;
+  campaignId: string;
+  campaignTitle: string;
+  campaignSlug: string;
+  consumerName: string;
+  consumerEmail: string;
+  consumerPhone: string;
+  productName: string;
+  shape?: string;
+  flavor?: string;
+  lotCode?: string;
+  dateCode?: string;
+  remedyId: string;
+  remedyTitle: string;
+  remedyType: string;
+  refundAmount?: number;
+  status: 'submitted' | 'under_review' | 'verified' | 'remedy_issued' | 'resolved' | 'rejected';
+  evidenceCount: number;
+  submittedAt: string;
+  updatedAt: string;
+  resolutionDate?: string;
+};
+
 
 // ── Runtime ──
 
@@ -171,6 +197,36 @@ export async function submitClaim(
     },
   );
 }
+
+export async function listConsumerClaims(token: string): Promise<ApiResult<{ claims: ConsumerClaim[] }>> {
+  return fetchApi<{ claims: ConsumerClaim[] }>('/v1/consumer-auth/claims', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function getConsumerClaim(
+  claimNumber: string,
+  token: string,
+): Promise<ApiResult<{ claim: ConsumerClaim }>> {
+  return fetchApi<{ claim: ConsumerClaim }>(`/v1/consumer-auth/claims/${encodeURIComponent(claimNumber)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function lookupConsumerClaim(
+  claimNumber: string,
+  phone: string,
+): Promise<ApiResult<{
+  claim: ConsumerClaim;
+  campaignTitle: string;
+  productName: string;
+  remedyTitle: string;
+  remedyType: string;
+  refundAmount?: number;
+}>> {
+  return fetchApi(`/v1/consumer-auth/lookup/${encodeURIComponent(claimNumber)}?phone=${encodeURIComponent(phone)}`);
+}
+
 
 /** POST /v1/recall-campaigns/{slug}/claim-drafts — Create anonymous claim draft */
 export async function submitClaimDraft(

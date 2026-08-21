@@ -1,47 +1,38 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { Search, X } from 'lucide-react';
 import { LookupForm } from '@/components/lookup/lookup-form';
 import { LookupResult } from '@/components/lookup/lookup-result';
-import { getClaimByNumber, seedIfEmpty } from '@/lib/shared-claims-store';
+import { lookupConsumerClaim, type ConsumerClaim } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 
 export default function LookupPage() {
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<{
+    claim: ConsumerClaim;
+    campaignTitle: string;
+    productName: string;
+    remedyTitle: string;
+    remedyType: string;
+    refundAmount?: number;
+  } | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Seed demo claims (if none exist) so status lookup has data to match against.
-  useEffect(() => {
-    seedIfEmpty([
-      { id: 'cmp_001', title: 'Music Lollipop Safety Recall', slug: 'music-lollipop-demo-2026' },
-    ]);
-  }, []);
-
-  const handleSearch = (claimNumber: string, phone: string) => {
+  const handleSearch = async (claimNumber: string, phone: string) => {
     setIsLoading(true);
     setNotFound(false);
     setResult(null);
-    setTimeout(() => {
-      const claim = getClaimByNumber(claimNumber);
-      if (claim && claim.consumerPhone === phone) {
-        setResult({
-          claim,
-          campaignTitle: claim.campaignTitle,
-          productName: claim.productName,
-          remedyTitle: claim.remedyTitle,
-          remedyType: claim.remedyType,
-          refundAmount: claim.refundAmount,
-        });
-        setDrawerOpen(true);
-      } else {
-        setNotFound(true);
-      }
-      setIsLoading(false);
-    }, 800);
+    const response = await lookupConsumerClaim(claimNumber, phone);
+    if (response.ok) {
+      setResult(response.data);
+      setDrawerOpen(true);
+    } else {
+      setNotFound(response.status === 404);
+    }
+    setIsLoading(false);
   };
 
   const closeDrawer = () => setDrawerOpen(false);

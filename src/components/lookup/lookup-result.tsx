@@ -2,12 +2,12 @@
 
 import { Check, Clock, Circle } from 'lucide-react';
 import { ClaimStatus } from '@/types';
-import type { Claim } from '@/types';
+import type { ConsumerClaim } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 interface LookupResultProps {
-  claim: Claim & { consumerPhone?: string };
+  claim: ConsumerClaim;
   campaignTitle?: string;
   productName?: string;
   remedyTitle?: string;
@@ -41,7 +41,7 @@ const REMEDY_LABELS: Record<string, string> = {
 export function LookupResult({
   claim, campaignTitle, productName, remedyTitle, remedyType, refundAmount,
 }: LookupResultProps) {
-  const idx = ORDER.indexOf(claim.status);
+  const idx = ORDER.indexOf(claim.status as ClaimStatus);
   const meta = STATUS_META[claim.status] || STATUS_META.submitted;
 
   return (

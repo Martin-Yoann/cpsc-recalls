@@ -18,10 +18,11 @@ import {
   Store,
   TrendingUp,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { useAuth } from '@/lib/auth-context';
-import { getClaimsByEmail } from '@/lib/shared-claims-store';
+import { listConsumerClaims, type ConsumerClaim } from '@/lib/api-client';
 import { getOrdersByUserId } from '@/data/mock-orders';
 import { cn } from '@/lib/utils';
 
@@ -53,8 +54,23 @@ const STATUS_BAR_COLORS: Record<ClaimStatusKey, string> = {
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const claims = user ? getClaimsByEmail(user.email) : [];
+  const [claims, setClaims] = useState<ConsumerClaim[]>([]);
   const orders = user ? getOrdersByUserId(user.id) : [];
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!user?.token) {
+      setClaims([]);
+      return;
+    }
+    void listConsumerClaims(user.token).then((response) => {
+      if (!cancelled && response.ok) setClaims(response.data.claims);
+      if (!cancelled && !response.ok) setClaims([]);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.token]);
 
   const activeClaims = claims.filter((c) =>
     ['submitted', 'under_review', 'verified', 'remedy_issued'].includes(c.status)
@@ -227,7 +243,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
-                    <StatusBadge variant={claim.status as ClaimStatusKey} />
+                    <StatusBadge variant={claim.status} />
                     <span className="text-xs text-text-tertiary hidden sm:block">
                       {new Date(claim.submittedAt).toLocaleDateString('en-US')}
                     </span>
