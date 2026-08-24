@@ -14,40 +14,43 @@ import { listConsumerClaims, type ConsumerClaim } from '@/lib/api-client';
 
 export default function MyClaimsPage() {
   const { user } = useAuth();
-  const [claims, setClaims] = useState<ConsumerClaim[]>([]);
+  const [claims, setClaims] = useState<ConsumerClaim[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     if (!user?.token) {
-      setClaims([]);
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
     void listConsumerClaims(user.token).then((response) => {
-      if (!cancelled && response.ok) setClaims(response.data.claims);
-      if (!cancelled && !response.ok) setClaims([]);
+      if (cancelled) return;
+      setClaims(response.ok ? response.data.claims : []);
     });
     return () => {
       cancelled = true;
     };
   }, [user?.token]);
 
+  const claimsList = user?.token ? (claims ?? []) : [];
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-text-primary">My Claims</h1>
         <p className="text-sm text-text-secondary mt-1">
-          {claims.length} claim{claims.length !== 1 ? 's' : ''} total
+          {claimsList.length} claim{claimsList.length !== 1 ? 's' : ''} total
         </p>
       </div>
 
-      {claims.length > 0 ? (
+      {claimsList.length > 0 ? (
         <div className="space-y-3">
-          {claims.map((claim) => {
+          {claimsList.map((claim) => {
             return (
               <Link
                 key={claim.id}
                 href={`/dashboard/claims/${claim.claimNumber}`}
-                className="block rounded-xl border bg-surface-elevated p-5 hover:shadow-sm hover:border-brand-teal/30 transition-all group"
+                className="block rounded-md border bg-surface-elevated p-5 transition-all group hover:border-brand-teal/30 hover:shadow-sm"
               >
                 <div className="flex items-start justify-between">
                   <div className="space-y-2 min-w-0">
@@ -73,7 +76,7 @@ export default function MyClaimsPage() {
           })}
         </div>
       ) : (
-        <div className="rounded-xl border bg-surface-elevated p-10 text-center">
+        <div className="rounded-md border bg-surface-elevated p-10 text-center">
           <ClipboardList className="h-10 w-10 mx-auto text-text-tertiary mb-3" />
           <h3 className="text-base font-semibold text-text-primary mb-1">No Claims Found</h3>
           <p className="text-sm text-text-secondary mb-4">You haven&apos;t submitted any recall claims yet.</p>

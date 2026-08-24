@@ -23,7 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { useAuth } from '@/lib/auth-context';
 import { getConsumerClaim, type ConsumerClaim } from '@/lib/api-client';
-import { ClaimStatus, RemedyType } from '@/types';
+import { ClaimStatus } from '@/types';
 import { cn } from '@/lib/utils';
 
 const PIPELINE_STAGES = [
@@ -36,22 +36,6 @@ const PIPELINE_STAGES = [
 
 const STATUS_ORDER = [ClaimStatus.SUBMITTED, ClaimStatus.UNDER_REVIEW, ClaimStatus.VERIFIED, ClaimStatus.REMEDY_ISSUED, ClaimStatus.RESOLVED];
 
-const REMEDY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  [RemedyType.REFUND]: Wallet,
-  [RemedyType.REPLACEMENT]: Package,
-  [RemedyType.REPAIR]: Package,
-  [RemedyType.VOUCHER]: Package,
-  [RemedyType.DISPOSAL_INSTRUCTION]: AlertTriangle,
-};
-
-const REMEDY_DESCRIPTIONS: Record<string, string> = {
-  refund: 'Refund',
-  replacement: 'Replacement',
-  repair: 'Repair',
-  disposal_instruction: 'Disposal Instructions',
-  voucher: 'Store Credit',
-};
-
 export default function ClaimDetailPage({
   params,
 }: {
@@ -59,26 +43,26 @@ export default function ClaimDetailPage({
 }) {
   const { id } = use(params);
   const { user } = useAuth();
-  const [claim, setClaim] = useState<ConsumerClaim | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  const [claim, setClaim] = useState<ConsumerClaim | null | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
     if (!user?.token) {
-      setLoaded(true);
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
     void getConsumerClaim(id, user.token).then((response) => {
       if (cancelled) return;
-      if (response.ok) setClaim(response.data.claim);
-      setLoaded(true);
+      setClaim(response.ok ? response.data.claim : null);
     });
     return () => {
       cancelled = true;
     };
   }, [id, user?.token]);
 
-  if (loaded && !claim) notFound();
+  if (!user?.token || claim === undefined) return null;
+  if (!claim) notFound();
   if (!claim) return null;
 
   const currentStatusIdx = STATUS_ORDER.indexOf(claim.status as ClaimStatus);
@@ -229,7 +213,7 @@ export default function ClaimDetailPage({
 
       {/* Estimated Resolution */}
       {!isRejected && claim.status !== 'resolved' && (
-        <div className="rounded-xl bg-brand-teal/5 border border-brand-teal/20 p-5 flex items-center gap-4">
+        <div className="rounded-md border border-brand-teal/20 bg-brand-teal/5 p-5 flex items-center gap-4">
           <Clock className="h-6 w-6 text-brand-teal shrink-0" />
           <div>
             <p className="text-sm font-semibold text-text-primary">Estimated Completion</p>

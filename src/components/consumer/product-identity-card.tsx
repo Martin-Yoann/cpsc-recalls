@@ -3,7 +3,7 @@
 // Shows shapes, flavors, lots, and package identifiers
 // ============================================================
 
-import { Barcode, Calendar, Factory, Store, Package, Candy, Sparkles } from 'lucide-react';
+import { Barcode, Calendar, Store, Package, Candy, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { Product } from '@/types';
 
@@ -20,6 +20,8 @@ export function ProductIdentityCard({ product, affectedLots, dateCodes }: Produc
       <div className="px-5 sm:px-6 py-4 sm:py-5 border-b bg-surface-secondary/50">
         <div className="flex items-start gap-4">
           {product.imageUrl && (
+            // Product image URLs may be supplied by the API and are not restricted to configured Next Image hosts.
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={product.imageUrl}
               alt={product.name}

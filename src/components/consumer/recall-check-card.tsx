@@ -9,14 +9,23 @@
 
 import { useState } from 'react';
 import { ShieldCheck, XCircle, Loader2, AlertTriangle, Info } from 'lucide-react';
+import Select from 'react-tailwindcss-select';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { checkProduct } from '@/lib/api-client';
 import type { Campaign, Product } from '@/types';
 
 interface RecallCheckCardProps { campaign: Campaign; product: Product; }
 
 type CheckResult = 'potential_match' | 'not_matched' | 'manual_review' | null;
+type SelectOption = { value: string; label: string };
+
+const selectClassNames = {
+  menuButton: () => 'flex h-10 w-full cursor-pointer items-center justify-between rounded-md border border-[#dcdfe6] bg-white px-3 text-sm text-gray-900 shadow-none transition-colors hover:border-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20',
+  menu: 'z-20 mt-1 overflow-hidden rounded-md border border-[#e4e7ed] bg-white py-1 shadow-[0_4px_12px_rgba(0,0,0,0.12)]',
+  list: 'max-h-52 overflow-y-auto py-1',
+  listItem: ({ isSelected }: { isSelected?: boolean } = {}) => `cursor-pointer px-3 py-2 text-sm text-[#606266] transition-colors hover:bg-[#ecf5ff] hover:text-[#409eff] ${isSelected ? 'bg-[#ecf5ff] text-[#409eff]' : ''}`,
+  ChevronIcon: ({ open }: { open?: boolean } = {}) => `h-4 w-4 text-[#c0c4cc] transition-transform ${open ? 'rotate-180' : ''}`,
+};
 
 export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
   const [shape, setShape] = useState('');
@@ -32,6 +41,12 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
   const flavors = product?.flavors || [];
   const lots = campaign?.affectedLots || [];
   const dates = campaign?.dateCodes || [];
+  const optionFor = (value: string, options: string[]): SelectOption | null => value ? { value, label: options.find((option) => option === value) ?? value } : null;
+  const optionsFor = (options: string[]): SelectOption[] => options.map((option) => ({ value: option, label: option }));
+  const selectValue = (setter: (value: string) => void) => (value: SelectOption | SelectOption[] | null) => {
+    setter(Array.isArray(value) ? value[0]?.value ?? '' : value?.value ?? '');
+    setError('');
+  };
 
   const handleCheck = async () => {
     if (!shape && !flavor && !lotCode && !dateCode) {
@@ -111,20 +126,12 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
             <Button variant="outline" size="sm" onClick={handleCheck}>Retry</Button>
           </div>
         ) : (
-          <div className="space-y-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {/* Candy Shape */}
             {shapes.length > 0 && (
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold">Candy Shape</p>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {shapes.map((s) => (
-                    <button key={s} type="button" onClick={() => { setShape(shape === s ? '' : s); setError(''); }}
-                      className={cn('py-2.5 rounded-lg border text-sm font-semibold transition-all cursor-pointer',
-                        shape === s ? 'bg-blade-verification text-white border-blade-verification' : 'bg-surface-secondary border-border text-text-primary hover:border-blade-verification/30 hover:bg-blade-verification-light')}>
-                      {s}
-                    </button>
-                  ))}
-                </div>
+                <Select value={optionFor(shape, shapes)} onChange={selectValue(setShape)} options={optionsFor(shapes)} placeholder="Select Shape" primaryColor="blue" isSearchable={false} isClearable={false} classNames={selectClassNames} />
               </div>
             )}
 
@@ -132,15 +139,7 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
             {flavors.length > 0 && (
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold">Flavor</p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {flavors.map((f) => (
-                    <button key={f} type="button" onClick={() => { setFlavor(flavor === f ? '' : f); setError(''); }}
-                      className={cn('py-2.5 rounded-lg border text-sm font-semibold transition-all cursor-pointer',
-                        flavor === f ? 'bg-blade-verification text-white border-blade-verification' : 'bg-surface-secondary border-border text-text-primary hover:border-blade-verification/30 hover:bg-blade-verification-light')}>
-                      {f}
-                    </button>
-                  ))}
-                </div>
+                <Select value={optionFor(flavor, flavors)} onChange={selectValue(setFlavor)} options={optionsFor(flavors)} placeholder="Select Flavor" primaryColor="blue" isSearchable={false} isClearable={false} classNames={selectClassNames} />
               </div>
             )}
 
@@ -148,15 +147,7 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
             {lots.length > 0 && (
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold">Affected Lot Code</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {lots.map((lot) => (
-                    <button key={lot} type="button" onClick={() => { setLotCode(lotCode === lot ? '' : lot); setError(''); }}
-                      className={cn('px-3 py-2 rounded-lg border text-sm font-mono font-semibold transition-all cursor-pointer',
-                        lotCode === lot ? 'bg-blade-verification text-white border-blade-verification' : 'bg-surface-secondary border-border text-text-primary hover:border-blade-verification/30 hover:bg-blade-verification-light')}>
-                      {lot}
-                    </button>
-                  ))}
-                </div>
+                <Select value={optionFor(lotCode, lots)} onChange={selectValue(setLotCode)} options={optionsFor(lots)} placeholder="Select Lot Code" primaryColor="blue" isSearchable={false} isClearable={false} classNames={selectClassNames} />
               </div>
             )}
 
@@ -164,30 +155,23 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
             {dates.length > 0 && (
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold">Date Code</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {dates.map((d) => (
-                    <button key={d} type="button" onClick={() => { setDateCode(dateCode === d ? '' : d); setError(''); }}
-                      className={cn('px-3 py-2 rounded-lg border text-sm font-mono font-semibold transition-all cursor-pointer',
-                        dateCode === d ? 'bg-blade-verification text-white border-blade-verification' : 'bg-surface-secondary border-border text-text-primary hover:border-blade-verification/30 hover:bg-blade-verification-light')}>
-                      {d}
-                    </button>
-                  ))}
-                </div>
+                <Select value={optionFor(dateCode, dates)} onChange={selectValue(setDateCode)} options={optionsFor(dates)} placeholder="Select Date Code" primaryColor="blue" isSearchable={false} isClearable={false} classNames={selectClassNames} />
               </div>
             )}
 
             {/* Hint */}
-            <div className="flex items-start gap-2 rounded-lg bg-surface-secondary border p-3">
+            <div className="flex items-start gap-2 rounded-lg bg-surface-secondary border p-3 sm:col-span-2">
               <Info className="h-4 w-4 text-text-tertiary shrink-0 mt-0.5" />
               <p className="text-xs text-text-tertiary leading-relaxed">
                 Select the shape, flavor, lot code, and date code printed on your package. We&apos;ll check them against this recall scope.
               </p>
             </div>
 
-            {error && <p className="text-xs text-destructive">{error}</p>}
+            {error && <p className="text-xs text-destructive sm:col-span-2">{error}</p>}
 
             <Button onClick={handleCheck} disabled={isChecking}
-              className="w-full h-10 bg-blade-verification hover:bg-blade-verification-dark text-white font-semibold cursor-pointer btn-lift btn-press disabled:opacity-50">
+              className="h-10 w-full font-semibold cursor-pointer btn-lift btn-press sm:col-span-2"
+              style={{ backgroundColor: isChecking ? '#a0cfff' : '#409eff', borderColor: isChecking ? '#a0cfff' : '#409eff', color: '#fff', opacity: 1 }}>
               {isChecking ? <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Checking...</> : 'Check My Product'}
             </Button>
           </div>

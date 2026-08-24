@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useForm } from 'react-hook-form';
+import { useForm, type UseFormRegisterReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, X, Search, Shield } from 'lucide-react';
@@ -37,11 +36,11 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 // ═══════════════════════════════════════════════════════════════
 function Field({ label, id, type = 'text', placeholder, error, register, autoComplete }: {
   label: string; id: string; type?: string; placeholder?: string;
-  error?: string; register: any; autoComplete?: string;
+  error?: string; register: UseFormRegisterReturn; autoComplete?: string;
 }) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#003527' }}>
+      <label htmlFor={id} className="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-text-primary">
         {label}
       </label>
       <input
@@ -49,11 +48,10 @@ function Field({ label, id, type = 'text', placeholder, error, register, autoCom
         type={type}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        className="w-full h-10 px-3 rounded-lg text-sm border-0 outline-none transition-colors"
-        style={{ background: 'rgba(0,53,39,0.04)', color: '#131b2e' }}
+        className="h-10 w-full rounded-md border border-input bg-surface-secondary px-3 text-sm text-text-primary outline-none transition-colors placeholder:text-text-tertiary focus:border-ring focus:ring-2 focus:ring-ring/20"
         {...register}
       />
-      {error && <p className="text-xs" style={{ color: '#ba1a1a' }}>{error}</p>}
+      {error && <p className="text-xs text-status-rejected">{error}</p>}
     </div>
   );
 }
@@ -63,10 +61,7 @@ export function AuthDrawer() {
   const { authDrawerOpen, authDrawerMode, closeAuthDrawer, openAuthDrawer, login, register } = useAuth();
   const [showPw, setShowPw] = useState(false);
   const [serverError, setServerError] = useState('');
-  const [visible, setVisible] = useState(false);
-
-  // Stagger entrance — trigger after mount
-  useEffect(() => { if (authDrawerOpen) { const t = setTimeout(() => setVisible(true), 50); return () => clearTimeout(t); } else { setVisible(false); } }, [authDrawerOpen]);
+  const visible = authDrawerOpen;
 
   // Sign In form
   const signInForm = useForm<LoginFormData>({ resolver: zodResolver(loginSchema) });
@@ -119,51 +114,48 @@ export function AuthDrawer() {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-50 transition-opacity duration-300"
-        style={{ background: 'rgba(0,0,0,0.25)' }}
+        className="fixed inset-0 z-50 bg-black/40 transition-opacity duration-300"
         onClick={closeAuthDrawer}
       />
 
       {/* Drawer panel */}
       <div
         className={cn(
-          'fixed top-0 right-0 z-50 h-full w-full sm:max-w-[460px] overflow-y-auto',
+          'fixed top-0 right-0 z-50 h-full w-full overflow-y-auto border-l bg-surface-primary shadow-xl sm:max-w-[460px]',
           'transition-transform duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]',
           'translate-x-0',
         )}
-        style={{ background: '#faf8ff' }}
       >
         {/* Close */}
         <button
           onClick={closeAuthDrawer}
-          className="absolute top-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-full cursor-pointer transition-colors hover:bg-black/5"
+          className="absolute top-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-md cursor-pointer transition-colors hover:bg-surface-secondary"
           aria-label="Close"
         >
-          <X className="h-5 w-5" style={{ color: '#003527' }} />
+          <X className="h-5 w-5 text-brand-teal" />
         </button>
 
         <div className={cn('p-8 pt-16', visible && 'stagger-in')}>
           {/* Logo */}
           <div className="flex items-center justify-center gap-2.5 mb-10">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: '#003527' }}>
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-teal">
               <Shield className="h-4.5 w-4.5 text-white" />
             </div>
-            <span className="text-lg font-bold tracking-tight" style={{ color: '#003527' }}>KOI</span>
+            <span className="text-lg font-bold tracking-tight text-brand-teal">KOI</span>
           </div>
 
           {/* Tab bar */}
-          <div className="flex rounded-lg p-1 mb-8" style={{ background: 'rgba(0,53,39,0.06)' }}>
+          <div className="mb-8 flex rounded-md border border-border bg-surface-secondary p-1">
             {(['signin', 'register'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => switchTab(tab)}
                 className={cn(
-                  'flex-1 py-2.5 rounded-md text-sm font-semibold transition-all cursor-pointer',
+                  'flex-1 cursor-pointer rounded-sm py-2.5 text-sm font-semibold transition-all',
                   authDrawerMode === tab
-                    ? 'text-white'
-                    : 'hover:text-[#003527]',
+                    ? 'bg-brand-teal text-white'
+                    : 'text-text-secondary hover:text-brand-teal',
                 )}
-                style={authDrawerMode === tab ? { background: '#003527', color: '#ffffff' } : { color: '#404944' }}
               >
                 {tab === 'signin' ? 'Sign In' : 'Create Account'}
               </button>
@@ -172,7 +164,7 @@ export function AuthDrawer() {
 
           {/* Error */}
           {serverError && (
-            <div className="mb-6 p-3 rounded-lg text-sm" style={{ background: '#ffdad6', color: '#93000a', border: '1px solid rgba(186,26,26,0.15)' }}>
+            <div className="mb-6 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
               {serverError}
             </div>
           )}
@@ -183,7 +175,7 @@ export function AuthDrawer() {
               <Field label="Email Address" id="sd-email" type="email" placeholder="your@email.com"
                 error={signInErrors.email?.message} register={signInForm.register('email')} autoComplete="email" />
               <div className="space-y-1.5">
-                <label htmlFor="sd-pw" className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#003527' }}>
+                <label htmlFor="sd-pw" className="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-text-primary">
                   Password
                 </label>
                 <div className="relative">
@@ -192,21 +184,18 @@ export function AuthDrawer() {
                     type={showPw ? 'text' : 'password'}
                     placeholder="Enter your password"
                     autoComplete="current-password"
-                    className="w-full h-10 pl-3 pr-10 rounded-lg text-sm border-0 outline-none transition-colors"
-                    style={{ background: 'rgba(0,53,39,0.04)', color: '#131b2e' }}
+                    className="h-10 w-full rounded-md border border-input bg-surface-secondary pl-3 pr-10 text-sm text-text-primary outline-none transition-colors placeholder:text-text-tertiary focus:border-ring focus:ring-2 focus:ring-ring/20"
                     {...signInForm.register('password')}
                   />
                   <button type="button" onClick={() => setShowPw(!showPw)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer hover:opacity-70"
-                    style={{ color: '#404944' }}>
+                    className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-text-tertiary hover:text-brand-teal">
                     {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                {signInErrors.password && <p className="text-xs" style={{ color: '#ba1a1a' }}>{signInErrors.password.message}</p>}
+                {signInErrors.password && <p className="text-xs text-status-rejected">{signInErrors.password.message}</p>}
               </div>
               <button type="submit" disabled={signingIn}
-                className="w-full h-10 rounded-lg text-sm font-semibold transition-colors cursor-pointer text-white"
-                style={{ background: '#003527' }}>
+                className="btn-lift btn-press h-10 w-full cursor-pointer rounded-md bg-brand-teal text-sm font-semibold text-white transition-colors hover:bg-blade-resolution-dark">
                 {signingIn ? 'Signing in...' : 'Sign In'}
               </button>
             </form>
@@ -222,7 +211,7 @@ export function AuthDrawer() {
               <Field label="Phone Number" id="sd-phone" type="tel" placeholder="13812341234"
                 error={regErrors.phone?.message} register={regForm.register('phone')} autoComplete="tel" />
               <div className="space-y-1.5">
-                <label htmlFor="sd-rpw" className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#003527' }}>
+                <label htmlFor="sd-rpw" className="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-text-primary">
                   Password
                 </label>
                 <div className="relative">
@@ -231,20 +220,18 @@ export function AuthDrawer() {
                     type={showPw ? 'text' : 'password'}
                     placeholder="At least 12 characters"
                     autoComplete="new-password"
-                    className="w-full h-10 pl-3 pr-10 rounded-lg text-sm border-0 outline-none transition-colors"
-                    style={{ background: 'rgba(0,53,39,0.04)', color: '#131b2e' }}
+                    className="h-10 w-full rounded-md border border-input bg-surface-secondary pl-3 pr-10 text-sm text-text-primary outline-none transition-colors placeholder:text-text-tertiary focus:border-ring focus:ring-2 focus:ring-ring/20"
                     {...regForm.register('password')}
                   />
                   <button type="button" onClick={() => setShowPw(!showPw)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer hover:opacity-70"
-                    style={{ color: '#404944' }}>
+                    className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-text-tertiary hover:text-brand-teal">
                     {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                {regErrors.password && <p className="text-xs" style={{ color: '#ba1a1a' }}>{regErrors.password.message}</p>}
+                {regErrors.password && <p className="text-xs text-status-rejected">{regErrors.password.message}</p>}
               </div>
               <div className="space-y-1.5">
-                <label htmlFor="sd-cpw" className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#003527' }}>
+                <label htmlFor="sd-cpw" className="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-text-primary">
                   Confirm Password
                 </label>
                 <input
@@ -252,27 +239,24 @@ export function AuthDrawer() {
                   type="password"
                   placeholder="Re-enter your password"
                   autoComplete="new-password"
-                  className="w-full h-10 px-3 rounded-lg text-sm border-0 outline-none transition-colors"
-                  style={{ background: 'rgba(0,53,39,0.04)', color: '#131b2e' }}
+                  className="h-10 w-full rounded-md border border-input bg-surface-secondary px-3 text-sm text-text-primary outline-none transition-colors placeholder:text-text-tertiary focus:border-ring focus:ring-2 focus:ring-ring/20"
                   {...regForm.register('confirmPassword')}
                 />
-                {regErrors.confirmPassword && <p className="text-xs" style={{ color: '#ba1a1a' }}>{regErrors.confirmPassword.message}</p>}
+                {regErrors.confirmPassword && <p className="text-xs text-status-rejected">{regErrors.confirmPassword.message}</p>}
               </div>
               <button type="submit" disabled={registering}
-                className="w-full h-10 rounded-lg text-sm font-semibold transition-colors cursor-pointer text-white mt-2"
-                style={{ background: '#003527' }}>
+                className="btn-lift btn-press mt-2 h-10 w-full cursor-pointer rounded-md bg-brand-teal text-sm font-semibold text-white transition-colors hover:bg-blade-resolution-dark">
                 {registering ? 'Creating account...' : 'Create Account'}
               </button>
             </form>
           )}
 
           {/* Guest lookup link */}
-          <div className="mt-6 pt-6 border-t text-center" style={{ borderColor: 'rgba(0,53,39,0.1)' }}>
+          <div className="mt-6 border-t border-border pt-6 text-center">
             <Link
               href="/lookup"
               onClick={closeAuthDrawer}
-              className="inline-flex items-center gap-2 text-sm transition-colors hover:underline"
-              style={{ color: '#404944' }}
+              className="inline-flex items-center gap-2 text-sm text-text-secondary transition-colors hover:text-brand-teal hover:underline"
             >
               <Search className="h-4 w-4" />
               Check Status Without Account

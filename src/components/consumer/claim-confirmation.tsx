@@ -6,7 +6,7 @@
 // ============================================================
 
 import { motion } from 'framer-motion';
-import { CheckCircle2, ClipboardList, Package, Mail, Download, ShieldCheck } from 'lucide-react';
+import { ClipboardList, Package, Mail, Download, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { scaleIn } from '@/lib/motion-presets';
 
@@ -36,7 +36,10 @@ const NEXT_STEPS = [
   },
 ];
 
-export function ClaimConfirmation({ claimNumber, remedyType }: ClaimConfirmationProps) {
+export function ClaimConfirmation(props: ClaimConfirmationProps) {
+  void props.remedyType;
+  const { claimNumber } = props;
+
   return (
     <div className="rounded-2xl border bg-surface-elevated shadow-card overflow-hidden blade-accent-resolution">
       <div className="px-6 py-8 text-center">

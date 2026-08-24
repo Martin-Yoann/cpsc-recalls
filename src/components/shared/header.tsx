@@ -27,14 +27,14 @@ export function Header() {
     : 'U';
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-surface-elevated/90 backdrop-blur supports-[backdrop-filter]:bg-surface-elevated/80">
-      <nav className="container-content flex h-15 items-center justify-between">
+    <header className="sticky top-0 z-40 w-full border-b bg-surface-elevated">
+      <nav className="container-content flex h-[60px] items-center justify-between">
         {/* Logo */}
         <Link
           href="/"
           className="flex items-center gap-2.5 font-semibold text-text-primary hover:text-brand-teal transition-colors duration-250"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-teal">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-teal">
             <Shield className="h-4.5 w-4.5 text-white" />
           </div>
           <span className="text-lg tracking-tight font-bold">KOI</span>
@@ -44,13 +44,13 @@ export function Header() {
         </Link>
 
         {/* Desktop Nav + Right Actions (lg+) */}
-        <div className="hidden lg:flex items-center gap-1">
+        <div className="site-desktop-header-actions items-center gap-1">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                'px-3.5 py-2 text-sm rounded-lg transition-colors duration-250 font-medium',
+                'px-3.5 py-2 text-sm rounded-md transition-colors duration-200 font-medium',
                 pathname === item.href
                   ? 'text-brand-teal bg-blade-resolution-light'
                   : 'text-text-secondary hover:text-text-primary hover:bg-surface-secondary'
@@ -114,6 +114,7 @@ export function Header() {
               <Button
                 size="sm"
                 className="bg-brand-teal hover:bg-blade-resolution-dark text-white text-sm font-medium cursor-pointer"
+                style={{ backgroundColor: '#0D9488', borderColor: '#0D9488', color: '#fff' }}
                 onClick={() => openAuthDrawer('register')}
               >
                 Register
@@ -123,7 +124,7 @@ export function Header() {
         </div>
 
         {/* Mobile + Tablet menu button */}
-        <div className="flex items-center gap-2 lg:hidden">
+        <div className="site-mobile-header-actions flex items-center gap-2">
           {isAuthenticated ? (
             <Link href="/dashboard">
               <Avatar className="h-8 w-8">
@@ -157,7 +158,7 @@ export function Header() {
 
       {/* Mobile Nav */}
       {mobileOpen && (
-        <div className="lg:hidden border-t bg-surface-elevated">
+        <div className="site-mobile-navigation border-t bg-surface-elevated">
           <div className="container-content py-3 space-y-1">
             {NAV_ITEMS.map((item) => (
               <Link
@@ -208,6 +209,7 @@ export function Header() {
                 </Button>
                 <Button
                   className="flex-1 bg-brand-teal hover:bg-blade-resolution-dark text-white cursor-pointer"
+                  style={{ backgroundColor: '#0D9488', borderColor: '#0D9488', color: '#fff' }}
                   onClick={() => { openAuthDrawer('register'); setMobileOpen(false); }}
                 >
                   Register

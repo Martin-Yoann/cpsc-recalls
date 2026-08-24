@@ -22,7 +22,8 @@ const PIPELINE = [
 
 const CURRENT_STAGE = 'under_review';
 
-export function CaseStatusTracker({ campaignId }: CaseStatusTrackerProps) {
+export function CaseStatusTracker(props: CaseStatusTrackerProps) {
+  void props.campaignId;
   const currentIdx = PIPELINE.findIndex((s) => s.id === CURRENT_STAGE);
 
   return (

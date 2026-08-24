@@ -22,8 +22,8 @@ type StatusVariant =
 const STATUS_COLORS: Record<StatusVariant, { dot: string; text: string; bg: string }> = {
   open: { dot: 'bg-status-open', text: 'text-status-open', bg: 'bg-orange-50' },
   reviewing: { dot: 'bg-status-reviewing', text: 'text-status-reviewing', bg: 'bg-blue-50' },
-  verified: { dot: 'bg-status-verified', text: 'text-status-verified', bg: 'bg-green-50' },
-  resolved: { dot: 'bg-status-resolved', text: 'text-status-resolved', bg: 'bg-green-50' },
+  verified: { dot: 'bg-status-verified', text: 'text-status-verified', bg: 'bg-emerald-50' },
+  resolved: { dot: 'bg-status-resolved', text: 'text-status-resolved', bg: 'bg-emerald-50' },
   rejected: { dot: 'bg-status-rejected', text: 'text-status-rejected', bg: 'bg-red-50' },
   active: { dot: 'bg-status-open', text: 'text-status-open', bg: 'bg-orange-50' },
   pending: { dot: 'bg-status-reviewing', text: 'text-status-reviewing', bg: 'bg-blue-50' },
@@ -32,7 +32,7 @@ const STATUS_COLORS: Record<StatusVariant, { dot: string; text: string; bg: stri
   draft: { dot: 'bg-text-tertiary', text: 'text-text-tertiary', bg: 'bg-slate-50' },
   submitted: { dot: 'bg-status-reviewing', text: 'text-status-reviewing', bg: 'bg-blue-50' },
   under_review: { dot: 'bg-status-reviewing', text: 'text-status-reviewing', bg: 'bg-blue-50' },
-  remedy_issued: { dot: 'bg-status-verified', text: 'text-status-verified', bg: 'bg-green-50' },
+  remedy_issued: { dot: 'bg-status-verified', text: 'text-status-verified', bg: 'bg-emerald-50' },
 };
 
 const STATUS_LABELS: Record<StatusVariant, string> = {
@@ -62,7 +62,7 @@ export function StatusBadge({ variant, label, className }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium',
+        'inline-flex items-center gap-1.5 rounded-sm border border-current/15 px-2 py-1 text-[11px] font-bold uppercase tracking-wide',
         colors.bg,
         colors.text,
         className

@@ -55,14 +55,14 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.75rem)] bg-surface-secondary">
-      <div className="container-content py-8">
+    <div className="min-h-[calc(100vh-3.75rem)] bg-surface-primary">
+      <div className="container-content py-6 sm:py-8">
         <div className="flex gap-8">
           {/* Sidebar */}
           <aside className="hidden lg:block w-56 shrink-0">
             <div className="sticky top-24 space-y-1">
               {/* User info */}
-              <div className="px-3 py-3 mb-4 rounded-xl bg-surface-elevated border">
+              <div className="mb-4 border border-border border-l-4 border-l-brand-teal bg-surface-elevated px-3 py-3">
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-teal text-white text-sm font-bold">
                     {user?.name?.slice(0, 2).toUpperCase() || 'U'}
@@ -83,10 +83,10 @@ export default function DashboardLayout({
                     key={link.href}
                     href={link.href}
                     className={cn(
-                      'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200',
+                      'flex items-center gap-3 border-l-2 px-3 py-2.5 text-sm font-medium transition-colors duration-200',
                       isActive
-                        ? 'bg-brand-teal text-white'
-                        : 'text-text-secondary hover:text-text-primary hover:bg-surface-elevated'
+                        ? 'border-l-brand-teal bg-brand-teal text-white'
+                        : 'border-l-transparent text-text-secondary hover:border-l-border hover:bg-surface-elevated hover:text-text-primary'
                     )}
                   >
                     <Icon className="h-4.5 w-4.5" />

@@ -31,7 +31,7 @@ export function EmptyState({
         className
       )}
     >
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-secondary mb-5">
+      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-md border border-border bg-surface-secondary">
         <Icon className="h-8 w-8 text-text-tertiary" />
       </div>
       <h3 className="text-lg font-semibold text-text-primary mb-1.5">{title}</h3>
@@ -42,7 +42,7 @@ export function EmptyState({
       )}
       {ctaLabel && ctaHref && (
         <Link href={ctaHref}>
-          <Button variant="default" size="sm" className="bg-blade-safety hover:bg-blade-safety-dark">
+          <Button variant="default" size="sm" className="bg-brand-teal hover:bg-blade-resolution-dark">
             {ctaLabel}
           </Button>
         </Link>

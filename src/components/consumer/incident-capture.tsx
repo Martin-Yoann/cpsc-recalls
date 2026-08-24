@@ -6,7 +6,7 @@
 // ============================================================
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertTriangle, Send, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,13 +23,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { scaleIn } from '@/lib/motion-presets';
 import { INCIDENT_SEVERITY_LABELS } from '@/lib/constants';
 
-const SEVERITY_STYLES: Record<string, string> = {
-  [IncidentSeverity.MINOR]: 'bg-amber-50 border-amber-200 text-amber-700',
-  [IncidentSeverity.MODERATE]: 'bg-orange-50 border-orange-200 text-orange-700',
-  [IncidentSeverity.SERIOUS]: 'bg-red-50 border-red-200 text-red-700',
-  [IncidentSeverity.FATAL]: 'bg-red-100 border-red-300 text-red-800',
-};
-
 export function IncidentCapture() {
   const [submitted, setSubmitted] = useState(false);
   const [showInjury, setShowInjury] = useState(false);
@@ -45,8 +38,8 @@ export function IncidentCapture() {
     },
   });
 
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = form;
-  const severity = watch('severity');
+  const { register, handleSubmit, setValue, control, formState: { errors } } = form;
+  const severity = useWatch({ control, name: 'severity' });
 
   const onSubmit = () => setSubmitted(true);
 

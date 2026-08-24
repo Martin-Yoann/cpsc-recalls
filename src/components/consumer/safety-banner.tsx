@@ -14,7 +14,8 @@ interface SafetyBannerProps {
   campaign: Campaign;
 }
 
-export function SafetyBanner({ campaign }: SafetyBannerProps) {
+export function SafetyBanner(props: SafetyBannerProps) {
+  void props.campaign;
   const [dismissed, setDismissed] = useState(false);
   if (dismissed) return null;
 

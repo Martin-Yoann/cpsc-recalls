@@ -36,7 +36,7 @@ export default function RecallLoading() {
       </div>
 
       {/* Hero skeleton */}
-      <div className="bg-gradient-to-b from-blade-safety-light to-surface-primary py-16">
+      <div className="bg-blade-safety-light py-16">
         <div className="container-content">
           <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-4">
@@ -45,7 +45,7 @@ export default function RecallLoading() {
               <div className="h-4 w-full rounded bg-surface-secondary animate-pulse" />
               <div className="h-4 w-5/6 rounded bg-surface-secondary animate-pulse" />
             </div>
-            <div className="h-64 rounded-xl bg-surface-secondary animate-pulse" />
+            <div className="h-64 rounded-md bg-surface-secondary animate-pulse" />
           </div>
         </div>
       </div>
@@ -56,7 +56,7 @@ export default function RecallLoading() {
           <div key={section} className="space-y-4">
             <div className="h-1 w-16 rounded-full bg-surface-secondary" />
             <div className="h-6 w-48 rounded bg-surface-secondary animate-pulse" />
-            <div className="h-48 rounded-xl bg-surface-secondary animate-pulse" />
+            <div className="h-48 rounded-md bg-surface-secondary animate-pulse" />
           </div>
         ))}
       </div>

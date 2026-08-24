@@ -66,7 +66,6 @@ export type ConsumerClaim = {
 
 // ── Runtime ──
 
-const LOCAL_API_BASE = 'http://localhost:3002';
 const ONLINE_API_BASE = 'https://koi-recall-backend.vercel.app';
 
 const configuredApi = (process.env.NEXT_PUBLIC_API_URL || '').trim().replace(/\/+$/, '');

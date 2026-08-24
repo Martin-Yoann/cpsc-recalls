@@ -24,13 +24,13 @@ const PIPELINE = [
 ];
 const ORDER = [ClaimStatus.SUBMITTED, ClaimStatus.UNDER_REVIEW, ClaimStatus.VERIFIED, ClaimStatus.REMEDY_ISSUED, ClaimStatus.RESOLVED];
 
-const STATUS_META: Record<string, { label: string; bg: string; color: string }> = {
-  submitted:    { label: 'Submitted',     bg: '#eaedff', color: '#404944' },
-  under_review: { label: 'Under Review',  bg: '#eaedff', color: '#404944' },
-  verified:     { label: 'Verified',      bg: '#6cf8bb', color: '#00714d' },
-  remedy_issued:{ label: 'Remedy Issued', bg: '#6cf8bb', color: '#00714d' },
-  resolved:     { label: 'Resolved',      bg: '#6cf8bb', color: '#00714d' },
-  rejected:     { label: 'Rejected',      bg: '#ffdad6', color: '#93000a' },
+const STATUS_META: Record<string, { label: string; bg: string; color: string; dot: string }> = {
+  submitted:    { label: 'Submitted',     bg: 'bg-blue-50',             color: 'text-trust-blue',       dot: 'bg-trust-blue' },
+  under_review: { label: 'Under Review',  bg: 'bg-blue-50',             color: 'text-trust-blue',       dot: 'bg-trust-blue' },
+  verified:     { label: 'Verified',      bg: 'bg-blade-resolution-light', color: 'text-blade-resolution', dot: 'bg-blade-resolution' },
+  remedy_issued:{ label: 'Remedy Issued', bg: 'bg-blade-resolution-light', color: 'text-blade-resolution', dot: 'bg-blade-resolution' },
+  resolved:     { label: 'Resolved',      bg: 'bg-blade-resolution-light', color: 'text-blade-resolution', dot: 'bg-blade-resolution' },
+  rejected:     { label: 'Rejected',      bg: 'bg-red-50',              color: 'text-status-rejected',  dot: 'bg-status-rejected' },
 };
 
 const REMEDY_LABELS: Record<string, string> = {
@@ -48,22 +48,20 @@ export function LookupResult({
     <div className="animate-in fade-in duration-300">
 
       {/* ── Header ── */}
-      <div className="mb-8 pb-6" style={{ borderBottom: '1px solid rgba(0,53,39,0.08)' }}>
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium mb-3"
-          style={{ background: meta.bg, color: meta.color }}>
-          <span className="w-1.5 h-1.5 rounded-full" style={{ background: meta.color }} />
+      <div className="mb-8 border-b border-border pb-6">
+        <span className={cn('mb-3 inline-flex items-center gap-1.5 rounded-sm border border-current/15 px-2 py-1 text-[11px] font-bold uppercase tracking-wide', meta.bg, meta.color)}>
+          <span className={cn('status-dot', meta.dot)} />
           {meta.label}
         </span>
-        <h2 className="text-[28px] md:text-[36px] font-semibold leading-tight tracking-[-0.02em] mb-1.5" style={{ color: '#003527' }}>
+        <h2 className="mb-1.5 font-mono text-[28px] font-semibold leading-tight tracking-[-0.02em] text-text-primary md:text-[36px]">
           {claim.claimNumber}
         </h2>
-        <p className="text-sm" style={{ color: '#707974' }}>{campaignTitle}</p>
+        <p className="text-sm text-text-secondary">{campaignTitle}</p>
       </div>
 
       {/* ── Timeline — horizontal on wide, vertical on narrow ── */}
-      <div className="mb-8 p-5 rounded-xl"
-        style={{ background: '#ffffff', border: '1px solid rgba(0,53,39,0.08)' }}>
-        <h3 className="text-sm font-semibold mb-4" style={{ color: '#003527' }}>Processing Status</h3>
+      <div className="mb-8 rounded-md border bg-surface-elevated p-5">
+        <h3 className="mb-4 text-sm font-semibold text-text-primary">Processing Status</h3>
 
         <div className="flex flex-nowrap gap-0 items-start">
           {PIPELINE.map((stage, i) => {
@@ -75,34 +73,30 @@ export function LookupResult({
               <div key={stage.status} className="flex-1 flex items-start gap-0 min-w-0">
                 {/* Connector line behind dot */}
                 {i > 0 && (
-                  <div className="h-[2px] flex-1 mt-[13px] -mr-1"
-                    style={{ background: done ? '#006c49' : 'rgba(0,53,39,0.08)' }} />
+                  <div className={cn('mt-[13px] h-[2px] flex-1 -mr-1', done ? 'bg-blade-resolution' : 'bg-border')} />
                 )}
                 {/* Dot + label */}
-                <div className="flex flex-col items-center shrink-0" style={{ minWidth: 0 }}>
+                <div className="flex min-w-0 shrink-0 flex-col items-center">
                   <div className={cn(
-                    'w-[26px] h-[26px] rounded-full flex items-center justify-center shrink-0',
-                  )}
-                  style={cur || done
-                    ? { background: '#006c49', color: '#ffffff', boxShadow: '0 0 0 3px rgba(0,108,73,0.12)' }
-                    : { background: '#faf8ff', border: '2px solid #bfc9c3' }
-                  }>
+                    'flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full',
+                    cur || done
+                      ? 'bg-blade-resolution text-white ring-4 ring-blade-resolution/15'
+                      : 'border-2 border-border bg-surface-primary text-transparent',
+                  )}>
                     {done ? <Check className="h-[13px] w-[13px]" /> :
                      cur  ? <Clock className="h-[13px] w-[13px]" /> :
-                     <Circle className="h-[13px] w-[13px]" style={{ color: 'transparent' }} />}
+                     <Circle className="h-[13px] w-[13px]" />}
                   </div>
                   <p className={cn(
-                    'text-[10px] font-semibold text-center mt-1.5 leading-tight px-1',
-                    future ? 'opacity-40' : ''
-                  )}
-                  style={{ color: cur ? '#006c49' : future ? '#707974' : '#003527' }}>
+                    'px-1 text-center text-[10px] font-semibold leading-tight',
+                    cur ? 'mt-1.5 text-blade-resolution' : future ? 'mt-1.5 text-text-tertiary opacity-40' : 'mt-1.5 text-text-primary',
+                  )}>
                     {stage.label}
                   </p>
                 </div>
                 {/* Connector */}
                 {i < PIPELINE.length - 1 && (
-                  <div className="h-[2px] flex-1 mt-[13px] -ml-1"
-                    style={{ background: done ? '#006c49' : 'rgba(0,53,39,0.08)' }} />
+                  <div className={cn('mt-[13px] h-[2px] flex-1 -ml-1', done ? 'bg-blade-resolution' : 'bg-border')} />
                 )}
               </div>
             );
@@ -114,46 +108,42 @@ export function LookupResult({
       <div className="grid sm:grid-cols-3 gap-4">
 
         {/* Product */}
-        <div className="p-4 rounded-xl border-t-[3px]"
-          style={{ background: '#ffffff', borderColor: 'rgba(0,53,39,0.08)', borderTopColor: '#006c49' }}>
-          <p className="text-xs mb-1.5" style={{ color: '#707974' }}>Product</p>
-          <p className="text-sm font-bold leading-snug" style={{ color: '#003527' }}>
+        <div className="rounded-md border border-t-[3px] border-t-blade-resolution bg-surface-elevated p-4">
+          <p className="mb-1.5 text-xs text-text-tertiary">Product</p>
+          <p className="text-sm font-bold leading-snug text-text-primary">
             {productName || '—'}
           </p>
         </div>
 
         {/* Remedy */}
-        <div className="p-4 rounded-xl border-t-[3px]"
-          style={{ background: '#ffffff', borderColor: 'rgba(0,53,39,0.08)', borderTopColor: '#006c49' }}>
-          <p className="text-xs mb-1.5" style={{ color: '#707974' }}>Remedy</p>
+        <div className="rounded-md border border-t-[3px] border-t-blade-resolution bg-surface-elevated p-4">
+          <p className="mb-1.5 text-xs text-text-tertiary">Remedy</p>
           {remedyType && (
-            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-medium mb-1"
-              style={{ background: '#f2f3ff', color: '#404944' }}>
+            <span className="mb-1 inline-block rounded-sm bg-surface-secondary px-2 py-0.5 text-[10px] font-medium text-text-secondary">
               {REMEDY_LABELS[remedyType] || remedyType}
             </span>
           )}
-          <p className="text-sm font-bold leading-snug" style={{ color: '#003527' }}>
+          <p className="text-sm font-bold leading-snug text-text-primary">
             {remedyTitle || '—'}
           </p>
           {refundAmount != null && refundAmount > 0 && (
-            <p className="text-xs font-bold mt-1" style={{ color: '#006c49' }}>${refundAmount.toFixed(2)}</p>
+            <p className="mt-1 text-xs font-bold text-blade-resolution">${refundAmount.toFixed(2)}</p>
           )}
         </div>
 
         {/* Timeline */}
-        <div className="p-4 rounded-xl"
-          style={{ background: '#ffffff', border: '1px solid rgba(0,53,39,0.08)' }}>
-          <p className="text-xs mb-3" style={{ color: '#707974' }}>Timeline</p>
+        <div className="rounded-md border bg-surface-elevated p-4">
+          <p className="mb-3 text-xs text-text-tertiary">Timeline</p>
           <div className="space-y-2 text-xs">
             <div className="flex justify-between">
-              <span style={{ color: '#707974' }}>Submitted</span>
-              <span className="font-medium" style={{ color: '#003527' }}>
+              <span className="text-text-tertiary">Submitted</span>
+              <span className="font-medium text-text-primary">
                 {new Date(claim.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </span>
             </div>
             <div className="flex justify-between">
-              <span style={{ color: '#707974' }}>Updated</span>
-              <span className="font-medium" style={{ color: '#003527' }}>
+              <span className="text-text-tertiary">Updated</span>
+              <span className="font-medium text-text-primary">
                 {new Date(claim.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </span>
             </div>
@@ -163,12 +153,11 @@ export function LookupResult({
       </div>
 
       {/* ── CTA ── */}
-      <div className="mt-5 p-3 rounded-lg text-center text-xs"
-        style={{ background: '#e2e7ff', color: '#404944' }}>
+      <div className="mt-5 rounded-md border border-border bg-surface-secondary p-3 text-center text-xs text-text-secondary">
         Want more details?{' '}
-        <Link href="/register" className="font-bold hover:underline" style={{ color: '#006c49' }}>Create Account</Link>
+        <Link href="/register" className="font-bold text-brand-teal hover:underline">Create Account</Link>
         {' '}or{' '}
-        <Link href="/login" className="font-bold hover:underline" style={{ color: '#006c49' }}>Sign In</Link>
+        <Link href="/login" className="font-bold text-brand-teal hover:underline">Sign In</Link>
       </div>
 
     </div>

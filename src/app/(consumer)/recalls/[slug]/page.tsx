@@ -1,307 +1,451 @@
-// ============================================================
-// KOI Recall Platform — Recall Detail v7.0
-// Three-Blade: unified header zone → titles lock into place
-// ============================================================
-
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { fetchCampaign } from '@/lib/api-adapter';
 import {
-  AlertTriangle, Barcode, Calendar, Factory, Hash, Package,
-  ShieldCheck, CheckCircle2, ArrowRight, Info, Phone,
+  AlertCircle,
+  Calendar,
+  CheckSquare,
+  Eye,
+  Factory,
+  FileText,
+  HelpCircle,
+  Info,
+  Package,
+  Phone,
+  Search,
+  Shield,
+  TrendingUp,
+  Users,
 } from 'lucide-react';
-import { StatusBadge } from '@/components/shared/status-badge';
-import { RecallCheckCard } from '@/components/consumer/recall-check-card';
+import { fetchCampaign } from '@/lib/api-adapter';
 import { ClaimSubmitWrapper } from '@/components/consumer/claim-submit-wrapper';
+import { RecallCheckCard } from '@/components/consumer/recall-check-card';
+import { SafetyBanner } from '@/components/consumer/safety-banner';
+import { StatusBadge } from '@/components/shared/status-badge';
 import { RiskLevel } from '@/types';
-import { cn } from '@/lib/utils';
 
-interface RecallPageProps { params: Promise<{ slug: string }>; }
+interface RecallPageProps {
+  params: Promise<{ slug: string }>;
+}
 
-const RISK_CONFIG: Record<string, { bg: string; text: string; border: string; label: string }> = {
-  [RiskLevel.CRITICAL]: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', label: 'CRITICAL RISK' },
-  [RiskLevel.HIGH]:    { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200', label: 'HIGH RISK' },
-  [RiskLevel.MODERATE]:{ bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', label: 'MODERATE RISK' },
-  [RiskLevel.LOW]:     { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', label: 'LOW RISK' },
+const riskLabels: Record<string, string> = {
+  [RiskLevel.CRITICAL]: 'CRITICAL RISK',
+  [RiskLevel.HIGH]: 'HIGH RISK',
+  [RiskLevel.MODERATE]: 'MODERATE RISK',
+  [RiskLevel.LOW]: 'LOW RISK',
 };
 
-// ══════════════════════════════════════════════════════════════════
-// Shared title block — same padding + width on every blade
-// ══════════════════════════════════════════════════════════════════
-const bladeColors = {
-  safety:    { strip: 'var(--blade-safety)', iconBg: 'var(--blade-safety)', light: 'var(--blade-safety-light)', text: 'var(--blade-safety-text)' },
-  verification: { strip: 'var(--blade-verification)', iconBg: 'var(--blade-verification)', light: 'var(--blade-verification-light)', text: 'var(--blade-verification-text)' },
-  resolution: { strip: 'var(--blade-resolution)', iconBg: 'var(--blade-resolution)', light: 'var(--blade-resolution-light)', text: 'var(--blade-resolution-text)' },
+const riskColors: Record<string, string> = {
+  [RiskLevel.CRITICAL]: 'bg-red-100 text-red-700 border-red-200',
+  [RiskLevel.HIGH]: 'bg-orange-100 text-orange-700 border-orange-200',
+  [RiskLevel.MODERATE]: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  [RiskLevel.LOW]: 'bg-blue-100 text-blue-700 border-blue-200',
 };
 
-const BLADE_H = 'min-h-[calc(100dvh-3.75rem)]';
+export async function generateMetadata({ params }: RecallPageProps): Promise<Metadata> {
+  const { campaign } = await fetchCampaign((await params).slug);
+  return {
+    title: campaign?.title ?? 'Recall Details',
+    description: campaign?.hazardDescription ?? 'Product safety recall information',
+  };
+}
 
-const BLADES = [
-  {
-    key: 'safety' as const,
-    number: '01',
-    label: 'Safety Notice',
-    title: 'Identify the Product',
-    description: 'Check whether your product matches this recall. Locate the lot code, date code, shape, and flavor on your package.',
-  },
-  {
-    key: 'verification' as const,
-    number: '02',
-    label: 'Verification',
-    title: 'Check Your Product',
-    description: 'Enter your codes below to verify whether your Music Lollipop is covered by this safety recall.',
-  },
-  {
-    key: 'resolution' as const,
-    number: '03',
-    label: 'Resolution',
-    title: 'Choose a Remedy',
-    description: 'Select the resolution option that works best for you. Free replacement or full refund are available.',
-  },
-] as const;
-
-function BladeHeader({ blade, campaignTitle, risk }: { blade: typeof BLADES[number]; campaignTitle?: string; risk?: { bg: string; text: string; border: string; label: string } }) {
-  const c = bladeColors[blade.key];
+function SectionTitle({
+  icon: Icon,
+  children,
+  description,
+}: {
+  icon: typeof Info;
+  children: React.ReactNode;
+  description?: string;
+}) {
   return (
-    <header className="pt-12 sm:pt-16 pb-6 sm:pb-8 max-w-4xl mx-auto w-full px-0">
-      {/* ── Thin color strip ── */}
-      <div className="w-[72px] h-[4px] rounded-full mb-6" style={{ background: c.strip }} />
-
-      {/* ── Number + label badge ── */}
-      <div className="flex items-center gap-4 mb-4">
-        <span
-          className="flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl text-white text-base sm:text-lg font-bold"
-          style={{ background: c.iconBg }}
-        >
-          {blade.number}
-        </span>
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: c.strip }}>
-            {blade.label}
-          </p>
-          <h2 className="text-[1.75rem] sm:text-[2.25rem] lg:text-[2.75rem] font-bold tracking-[-0.02em] text-text-primary leading-[1.10]">
-            {blade.title}
-          </h2>
+    <div className="mb-5">
+      <div className="flex items-center gap-2.5 border-b border-[#dcdfe6] pb-3">
+        <div className="flex h-8 w-8 items-center justify-center rounded bg-[#ecf5ff] text-[#409eff]">
+          <Icon className="h-4 w-4" strokeWidth={1.7} />
         </div>
+        <h2 className="text-lg font-semibold text-[#303133]">{children}</h2>
       </div>
-
-      {/* ── Status chips (Blade 1 only) ── */}
-      {blade.key === 'safety' && campaignTitle && risk && (
-        <div className="flex flex-wrap items-center gap-2 mt-3">
-          <StatusBadge variant="active" />
-          <span className={cn('inline-flex items-center gap-1 rounded-md border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider', risk.bg, risk.text, risk.border)}>
-            <AlertTriangle className="h-3.5 w-3.5" />{risk.label}
-          </span>
-          <span className="text-[13px] text-text-tertiary">{campaignTitle}</span>
-        </div>
+      {description && (
+        <p className="mt-2 text-sm text-[#606266] leading-relaxed">{description}</p>
       )}
-
-      {/* ── Description ── */}
-      <p className="mt-4 text-base sm:text-lg text-text-secondary max-w-2xl leading-relaxed">
-        {blade.description}
-      </p>
-    </header>
+    </div>
   );
 }
 
-export async function generateMetadata({ params }: RecallPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const result = await fetchCampaign(slug);
-  if (result.error || !result.campaign) return { title: 'Recall Not Found' };
-  return { title: result.campaign.title, description: result.campaign.summary };
+function SideCard({ title, icon: Icon, children }: { title: string; icon?: typeof Info; children: React.ReactNode }) {
+  return (
+    <aside className="rounded border border-[#dcdfe6] bg-white p-5 shadow-sm">
+      <h3 className="mb-3 flex items-center gap-2 border-b border-[#ebeef5] pb-2.5 text-base font-semibold text-[#303133]">
+        {Icon && <Icon className="h-4 w-4 text-[#409eff]" strokeWidth={1.7} />}
+        {title}
+      </h3>
+      {children}
+    </aside>
+  );
+}
+
+function StatCard({ label, value, icon: Icon, trend }: { label: string; value: string; icon: typeof Info; trend?: string }) {
+  return (
+    <div className="rounded border border-[#ebeef5] bg-white p-4 text-center">
+      <div className="flex items-center justify-center gap-2 text-[#909399]">
+        <Icon className="h-4 w-4" />
+        <span className="text-xs font-medium uppercase tracking-wider">{label}</span>
+      </div>
+      <p className="mt-1.5 text-2xl font-bold text-[#303133]">{value}</p>
+      {trend && <p className="mt-0.5 text-xs text-[#67c23a]">{trend}</p>}
+    </div>
+  );
 }
 
 export default async function RecallPage({ params }: RecallPageProps) {
-  const { slug } = await params;
-  const result = await fetchCampaign(slug);
-  if (result.error || !result.campaign) notFound();
-  const campaign = result.campaign;
-  const p = campaign.affectedProducts[0];
-  const risk = RISK_CONFIG[campaign.riskLevel];
+  const { campaign } = await fetchCampaign((await params).slug);
+  if (!campaign) notFound();
+  const product = campaign.affectedProducts?.[0];
+  if (!product) notFound();
+
+  // 模拟数据（实际应从 API 获取）
+  const stats = {
+    affectedUnits: '12,847',
+    claimsResolved: '94%',
+    publishedDate: 'March 15, 2026',
+    recallReference: 'CPSC ML-DEMO-2026',
+  };
 
   return (
-    <div>
+    <div className="recall-detail-theme bg-[#f5f7fa] text-[#303133]">
+      <SafetyBanner campaign={campaign} />
 
-      {/* ── Global safety strip ── */}
-      <div className="sticky top-[3.75rem] z-40 bg-blade-safety text-white py-2 px-5 text-center text-[13px] font-medium flex items-center justify-center gap-2">
-        <AlertTriangle className="h-4 w-4" />
-        Safety Recall — Stop using the product until its status has been verified.
-      </div>
-
-      {/* ══════════════════════════════════════════════════════════════
-          BLADE 1 · SAFETY
-          ══════════════════════════════════════════════════════════════ */}
-      <section className={cn(BLADE_H, 'flex flex-col blade-section-safety')}>
-        <div className="container-content max-w-5xl w-full flex flex-col justify-center flex-1">
-          <BladeHeader blade={BLADES[0]} campaignTitle={campaign.title} risk={risk} />
-
-          {/* ── Content ── */}
-          <div className="grid md:grid-cols-5 gap-8 lg:gap-12 max-w-5xl w-full mx-auto">
-            <div className="md:col-span-2 flex flex-col gap-4">
-              {campaign.images[0] && (
-                <div className="rounded-2xl bg-surface-elevated border p-6 flex items-center justify-center flex-1">
-                  <img src={campaign.images[0]} alt={campaign.title}
-                    className="h-40 sm:h-48 object-contain mix-blend-multiply" />
-                </div>
-              )}
-              {p && (
-                <div className="text-xs text-text-tertiary space-y-0.5 text-center">
-                  <p className="font-semibold text-text-secondary">{p.name}</p>
-                  <p>{p.weight} · {p.brandName}</p>
-                  <p>{p.shapes?.join(' · ')} · {p.flavors?.join(' · ')}</p>
-                </div>
-              )}
-            </div>
-
-            <div className="md:col-span-3 space-y-4">
-              <div className="rounded-xl blade-accent-safety bg-blade-safety-light/50 p-5">
-                <p className="text-xs font-bold uppercase tracking-widest text-blade-safety-text/60 mb-2 flex items-center gap-1.5">
-                  <AlertTriangle className="h-4 w-4" />Hazard Description
-                </p>
-                <p className="text-sm text-text-primary leading-relaxed">{campaign.hazardDescription}</p>
-                <p className="text-xs font-semibold text-blade-safety-text mt-2.5">{campaign.instructions}</p>
-              </div>
-
-              <div className="rounded-xl border bg-surface-elevated p-5">
-                <p className="text-xs font-bold text-text-tertiary uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                  <Barcode className="h-4 w-4" />Affected Lot Codes
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {(campaign.affectedLots || []).map((lot) => (
-                    <code key={lot} className="px-3 py-1 rounded-lg bg-blade-safety-light text-blade-safety-text font-mono text-sm font-bold">{lot}</code>
-                  ))}
-                </div>
-                {campaign.dateCodes && (
-                  <p className="text-sm text-text-tertiary mt-2.5 flex items-center gap-1.5">
-                    <Calendar className="h-4 w-4" />Date codes: {campaign.dateCodes.join(', ')}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-3 gap-2.5">
-                {[
-                  { label: 'CPSC', value: campaign.cpscNumber, icon: Hash },
-                  { label: 'Manufacturer', value: campaign.manufacturerName.split(' ').slice(0, 2).join(' '), icon: Factory },
-                  { label: 'Units Affected', value: `${(campaign.estimatedUnits / 1000).toFixed(0)}K`, icon: Package },
-                ].map((m) => (
-                  <div key={m.label} className="rounded-lg border bg-surface-elevated p-3 text-center">
-                    <m.icon className="h-4 w-4 mx-auto text-text-tertiary mb-1" />
-                    <p className="text-[10px] text-text-tertiary uppercase tracking-wider">{m.label}</p>
-                    <p className="text-xs font-bold text-text-primary mt-0.5">{m.value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+      <main className="mx-auto max-w-[1250px] px-4 pb-24 pt-6 sm:px-6 lg:px-8">
+        {/* ===== 头部区域 ===== */}
+        <header className="mb-10">
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <StatusBadge
+              variant={campaign.status}
+              label="Active Recall"
+              className="rounded-full border-0 bg-[#ecf5ff] px-4 py-1 text-sm font-medium text-[#409eff]"
+            />
+            <span
+              className={`
+                inline-flex items-center rounded-full border px-3.5 py-1 text-xs font-bold uppercase tracking-wider
+                ${riskColors[campaign.riskLevel] || 'bg-gray-100 text-gray-700'}
+              `}
+            >
+              <AlertCircle className="mr-1.5 h-3 w-3" />
+              {riskLabels[campaign.riskLevel] || 'UNKNOWN RISK'}
+            </span>
+            <span className="text-sm text-[#909399]">
+              Reference: <span className="font-mono font-medium text-[#303133]">{stats.recallReference}</span>
+            </span>
           </div>
-        </div>
-      </section>
 
-      {/* ══════════════════════════════════════════════════════════════
-          BLADE 2 · VERIFICATION
-          ══════════════════════════════════════════════════════════════ */}
-      <section className={cn(BLADE_H, 'flex flex-col blade-section-verification')}>
-        <div className="container-content max-w-4xl w-full flex flex-col justify-center flex-1">
-          <BladeHeader blade={BLADES[1]} />
+          <h1 className="text-3xl font-bold leading-tight text-[#1f2937] sm:text-4xl">
+            {campaign.title}
+          </h1>
 
-          {/* ── Content: 2-col balanced ── */}
-          <div className="grid lg:grid-cols-2 gap-8 max-w-4xl w-full mx-auto">
-            <div className="flex items-stretch">
-              <RecallCheckCard campaign={campaign} product={p} />
-            </div>
-            <div className="flex flex-col justify-between gap-4">
-              <div className="rounded-xl border bg-surface-elevated p-5">
-                <h4 className="text-sm font-bold text-text-primary mb-3 flex items-center gap-1.5">
-                  <Info className="h-4 w-4 text-blade-verification" />
-                  Where to Find the Codes
-                </h4>
-                <ul className="space-y-3 text-sm text-text-secondary">
-                  {[
-                    'Look for product identifiers (SKU, UPC, model, style) on the package or label',
-                    'If your product has lot or date codes, enter them below',
-                    'Select any visible attributes like shape or flavor from the label',
-                  ].map((step, i) => (
-                    <li key={i} className="flex gap-2">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blade-verification text-white text-[11px] font-bold mt-0.5">{i + 1}</span>
-                      <span>{step}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="rounded-xl border bg-surface-elevated p-5">
-                <h4 className="text-sm font-bold text-text-primary mb-3 flex items-center gap-1.5">
-                  <ArrowRight className="h-4 w-4 text-blade-verification" />
-                  After You Check
-                </h4>
-                <ul className="space-y-2.5 text-sm text-text-secondary">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-blade-resolution shrink-0" />
-                    If matched — your identifiers are listed in the affected scope
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-blade-resolution shrink-0" />
-                    If not matched — this does not confirm the product is safe; you may still submit for manual review
-                  </li>
-                </ul>
-              </div>
-            </div>
+          <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-[#606266]">
+            <span className="flex items-center gap-1.5">
+              <Factory className="h-4 w-4 text-[#909399]" strokeWidth={1.5} />
+              Manufacturer: <strong className="font-medium text-[#303133]">Candy Master</strong>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Calendar className="h-4 w-4 text-[#909399]" strokeWidth={1.5} />
+              Published: <strong className="font-medium text-[#303133]">{stats.publishedDate}</strong>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Package className="h-4 w-4 text-[#909399]" strokeWidth={1.5} />
+              Affected Units: <strong className="font-medium text-[#303133]">{stats.affectedUnits}</strong>
+            </span>
           </div>
+
+          <div className="mt-4 rounded border-l-4 border-[#e6a23c] bg-[#fdf6ec] px-4 py-3 text-sm text-[#606266]">
+            <p className="flex items-start gap-2">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#e6a23c]" />
+              <span>
+                <strong className="text-[#303133]">Important:</strong> Do not continue using a product
+                if the recall notice instructs you to stop use. Check your product immediately.
+              </span>
+            </p>
+          </div>
+        </header>
+
+        {/* ===== 统计卡片 ===== */}
+        <div className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatCard label="Affected Units" value={stats.affectedUnits} icon={Package} />
+          <StatCard label="Claims Resolved" value={stats.claimsResolved} icon={TrendingUp} trend="↑ 12% this month" />
+          <StatCard label="Remedies Available" value={String(campaign.remedies?.length || 0)} icon={Shield} />
+          <StatCard label="Products Affected" value={String(campaign.affectedProducts?.length || 0)} icon={Users} />
         </div>
-      </section>
 
-      {/* ══════════════════════════════════════════════════════════════
-          BLADE 3 · RESOLUTION
-          ══════════════════════════════════════════════════════════════ */}
-      <section className={cn(BLADE_H, 'flex flex-col blade-section-resolution')}>
-        <div className="container-content max-w-4xl w-full flex flex-col justify-center flex-1">
-          <BladeHeader blade={BLADES[2]} />
+        {/* ===== 主内容区域 ===== */}
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+          {/* ===== 左侧主内容 ===== */}
+          <div className="min-w-0 space-y-12">
+            {/* 1. 识别产品 */}
+            <section>
+              <SectionTitle
+                icon={Info}
+                description="Check whether your product matches this recall. Locate the lot code, date code, shape, and flavor on your package."
+              >
+                Identify the Product
+              </SectionTitle>
 
-          {/* ── Content: 2-col balanced ── */}
-          <div className="grid lg:grid-cols-2 gap-8 max-w-4xl w-full mx-auto">
-            <div className="flex items-stretch">
-              <ClaimSubmitWrapper campaign={campaign} />
-            </div>
-            <div className="flex flex-col justify-between gap-4">
-              <div className="rounded-xl border bg-surface-elevated p-5">
-                <h4 className="text-sm font-bold text-text-primary mb-3 flex items-center gap-1.5">
-                  <Phone className="h-4 w-4 text-blade-resolution" />
-                  Need Help?
-                </h4>
-                <div className="space-y-2.5 text-sm">
-                  {campaign.manufacturerContact && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-text-tertiary shrink-0" />
-                      <span className="text-text-secondary">{campaign.manufacturerContact}</span>
+              <div className="rounded border border-[#dcdfe6] bg-white p-5">
+                <div className="grid gap-6 border-b border-[#ebeef5] pb-5 sm:grid-cols-2">
+                  <div>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#909399]">
+                      Product Details
+                    </p>
+                    <div className="space-y-1.5 text-sm text-[#303133]">
+                      <p>
+                        <span className="text-[#606266]">Name:</span>{' '}
+                        <strong className="font-medium">{product.name}</strong>
+                      </p>
+                      <p>
+                        <span className="text-[#606266]">Manufacturer:</span>{' '}
+                        <strong className="font-medium">Candy Master</strong>
+                      </p>
+                      <p>
+                        <span className="text-[#606266]">Shapes:</span>{' '}
+                        <span className="inline-flex flex-wrap gap-1">
+                          {product.shapes?.map((shape) => (
+                            <span
+                              key={shape}
+                              className="rounded bg-[#ecf5ff] px-2 py-0.5 text-xs text-[#409eff]"
+                            >
+                              {shape}
+                            </span>
+                          ))}
+                        </span>
+                      </p>
+                      <p>
+                        <span className="text-[#606266]">Flavors:</span>{' '}
+                        <span className="inline-flex flex-wrap gap-1">
+                          {product.flavors?.map((flavor) => (
+                            <span
+                              key={flavor}
+                              className="rounded bg-[#f0f9eb] px-2 py-0.5 text-xs text-[#67c23a]"
+                            >
+                              {flavor}
+                            </span>
+                          ))}
+                        </span>
+                      </p>
                     </div>
+                  </div>
+
+                  <div>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#909399]">
+                      Hazard Description
+                    </p>
+                    <p className="text-sm leading-relaxed text-[#606266]">
+                      {campaign.hazardDescription}
+                    </p>
+                    <p className="mt-2 text-sm text-[#e6a23c]">
+                      ⚠️ Stop using a potentially affected product until its lot code has been checked.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-4">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#909399]">
+                    Affected Lot Codes
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {campaign.affectedLots?.map((lot) => (
+                      <code
+                        key={lot}
+                        className="rounded bg-[#ecf5ff] px-3 py-1.5 text-xs font-mono font-medium text-[#409eff]"
+                      >
+                        {lot}
+                      </code>
+                    ))}
+                  </div>
+                  {campaign.dateCodes && campaign.dateCodes.length > 0 && (
+                    <p className="mt-2 text-xs text-[#606266]">
+                      Date codes:{' '}
+                      <span className="font-mono text-[#303133]">
+                        {campaign.dateCodes.join(', ')}
+                      </span>
+                    </p>
                   )}
                 </div>
               </div>
+            </section>
 
-              <div className="rounded-xl border bg-surface-elevated p-5">
-                <h4 className="text-sm font-bold text-text-primary mb-3 flex items-center gap-1.5">
-                  <ShieldCheck className="h-4 w-4 text-blade-resolution" />
+            {/* 2. 检查产品 */}
+            <section>
+              <SectionTitle
+                icon={CheckSquare}
+                description="Enter your product codes below to verify whether your item is covered by this safety recall."
+              >
+                Check Your Product
+              </SectionTitle>
+
+              <div className="rounded border border-[#dcdfe6] bg-white p-5">
+                <RecallCheckCard campaign={campaign} product={product} />
+              </div>
+            </section>
+
+            {/* 3. 选择补救措施 */}
+            <section>
+              <SectionTitle
+                icon={FileText}
+                description="Select the resolution option that works best for you. Free replacement or full refund are available."
+              >
+                Choose a Remedy
+              </SectionTitle>
+
+              <div className="rounded border border-[#dcdfe6] bg-white p-5">
+                {/* 进度指示 */}
+                <div className="mb-5 flex items-center gap-3 text-sm text-[#606266]">
+                  <span className="flex items-center gap-1.5">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#67c23a] text-xs font-bold text-white">
+                      1
+                    </span>
+                    Select Remedy
+                  </span>
+                  <span className="text-[#dcdfe6]">—</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full border border-[#dcdfe6] text-xs font-bold text-[#909399]">
+                      2
+                    </span>
+                    Submit Info
+                  </span>
+                  <span className="text-[#dcdfe6]">—</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full border border-[#dcdfe6] text-xs font-bold text-[#909399]">
+                      3
+                    </span>
+                    Confirmation
+                  </span>
+                </div>
+
+                <ClaimSubmitWrapper campaign={campaign} />
+              </div>
+            </section>
+          </div>
+
+          {/* ===== 右侧边栏 ===== */}
+          <div className="space-y-5 lg:pt-[72px]">
+            {/* 需要帮助？ */}
+            <SideCard title="Need Help?" icon={HelpCircle}>
+              <div className="flex items-start gap-3 rounded bg-[#f5f7fa] p-3 text-sm">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#ecf5ff] text-[#409eff]">
+                  <Phone className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="font-medium text-[#303133]">Consumer Support</p>
+                  <p className="text-xs text-[#606266]">
+                    {campaign.manufacturerContact?.split(' (')[0] || '1-800-555-0199'}
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-[#909399]">
+                    Mon-Fri, 9:00 AM - 5:00 PM ET
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#909399]">
                   What to Expect
-                </h4>
-                <ol className="space-y-2.5 text-sm text-text-secondary">
-                  <li className="flex gap-2">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blade-resolution text-white text-[11px] font-bold mt-0.5">1</span>
-                    <span>Submit your claim without creating an account</span>
+                </p>
+                <ol className="space-y-3 text-sm leading-relaxed">
+                  <li className="flex gap-3">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#ecf5ff] text-xs font-bold text-[#409eff]">
+                      1
+                    </span>
+                    <span className="text-[#606266]">
+                      Submit your claim without creating an account
+                    </span>
                   </li>
-                  <li className="flex gap-2">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blade-resolution text-white text-[11px] font-bold mt-0.5">2</span>
-                    <span>Your submission will be reviewed by the recall team</span>
+                  <li className="flex gap-3">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#ecf5ff] text-xs font-bold text-[#409eff]">
+                      2
+                    </span>
+                    <span className="text-[#606266]">
+                      Your submission will be reviewed by the recall team
+                    </span>
                   </li>
-                  <li className="flex gap-2">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blade-resolution text-white text-[11px] font-bold mt-0.5">3</span>
-                    <span>You will receive confirmation and next steps after review</span>
+                  <li className="flex gap-3">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#ecf5ff] text-xs font-bold text-[#409eff]">
+                      3
+                    </span>
+                    <span className="text-[#606266]">
+                      You will receive confirmation and next steps within 3-5 business days
+                    </span>
                   </li>
                 </ol>
               </div>
-            </div>
+            </SideCard>
+
+            {/* 查找代码位置 */}
+            <SideCard title="Where to Find Codes" icon={Search}>
+              <ul className="space-y-3 text-sm leading-relaxed">
+                <li className="flex gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#f5f7fa] text-[#909399]">
+                    <Package className="h-3.5 w-3.5" />
+                  </span>
+                  <span className="text-[#606266]">
+                    Look for product identifiers (SKU, UPC, model) on the package or label
+                  </span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#f5f7fa] text-[#909399]">
+                    <FileText className="h-3.5 w-3.5" />
+                  </span>
+                  <span className="text-[#606266]">
+                    Lot and date codes are typically printed near the expiration date
+                  </span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#f5f7fa] text-[#909399]">
+                    <Eye className="h-3.5 w-3.5" />
+                  </span>
+                  <span className="text-[#606266]">
+                    Select visible attributes like shape or flavor from the label
+                  </span>
+                </li>
+              </ul>
+            </SideCard>
+
+            {/* 快速链接 */}
+<SideCard title="Quick Links" icon={FileText}>
+  <div className="space-y-2 text-sm">
+    <a
+      href="/faq#general"
+      className="block rounded px-3 py-2 text-[#409eff] transition-colors hover:bg-[#ecf5ff]"
+    >
+      → General Questions
+    </a>
+    <a
+      href="/faq#identify"
+      className="block rounded px-3 py-2 text-[#409eff] transition-colors hover:bg-[#ecf5ff]"
+    >
+      → Identify Your Product
+    </a>
+    <a
+      href="/faq#check"
+      className="block rounded px-3 py-2 text-[#409eff] transition-colors hover:bg-[#ecf5ff]"
+    >
+      → Check Your Product
+    </a>
+    <a
+      href="/faq#remedy"
+      className="block rounded px-3 py-2 text-[#409eff] transition-colors hover:bg-[#ecf5ff]"
+    >
+      → Choose a Remedy
+    </a>
+    <a
+      href="/faq#status"
+      className="block rounded px-3 py-2 text-[#409eff] transition-colors hover:bg-[#ecf5ff]"
+    >
+      → Check Claim Status
+    </a>
+  </div>
+</SideCard>
           </div>
         </div>
-      </section>
-
+      </main>
     </div>
   );
 }

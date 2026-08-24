@@ -41,7 +41,7 @@ export function BladeProgress({ current, completedSteps }: BladeProgressProps) {
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         />
 
-        {BLADES.map((blade, index) => {
+        {BLADES.map((blade) => {
           const config = BLADE_CONFIG[blade];
           const Icon = BLADE_ICONS[blade];
           const isComplete = completedSteps.includes(blade);

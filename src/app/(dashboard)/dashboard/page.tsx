@@ -54,39 +54,42 @@ const STATUS_BAR_COLORS: Record<ClaimStatusKey, string> = {
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [claims, setClaims] = useState<ConsumerClaim[]>([]);
+  const [claims, setClaims] = useState<ConsumerClaim[] | null>(null);
   const orders = user ? getOrdersByUserId(user.id) : [];
 
   useEffect(() => {
     let cancelled = false;
     if (!user?.token) {
-      setClaims([]);
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
     void listConsumerClaims(user.token).then((response) => {
-      if (!cancelled && response.ok) setClaims(response.data.claims);
-      if (!cancelled && !response.ok) setClaims([]);
+      if (cancelled) return;
+      setClaims(response.ok ? response.data.claims : []);
     });
     return () => {
       cancelled = true;
     };
   }, [user?.token]);
 
-  const activeClaims = claims.filter((c) =>
+  const claimsList = user?.token ? (claims ?? []) : [];
+
+  const activeClaims = claimsList.filter((c) =>
     ['submitted', 'under_review', 'verified', 'remedy_issued'].includes(c.status)
   );
-  const resolvedClaims = claims.filter((c) => c.status === 'resolved');
-  const pendingClaims = claims.filter((c) =>
+  const resolvedClaims = claimsList.filter((c) => c.status === 'resolved');
+  const pendingClaims = claimsList.filter((c) =>
     ['submitted', 'under_review'].includes(c.status)
   );
 
   const statusCounts = STATUS_ORDER.map((s) => ({
     status: s,
-    count: claims.filter((c) => c.status === s).length,
+    count: claimsList.filter((c) => c.status === s).length,
   })).filter((s) => s.count > 0);
 
   const resolutionRate =
-    claims.length > 0 ? Math.round((resolvedClaims.length / claims.length) * 100) : 0;
+    claimsList.length > 0 ? Math.round((resolvedClaims.length / claimsList.length) * 100) : 0;
 
   return (
     <div className="space-y-8 stagger-in">
@@ -111,7 +114,7 @@ export default function DashboardPage() {
       {/* Stat Cards */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Claims', value: claims.length, icon: ClipboardList, color: 'text-brand-teal', bg: 'bg-blade-resolution-light' },
+          { label: 'Total Claims', value: claimsList.length, icon: ClipboardList, color: 'text-brand-teal', bg: 'bg-blade-resolution-light' },
           { label: 'In Progress', value: activeClaims.length, icon: Clock, color: 'text-blade-verification', bg: 'bg-blade-verification-light' },
           { label: 'Resolved', value: resolvedClaims.length, icon: CheckCircle2, color: 'text-blade-resolution', bg: 'bg-blade-resolution-light' },
           { label: 'Linked Orders', value: orders.length, icon: Package, color: 'text-blade-safety', bg: 'bg-blade-safety-light' },
@@ -134,8 +137,8 @@ export default function DashboardPage() {
       </div>
 
       {/* Status distribution */}
-      {claims.length > 0 && (
-        <div className="rounded-xl border bg-surface-elevated p-5 shadow-sm">
+      {claimsList.length > 0 && (
+        <div className="rounded-md border bg-surface-elevated p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <h2 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
               <TrendingUp className="h-4 w-4 text-text-tertiary" />
@@ -152,7 +155,7 @@ export default function DashboardPage() {
               <div
                 key={s.status}
                 className={cn('h-full transition-all duration-500', STATUS_BAR_COLORS[s.status])}
-                style={{ width: `${(s.count / claims.length) * 100}%` }}
+                style={{ width: `${(s.count / claimsList.length) * 100}%` }}
                 title={`${s.status.replace(/_/g, ' ')}: ${s.count}`}
               />
             ))}
@@ -172,7 +175,7 @@ export default function DashboardPage() {
 
       {/* Pending Action */}
       {pendingClaims.length > 0 && (
-        <div className="rounded-xl border blade-accent-safety bg-blade-safety-light/30 p-5">
+        <div className="rounded-md border blade-accent-safety bg-blade-safety-light/30 p-5">
           <div className="flex items-start gap-3">
             <AlertTriangle className="h-5 w-5 text-blade-safety mt-0.5 shrink-0" />
             <div>
@@ -200,14 +203,14 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {claims.length > 0 ? (
+        {claimsList.length > 0 ? (
           <div className="space-y-3">
-            {claims.slice(0, 5).map((claim) => {
+            {claimsList.slice(0, 5).map((claim) => {
               return (
                 <Link
                   key={claim.id}
                   href={`/dashboard/claims/${claim.claimNumber}`}
-                  className="flex items-center justify-between p-4 rounded-xl border bg-surface-elevated hover:shadow-md hover:border-brand-teal/30 hover:-translate-y-0.5 transition-all duration-250 group"
+                  className="flex items-center justify-between rounded-md border bg-surface-elevated p-4 transition-all duration-200 group hover:border-brand-teal/30 hover:shadow-sm"
                 >
                   <div className="flex items-center gap-4 min-w-0">
                     <div
@@ -253,7 +256,7 @@ export default function DashboardPage() {
             })}
           </div>
         ) : (
-          <div className="rounded-xl border bg-surface-elevated p-10 text-center">
+          <div className="rounded-md border bg-surface-elevated p-10 text-center">
             <ClipboardList className="h-10 w-10 mx-auto text-text-tertiary mb-3" />
             <h3 className="text-base font-semibold text-text-primary mb-1">No Claims Yet</h3>
             <p className="text-sm text-text-secondary mb-4">

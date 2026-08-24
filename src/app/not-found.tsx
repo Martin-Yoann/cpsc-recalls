@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 export default function NotFound() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
-      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-blade-safety-light mb-6">
+      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-md border border-blade-safety-medium/40 bg-blade-safety-light">
         <ShieldOff className="h-10 w-10 text-blade-safety" />
       </div>
       <h1 className="text-display-md font-bold text-text-primary mb-3">Page Not Found</h1>

@@ -16,7 +16,7 @@ interface RecallCardProps {
 
 const RISK_CONFIG: Record<string, { accent: string; bg: string; text: string; label: string }> = {
   [RiskLevel.CRITICAL]: {
-    accent: 'border-l-red-500',
+    accent: 'border-l-status-rejected',
     bg: 'bg-red-50',
     text: 'text-red-700',
     label: 'CRITICAL',
@@ -28,13 +28,13 @@ const RISK_CONFIG: Record<string, { accent: string; bg: string; text: string; la
     label: 'HIGH RISK',
   },
   [RiskLevel.MODERATE]: {
-    accent: 'border-l-amber-500',
+    accent: 'border-l-alert-orange',
     bg: 'bg-amber-50',
     text: 'text-amber-700',
     label: 'MODERATE',
   },
   [RiskLevel.LOW]: {
-    accent: 'border-l-blue-500',
+    accent: 'border-l-trust-blue',
     bg: 'bg-blue-50',
     text: 'text-blue-700',
     label: 'LOW',
@@ -48,7 +48,7 @@ export function RecallCard({ campaign }: RecallCardProps) {
     <Link href={`/recalls/${campaign.slug}`} className="block group h-full cursor-pointer">
       <article
         className={cn(
-          'h-full rounded-2xl border-l-[3px] bg-surface-elevated border shadow-sm transition-all duration-300 flex flex-col card-lift',
+          'h-full rounded-md border-l-[3px] bg-surface-elevated border shadow-sm transition-all duration-300 flex flex-col card-lift',
           risk.accent
         )}
       >

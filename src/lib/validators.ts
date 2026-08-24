@@ -3,7 +3,6 @@
 // ============================================================
 
 import { z } from 'zod';
-import { IncidentSeverity } from '@/types';
 
 // === Eligibility Check ===
 export const eligibilitySchema = z.object({

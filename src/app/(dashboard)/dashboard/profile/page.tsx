@@ -140,10 +140,10 @@ export default function ProfilePage() {
                 <img
                   src={user.avatarDataUrl}
                   alt={user.name}
-                  className="h-16 w-16 rounded-xl object-cover border"
+                  className="h-16 w-16 rounded-md object-cover border"
                 />
               ) : (
-                <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-brand-teal text-white text-xl font-bold">
+                <div className="flex h-16 w-16 items-center justify-center rounded-md bg-brand-teal text-white text-xl font-bold">
                   {initials}
                 </div>
               )}

@@ -3,7 +3,7 @@
 // Music Lollipop Recall Demo claims
 // ============================================================
 
-import { ClaimStatus, EvidenceType, IncidentSeverity } from '@/types';
+import { ClaimStatus, EvidenceType } from '@/types';
 
 import type { Claim } from '@/types';
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { AlertCircle, CheckCircle2, ClipboardList, Loader2, Upload, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ChevronDown, ClipboardList, Loader2, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -106,6 +106,107 @@ function buildDefaultForm(product: Product | undefined): ClaimFlowDraftState {
     privacyAccepted: false,
     accuracyAccepted: false,
   };
+}
+
+// ===== Element UI 风格的自定义 Select 组件 =====
+function ElSelect({
+  value,
+  onChange,
+  options,
+  placeholder = 'Select',
+  id,
+  disabled = false,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: ReadonlyArray<{ value: string; label: string }>;
+  placeholder?: string;
+  id?: string;
+  disabled?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const selectedLabel = options.find((opt) => opt.value === value)?.label || placeholder;
+
+  return (
+    <div className="relative" onBlur={() => setTimeout(() => setIsOpen(false), 150)}>
+      <div
+        className={`
+          flex h-10 w-full cursor-pointer items-center justify-between
+          rounded border border-[#dcdfe6] bg-white px-3 text-sm
+          transition-colors
+          ${disabled ? 'cursor-not-allowed bg-[#f5f7fa] text-[#c0c4cc]' : 'hover:border-[#409eff]'}
+          ${isOpen ? 'border-[#409eff] ring-2 ring-[#409eff]/20' : ''}
+        `}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+      >
+        <span className={value ? 'text-[#303133]' : 'text-[#c0c4cc]'}>
+          {selectedLabel}
+        </span>
+        <ChevronDown className={`
+          h-4 w-4 transition-transform duration-200
+          ${isOpen ? 'rotate-180' : ''}
+          ${disabled ? 'text-[#c0c4cc]' : 'text-[#909399]'}
+        `} />
+      </div>
+      {isOpen && !disabled && (
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-auto rounded border border-[#dcdfe6] bg-white shadow-lg">
+          {options.map((option) => (
+            <div
+              key={option.value}
+              className={`
+                cursor-pointer px-3 py-2 text-sm transition-colors
+                ${option.value === value ? 'bg-[#ecf5ff] text-[#409eff]' : 'text-[#303133] hover:bg-[#f5f7fa]'}
+              `}
+              onMouseDown={() => {
+                onChange(option.value);
+                setIsOpen(false);
+              }}
+            >
+              {option.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ===== Element UI 风格的复选框 =====
+function ElCheckbox({
+  checked,
+  onChange,
+  children,
+  disabled = false,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  children: React.ReactNode;
+  disabled?: boolean;
+}) {
+  return (
+    <label className={`
+      flex cursor-pointer items-start gap-2 text-sm
+      ${disabled ? 'cursor-not-allowed opacity-60' : ''}
+    `}>
+      <div className="relative flex h-4 w-4 shrink-0 items-center justify-center">
+        <input
+          type="checkbox"
+          className="absolute h-0 w-0 opacity-0"
+          checked={checked}
+          disabled={disabled}
+          onChange={(e) => onChange(e.target.checked)}
+        />
+        <div className={`
+          flex h-4 w-4 items-center justify-center rounded border transition-all
+          ${checked ? 'border-[#409eff] bg-[#409eff]' : 'border-[#dcdfe6] bg-white hover:border-[#409eff]'}
+        `}>
+          {checked && <CheckCircle2 className="h-3 w-3 text-white" strokeWidth={3} />}
+        </div>
+      </div>
+      <span className="text-[#606266]">{children}</span>
+    </label>
+  );
 }
 
 export function ClaimSubmitWrapper({ campaign }: Props) {
@@ -286,33 +387,35 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
 
   if (submitted) {
     return (
-      <div className="text-center py-12 space-y-5 rounded-xl border bg-surface-elevated">
-        <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-blade-resolution-light border border-blade-resolution-medium/30">
-          <CheckCircle2 className="h-8 w-8 text-blade-resolution" />
+      <div className="text-center py-12 space-y-5 rounded border border-[#dcdfe6] bg-white">
+        <div className="inline-flex h-16 w-16 items-center justify-center rounded-full border border-[#b3d8ff] bg-[#ecf5ff]">
+          <CheckCircle2 className="h-8 w-8 text-[#409eff]" />
         </div>
         <div>
-          <h3 className="text-xl font-bold text-blade-resolution mb-1">Claim Submitted</h3>
-          <p className="text-sm text-text-secondary">Your claim was accepted by KOI Recall API.</p>
+          <h3 className="text-xl font-bold text-[#303133] mb-1">Claim Submitted</h3>
+          <p className="text-sm text-[#606266]">Your claim was accepted by KOI Recall API.</p>
         </div>
-        <div className="inline-flex flex-col items-center rounded-xl bg-surface-secondary border p-4">
-          <p className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest mb-1">Case Reference</p>
-          <p className="text-2xl font-mono font-bold text-blade-resolution">{submitted.caseReference}</p>
+        <div className="inline-flex flex-col items-center rounded border border-[#dcdfe6] bg-[#f5f7fa] p-4">
+          <p className="text-[10px] font-bold text-[#909399] uppercase tracking-widest mb-1">Case Reference</p>
+          <p className="text-2xl font-mono font-bold text-[#409eff]">{submitted.caseReference}</p>
         </div>
-        <div className="space-y-2 text-sm text-text-secondary max-w-md mx-auto">
+        <div className="space-y-2 text-sm text-[#606266] max-w-md mx-auto">
           <p className="flex items-center justify-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-blade-resolution" />
+            <CheckCircle2 className="h-4 w-4 text-[#409eff]" />
             Confirmation email queued: {submitted.emailStatus}
           </p>
           <p className="flex items-center justify-center gap-2">
-            <ClipboardList className="h-4 w-4 text-blade-resolution" />
+            <ClipboardList className="h-4 w-4 text-[#409eff]" />
             Next step: {submitted.nextStep}
           </p>
         </div>
         <div className="flex flex-wrap justify-center gap-2">
           <Link href="/lookup">
-            <Button size="sm" variant="outline">Check Status</Button>
+            <Button size="sm" variant="outline" className="border-[#dcdfe6] text-[#606266] hover:border-[#409eff] hover:text-[#409eff]">
+              Check Status
+            </Button>
           </Link>
-          <Button size="sm" onClick={handleReset} className="bg-blade-resolution hover:bg-blade-resolution-dark text-white">
+          <Button size="sm" onClick={handleReset} className="bg-[#409eff] text-white hover:bg-[#337ecc] border-0">
             Start Another Claim
           </Button>
         </div>
@@ -322,8 +425,8 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
 
   if (isBootstrapping) {
     return (
-      <div className="rounded-xl border bg-surface-elevated p-6 text-sm text-text-secondary flex items-center gap-3">
-        <Loader2 className="h-4 w-4 animate-spin text-blade-resolution" />
+      <div className="rounded border border-[#dcdfe6] bg-white p-6 text-sm text-[#606266] flex items-center gap-3">
+        <Loader2 className="h-4 w-4 animate-spin text-[#409eff]" />
         Preparing secure claim session...
       </div>
     );
@@ -331,13 +434,13 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
 
   if (problem && !session) {
     return (
-      <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 space-y-2">
-        <p className="text-sm font-semibold text-destructive flex items-center gap-2">
+      <div className="rounded border border-red-500/20 bg-red-50 p-4 space-y-2">
+        <p className="text-sm font-semibold text-red-500 flex items-center gap-2">
           <AlertCircle className="h-4 w-4" />
           Claim flow unavailable
         </p>
-        <p className="text-sm text-text-secondary">{problem.detail}</p>
-        {problem.requestId && <p className="text-xs text-text-tertiary">Request ID: {problem.requestId}</p>}
+        <p className="text-sm text-[#606266]">{problem.detail}</p>
+        {problem.requestId && <p className="text-xs text-[#909399]">Request ID: {problem.requestId}</p>}
       </div>
     );
   }
@@ -347,183 +450,265 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
   }
 
   return (
-    <div className="rounded-xl border bg-surface-elevated p-5 space-y-5">
+    <div data-claim-form className="rounded border border-[#dcdfe6] bg-white p-4 space-y-6 sm:p-5">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-tertiary">Draft Ready</p>
-        <h3 className="text-lg font-bold text-text-primary mt-1">Requested resolution captured</h3>
-        <p className="text-sm text-text-secondary mt-1">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#909399]">Draft Ready</p>
+        <h3 className="text-lg font-bold text-[#303133] mt-1">Requested resolution captured</h3>
+        <p className="text-sm text-[#606266] mt-1">
           Resolution `{selectedRemedy.id}` is stored in the draft session. This bridge form now persists claim data into session storage and submits using the real API contract.
         </p>
       </div>
 
-      <div className="rounded-lg border bg-surface-secondary/50 p-4 text-sm text-text-secondary space-y-2">
-        <p><span className="font-semibold text-text-primary">Draft ID:</span> {session.draftId}</p>
-        <p><span className="font-semibold text-text-primary">Expires:</span> {session.expiresAt}</p>
-        <p><span className="font-semibold text-text-primary">Requested Resolution:</span> {selectedRemedy.title}</p>
-        <p><span className="font-semibold text-text-primary">Form Version:</span> {CLAIM_FLOW_FORM_VERSION}</p>
+      <div className="rounded border border-[#dcdfe6] bg-[#f5f7fa] p-4 text-sm text-[#606266] space-y-2">
+        <p><span className="font-semibold text-[#303133]">Draft ID:</span> {session.draftId}</p>
+        <p><span className="font-semibold text-[#303133]">Expires:</span> {session.expiresAt}</p>
+        <p><span className="font-semibold text-[#303133]">Requested Resolution:</span> {selectedRemedy.title}</p>
+        <p><span className="font-semibold text-[#303133]">Form Version:</span> {CLAIM_FLOW_FORM_VERSION}</p>
       </div>
 
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+      <div className="rounded border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
         Your selection is a requested resolution and remains subject to eligibility and operational review.
       </div>
 
       {selectedRemedy.type === 'refund' && (
-        <div className="rounded-lg border bg-surface-secondary/50 p-4 text-sm text-text-secondary">
+        <div className="rounded border border-[#dcdfe6] bg-[#f5f7fa] p-4 text-sm text-[#606266]">
           If approved, the refund will be processed outside this website by the appropriate finance, ecommerce, or payment team. This website does not collect card or bank details.
         </div>
       )}
 
+      {/* ===== 消费者信息 ===== */}
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="first-name">First name</Label>
-          <Input id="first-name" value={session.form.consumer.firstName} onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, firstName: event.target.value } }))} />
+          <Label htmlFor="first-name" className="text-sm font-medium text-[#303133]">First name</Label>
+          <Input
+            id="first-name"
+            value={session.form.consumer.firstName}
+            onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, firstName: event.target.value } }))}
+            className="h-10 rounded border border-[#dcdfe6] px-3 text-sm text-[#303133] transition-colors placeholder:text-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20"
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="last-name">Last name</Label>
-          <Input id="last-name" value={session.form.consumer.lastName} onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, lastName: event.target.value } }))} />
+          <Label htmlFor="last-name" className="text-sm font-medium text-[#303133]">Last name</Label>
+          <Input
+            id="last-name"
+            value={session.form.consumer.lastName}
+            onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, lastName: event.target.value } }))}
+            className="h-10 rounded border border-[#dcdfe6] px-3 text-sm text-[#303133] transition-colors placeholder:text-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20"
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" value={session.form.consumer.email} onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, email: event.target.value } }))} />
+          <Label htmlFor="email" className="text-sm font-medium text-[#303133]">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            value={session.form.consumer.email}
+            onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, email: event.target.value } }))}
+            className="h-10 rounded border border-[#dcdfe6] px-3 text-sm text-[#303133] transition-colors placeholder:text-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20"
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone</Label>
-          <Input id="phone" value={session.form.consumer.phone} onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, phone: event.target.value } }))} />
+          <Label htmlFor="phone" className="text-sm font-medium text-[#303133]">Phone</Label>
+          <Input
+            id="phone"
+            value={session.form.consumer.phone}
+            onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, phone: event.target.value } }))}
+            className="h-10 rounded border border-[#dcdfe6] px-3 text-sm text-[#303133] transition-colors placeholder:text-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20"
+          />
         </div>
         <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="address-line1">Address line 1</Label>
-          <Input id="address-line1" value={session.form.consumer.addressLine1} onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, addressLine1: event.target.value } }))} />
+          <Label htmlFor="address-line1" className="text-sm font-medium text-[#303133]">Address line 1</Label>
+          <Input
+            id="address-line1"
+            value={session.form.consumer.addressLine1}
+            onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, addressLine1: event.target.value } }))}
+            className="h-10 rounded border border-[#dcdfe6] px-3 text-sm text-[#303133] transition-colors placeholder:text-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20"
+          />
         </div>
         <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="address-line2">Address line 2</Label>
-          <Input id="address-line2" value={session.form.consumer.addressLine2} onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, addressLine2: event.target.value } }))} />
+          <Label htmlFor="address-line2" className="text-sm font-medium text-[#303133]">Address line 2</Label>
+          <Input
+            id="address-line2"
+            value={session.form.consumer.addressLine2}
+            onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, addressLine2: event.target.value } }))}
+            className="h-10 rounded border border-[#dcdfe6] px-3 text-sm text-[#303133] transition-colors placeholder:text-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20"
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="city">City</Label>
-          <Input id="city" value={session.form.consumer.city} onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, city: event.target.value } }))} />
+          <Label htmlFor="city" className="text-sm font-medium text-[#303133]">City</Label>
+          <Input
+            id="city"
+            value={session.form.consumer.city}
+            onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, city: event.target.value } }))}
+            className="h-10 rounded border border-[#dcdfe6] px-3 text-sm text-[#303133] transition-colors placeholder:text-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20"
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="state">State / Province</Label>
-          <Input id="state" value={session.form.consumer.state} onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, state: event.target.value } }))} />
+          <Label htmlFor="state" className="text-sm font-medium text-[#303133]">State / Province</Label>
+          <Input
+            id="state"
+            value={session.form.consumer.state}
+            onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, state: event.target.value } }))}
+            className="h-10 rounded border border-[#dcdfe6] px-3 text-sm text-[#303133] transition-colors placeholder:text-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20"
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="postal-code">Postal code</Label>
-          <Input id="postal-code" value={session.form.consumer.postalCode} onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, postalCode: event.target.value } }))} />
+          <Label htmlFor="postal-code" className="text-sm font-medium text-[#303133]">Postal code</Label>
+          <Input
+            id="postal-code"
+            value={session.form.consumer.postalCode}
+            onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, postalCode: event.target.value } }))}
+            className="h-10 rounded border border-[#dcdfe6] px-3 text-sm text-[#303133] transition-colors placeholder:text-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20"
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="country-code">Country code</Label>
-          <Input id="country-code" maxLength={2} value={session.form.consumer.countryCode} onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, countryCode: event.target.value.toUpperCase() } }))} />
+          <Label htmlFor="country-code" className="text-sm font-medium text-[#303133]">Country code</Label>
+          <Input
+            id="country-code"
+            maxLength={2}
+            value={session.form.consumer.countryCode}
+            onChange={(event) => updateForm((form) => ({ ...form, consumer: { ...form.consumer, countryCode: event.target.value.toUpperCase() } }))}
+            className="h-10 rounded border border-[#dcdfe6] px-3 text-sm text-[#303133] transition-colors placeholder:text-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20"
+          />
         </div>
       </div>
 
+      {/* ===== 产品信息 ===== */}
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="product">Affected product</Label>
-          <select
+          <Label htmlFor="product" className="text-sm font-medium text-[#303133]">Affected product</Label>
+          <ElSelect
             id="product"
             value={session.form.product.campaignProductId}
-            onChange={(event) => updateForm((form) => ({ ...form, product: { ...form.product, campaignProductId: event.target.value } }))}
-            className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-          >
-            {campaign.affectedProducts.map((product) => (
-              <option key={product.id} value={product.id}>{product.name}</option>
-            ))}
-          </select>
+            onChange={(value) => updateForm((form) => ({ ...form, product: { ...form.product, campaignProductId: value } }))}
+            options={campaign.affectedProducts.map((p) => ({ value: p.id, label: p.name }))}
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="purchase-channel">Purchase channel</Label>
-          <select
+          <Label htmlFor="purchase-channel" className="text-sm font-medium text-[#303133]">Purchase channel</Label>
+          <ElSelect
             id="purchase-channel"
             value={session.form.product.purchaseChannel}
-            onChange={(event) => updateForm((form) => ({ ...form, product: { ...form.product, purchaseChannel: event.target.value as ClaimFlowDraftState['product']['purchaseChannel'] } }))}
-            className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-          >
-            {PURCHASE_CHANNEL_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
+            onChange={(value) => updateForm((form) => ({
+              ...form,
+              product: { ...form.product, purchaseChannel: value as ClaimFlowDraftState['product']['purchaseChannel'] },
+            }))}
+            options={PURCHASE_CHANNEL_OPTIONS}
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="purchase-date">Purchase date</Label>
-          <Input id="purchase-date" type="date" value={session.form.product.purchaseDate} onChange={(event) => updateForm((form) => ({ ...form, product: { ...form.product, purchaseDate: event.target.value } }))} />
+          <Label htmlFor="purchase-date" className="text-sm font-medium text-[#303133]">Purchase date</Label>
+          <Input
+            id="purchase-date"
+            type="date"
+            value={session.form.product.purchaseDate}
+            onChange={(event) => updateForm((form) => ({ ...form, product: { ...form.product, purchaseDate: event.target.value } }))}
+            className="h-10 rounded border border-[#dcdfe6] px-3 text-sm text-[#303133] transition-colors placeholder:text-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20"
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="order-number">Order number</Label>
-          <Input id="order-number" value={session.form.product.orderNumber} onChange={(event) => updateForm((form) => ({ ...form, product: { ...form.product, orderNumber: event.target.value } }))} />
+          <Label htmlFor="order-number" className="text-sm font-medium text-[#303133]">Order number</Label>
+          <Input
+            id="order-number"
+            value={session.form.product.orderNumber}
+            onChange={(event) => updateForm((form) => ({ ...form, product: { ...form.product, orderNumber: event.target.value } }))}
+            className="h-10 rounded border border-[#dcdfe6] px-3 text-sm text-[#303133] transition-colors placeholder:text-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20"
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="lot-code">Lot code</Label>
-          <Input id="lot-code" value={session.form.product.lotCode} onChange={(event) => updateForm((form) => ({ ...form, product: { ...form.product, lotCode: event.target.value } }))} />
+          <Label htmlFor="lot-code" className="text-sm font-medium text-[#303133]">Lot code</Label>
+          <Input
+            id="lot-code"
+            value={session.form.product.lotCode}
+            onChange={(event) => updateForm((form) => ({ ...form, product: { ...form.product, lotCode: event.target.value } }))}
+            className="h-10 rounded border border-[#dcdfe6] px-3 text-sm text-[#303133] transition-colors placeholder:text-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20"
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="date-code">Date code</Label>
-          <Input id="date-code" value={session.form.product.dateCode} onChange={(event) => updateForm((form) => ({ ...form, product: { ...form.product, dateCode: event.target.value } }))} />
+          <Label htmlFor="date-code" className="text-sm font-medium text-[#303133]">Date code</Label>
+          <Input
+            id="date-code"
+            value={session.form.product.dateCode}
+            onChange={(event) => updateForm((form) => ({ ...form, product: { ...form.product, dateCode: event.target.value } }))}
+            className="h-10 rounded border border-[#dcdfe6] px-3 text-sm text-[#303133] transition-colors placeholder:text-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20"
+          />
         </div>
       </div>
 
-      <div className="space-y-4 rounded-lg border p-4">
+      {/* ===== 事故信息 ===== */}
+      <div className="space-y-4 rounded border border-[#dcdfe6] p-4">
         <div className="space-y-2">
-          <Label htmlFor="incident-answer">Did the recalled product cause an incident?</Label>
-          <select
+          <Label htmlFor="incident-answer" className="text-sm font-medium text-[#303133]">Did the recalled product cause an incident?</Label>
+          <ElSelect
             id="incident-answer"
             value={session.form.incidentAnswer}
-            onChange={(event) => updateForm((form) => ({
+            onChange={(value) => updateForm((form) => ({
               ...form,
-              incidentAnswer: event.target.value as ClaimFlowDraftState['incidentAnswer'],
-              incident: event.target.value === 'no' ? buildDefaultForm(firstProduct).incident : form.incident,
+              incidentAnswer: value as ClaimFlowDraftState['incidentAnswer'],
+              incident: value === 'no' ? buildDefaultForm(firstProduct).incident : form.incident,
             }))}
-            className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-          >
-            <option value="no">No</option>
-            <option value="yes">Yes</option>
-            <option value="unsure">Unsure</option>
-          </select>
+            options={[
+              { value: 'no', label: 'No' },
+              { value: 'yes', label: 'Yes' },
+              { value: 'unsure', label: 'Unsure' },
+            ]}
+          />
         </div>
 
         {session.form.incidentAnswer !== 'no' && (
           <>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="incident-date">Incident date</Label>
-                <Input id="incident-date" type="date" value={session.form.incident.occurredDate} onChange={(event) => updateForm((form) => ({ ...form, incident: { ...form.incident, occurredDate: event.target.value } }))} />
-              </div>
-              <label className="flex items-center gap-2 text-sm text-text-secondary pt-7">
-                <input
-                  type="checkbox"
-                  checked={session.form.incident.occurredDateUnknown}
-                  onChange={(event) => updateForm((form) => ({ ...form, incident: { ...form.incident, occurredDateUnknown: event.target.checked } }))}
+                <Label htmlFor="incident-date" className="text-sm font-medium text-[#303133]">Incident date</Label>
+                <Input
+                  id="incident-date"
+                  type="date"
+                  value={session.form.incident.occurredDate}
+                  onChange={(event) => updateForm((form) => ({ ...form, incident: { ...form.incident, occurredDate: event.target.value } }))}
+                  className="h-10 rounded border border-[#dcdfe6] px-3 text-sm text-[#303133] transition-colors placeholder:text-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20"
                 />
-                Date unknown
-              </label>
+              </div>
+              <div className="flex items-center pt-7">
+                <ElCheckbox
+                  checked={session.form.incident.occurredDateUnknown}
+                  onChange={(checked) => updateForm((form) => ({ ...form, incident: { ...form.incident, occurredDateUnknown: checked } }))}
+                >
+                  Date unknown
+                </ElCheckbox>
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="incident-description">What happened?</Label>
-              <Textarea id="incident-description" rows={4} value={session.form.incident.eventDescription} onChange={(event) => updateForm((form) => ({ ...form, incident: { ...form.incident, eventDescription: event.target.value } }))} />
+              <Label htmlFor="incident-description" className="text-sm font-medium text-[#303133]">What happened?</Label>
+              <Textarea
+                id="incident-description"
+                rows={4}
+                value={session.form.incident.eventDescription}
+                onChange={(event) => updateForm((form) => ({ ...form, incident: { ...form.incident, eventDescription: event.target.value } }))}
+                className="rounded border border-[#dcdfe6] px-3 py-2 text-sm text-[#303133] transition-colors placeholder:text-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20"
+              />
             </div>
 
             <div className="space-y-2">
-              <Label>Event types</Label>
+              <Label className="text-sm font-medium text-[#303133]">Event types</Label>
               <div className="grid gap-2 sm:grid-cols-2">
                 {INCIDENT_EVENT_OPTIONS.map((option) => {
                   const checked = session.form.incident.eventTypes.includes(option.value);
                   return (
-                    <label key={option.value} className="flex items-center gap-2 rounded border px-3 py-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={(event) => updateForm((form) => ({
-                          ...form,
-                          incident: {
-                            ...form.incident,
-                            eventTypes: event.target.checked
-                              ? [...form.incident.eventTypes, option.value]
-                              : form.incident.eventTypes.filter((value) => value !== option.value),
-                          },
-                        }))}
-                      />
+                    <ElCheckbox
+                      key={option.value}
+                      checked={checked}
+                      onChange={(eventChecked) => updateForm((form) => ({
+                        ...form,
+                        incident: {
+                          ...form.incident,
+                          eventTypes: eventChecked
+                            ? [...form.incident.eventTypes, option.value]
+                            : form.incident.eventTypes.filter((value) => value !== option.value),
+                        },
+                      }))}
+                    >
                       {option.label}
-                    </label>
+                    </ElCheckbox>
                   );
                 })}
               </div>
@@ -531,57 +716,58 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
 
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="injury-severity">Injury severity</Label>
-                <select
+                <Label htmlFor="injury-severity" className="text-sm font-medium text-[#303133]">Injury severity</Label>
+                <ElSelect
                   id="injury-severity"
                   value={session.form.incident.injurySeverity}
-                  onChange={(event) => updateForm((form) => ({ ...form, incident: { ...form.incident, injurySeverity: event.target.value as ClaimFlowDraftState['incident']['injurySeverity'] } }))}
-                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                >
-                  <option value="">Select</option>
-                  <option value="none">None</option>
-                  <option value="minor">Minor</option>
-                  <option value="moderate">Moderate</option>
-                  <option value="severe">Severe</option>
-                  <option value="death">Death</option>
-                  <option value="unknown">Unknown</option>
-                </select>
+                  onChange={(value) => updateForm((form) => ({ ...form, incident: { ...form.incident, injurySeverity: value as ClaimFlowDraftState['incident']['injurySeverity'] } }))}
+                  options={[
+                    { value: '', label: 'Select' },
+                    { value: 'none', label: 'None' },
+                    { value: 'minor', label: 'Minor' },
+                    { value: 'moderate', label: 'Moderate' },
+                    { value: 'severe', label: 'Severe' },
+                    { value: 'death', label: 'Death' },
+                    { value: 'unknown', label: 'Unknown' },
+                  ]}
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="medical-treatment">Medical treatment</Label>
-                <select
+                <Label htmlFor="medical-treatment" className="text-sm font-medium text-[#303133]">Medical treatment</Label>
+                <ElSelect
                   id="medical-treatment"
                   value={session.form.incident.medicalTreatment}
-                  onChange={(event) => updateForm((form) => ({ ...form, incident: { ...form.incident, medicalTreatment: event.target.value as ClaimFlowDraftState['incident']['medicalTreatment'] } }))}
-                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                >
-                  <option value="">Select</option>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                  <option value="unknown">Unknown</option>
-                </select>
+                  onChange={(value) => updateForm((form) => ({ ...form, incident: { ...form.incident, medicalTreatment: value as ClaimFlowDraftState['incident']['medicalTreatment'] } }))}
+                  options={[
+                    { value: '', label: 'Select' },
+                    { value: 'yes', label: 'Yes' },
+                    { value: 'no', label: 'No' },
+                    { value: 'unknown', label: 'Unknown' },
+                  ]}
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="used-as-intended">Used as intended</Label>
-                <select
+                <Label htmlFor="used-as-intended" className="text-sm font-medium text-[#303133]">Used as intended</Label>
+                <ElSelect
                   id="used-as-intended"
                   value={session.form.incident.usedAsIntended}
-                  onChange={(event) => updateForm((form) => ({ ...form, incident: { ...form.incident, usedAsIntended: event.target.value as ClaimFlowDraftState['incident']['usedAsIntended'] } }))}
-                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                >
-                  <option value="">Select</option>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                  <option value="unknown">Unknown</option>
-                </select>
+                  onChange={(value) => updateForm((form) => ({ ...form, incident: { ...form.incident, usedAsIntended: value as ClaimFlowDraftState['incident']['usedAsIntended'] } }))}
+                  options={[
+                    { value: '', label: 'Select' },
+                    { value: 'yes', label: 'Yes' },
+                    { value: 'no', label: 'No' },
+                    { value: 'unknown', label: 'Unknown' },
+                  ]}
+                />
               </div>
             </div>
           </>
         )}
       </div>
 
-      <div className="space-y-3 rounded-lg border p-4">
-        <div className="space-y-3 rounded-lg border border-dashed p-4">
+      {/* ===== 上传区域 ===== */}
+      <div className="space-y-3 rounded border border-[#dcdfe6] p-4">
+        <div className="space-y-3 rounded border border-dashed border-[#dcdfe6] p-4">
           {(evidenceRequirements.length
             ? evidenceRequirements
             : DOCUMENT_CATEGORY_OPTIONS.map((option) => ({
@@ -596,20 +782,23 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             const uploadedCount = session.documents.filter((document) => document.category === rule.category).length;
             const limitReached = uploadedCount >= rule.maximumFiles;
             return (
-              <div key={rule.category} className="rounded-md border bg-background/60 p-3">
+              <div key={rule.category} className="rounded border border-[#dcdfe6] bg-[#fafafa] p-3">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div className="space-y-1 text-sm">
-                    <p className="font-medium text-text-primary">{formatDocumentCategory(rule.category)}</p>
-                    <p className="text-xs text-text-tertiary">
+                    <p className="font-medium text-[#303133]">{formatDocumentCategory(rule.category)}</p>
+                    <p className="text-xs text-[#909399]">
                       {rule.required || rule.minimumFiles > 0 ? 'Required' : 'Optional'} | Uploaded {uploadedCount} of {rule.maximumFiles}
                     </p>
-                    {rule.instructions ? <p className="text-xs text-text-tertiary">{rule.instructions}</p> : null}
+                    {rule.instructions ? <p className="text-xs text-[#909399]">{rule.instructions}</p> : null}
                     {rule.allowedMimeTypes.length ? (
-                      <p className="text-xs text-text-tertiary">Accepted: {formatMimeTypes(rule.allowedMimeTypes)}</p>
+                      <p className="text-xs text-[#909399]">Accepted: {formatMimeTypes(rule.allowedMimeTypes)}</p>
                     ) : null}
                   </div>
                   <label
-                    className={`inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white ${limitReached || isUploading ? 'cursor-not-allowed bg-muted' : 'cursor-pointer bg-blade-verification'}`}
+                    className={`
+                      inline-flex items-center justify-center gap-2 rounded px-4 py-2 text-sm font-medium text-white transition-colors
+                      ${limitReached || isUploading ? 'cursor-not-allowed bg-[#a0cfff]' : 'cursor-pointer bg-[#409eff] hover:bg-[#337ecc]'}
+                    `}
                   >
                     <Upload className="h-4 w-4" />
                     {isUploading ? 'Uploading...' : limitReached ? 'Limit reached' : `Add ${formatDocumentCategory(rule.category)}`}
@@ -634,80 +823,80 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
         {session.documents.length > 0 ? (
           <div className="space-y-2">
             {session.documents.map((document) => (
-              <div key={document.documentId} className="flex items-center justify-between rounded border px-3 py-2 text-sm">
+              <div key={document.documentId} className="flex items-center justify-between rounded border border-[#dcdfe6] px-3 py-2 text-sm">
                 <div>
-                  <p className="font-medium text-text-primary">{document.fileName}</p>
-                  <p className="text-xs text-text-tertiary">{formatDocumentCategory(document.category)} | {document.status} | {document.documentId}</p>
+                  <p className="font-medium text-[#303133]">{document.fileName}</p>
+                  <p className="text-xs text-[#909399]">{formatDocumentCategory(document.category)} | {document.status} | {document.documentId}</p>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setSession(claimFlowModule.removeDocument(session, document.documentId))}>
+                <Button variant="ghost" size="icon" onClick={() => setSession(claimFlowModule.removeDocument(session, document.documentId))} className="text-[#909399] hover:text-[#409eff]">
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-text-secondary">No evidence receipts attached yet.</p>
+          <p className="text-sm text-[#909399]">No evidence receipts attached yet.</p>
         )}
       </div>
 
-      <div className="rounded-lg border p-4 text-sm text-text-secondary">
-        <p className="font-medium text-text-primary">Evidence requirements</p>
+      <div className="rounded border border-[#dcdfe6] p-4 text-sm text-[#606266]">
+        <p className="font-medium text-[#303133]">Evidence requirements</p>
         {evidenceRequirements.length ? (
-          <div className="mt-2 space-y-2 text-xs text-text-tertiary">
+          <div className="mt-2 space-y-2 text-xs text-[#909399]">
             {evidenceRequirements.map((rule) => (
               <div key={rule.category}>
-                <p className="font-medium text-text-primary">{describeEvidenceRule(rule)}</p>
+                <p className="font-medium text-[#303133]">{describeEvidenceRule(rule)}</p>
                 <p>{rule.instructions}</p>
               </div>
             ))}
           </div>
         ) : (
-          <p className="mt-1 text-xs text-text-tertiary">No campaign-specific evidence requirements were returned.</p>
+          <p className="mt-1 text-xs text-[#909399]">No campaign-specific evidence requirements were returned.</p>
         )}
       </div>
 
-      <div className="rounded-lg border p-4 text-sm text-text-secondary">
-        <p className="font-medium text-text-primary">Mailing address</p>
-        <p className="mt-1 text-xs text-text-tertiary">Used for replacement or other remedies that need shipment details.</p>
+      <div className="rounded border border-[#dcdfe6] p-4 text-sm text-[#606266]">
+        <p className="font-medium text-[#303133]">Mailing address</p>
+        <p className="mt-1 text-xs text-[#909399]">Used for replacement or other remedies that need shipment details.</p>
       </div>
 
-      <div className="space-y-2 rounded-lg border p-4 text-sm text-text-secondary">
-        <label className="flex items-start gap-2">
-          <input
-            type="checkbox"
-            checked={session.form.privacyAccepted}
-            onChange={(event) => updateForm((form) => ({ ...form, privacyAccepted: event.target.checked }))}
-          />
-          <span>I acknowledge the privacy notice version `{CLAIM_FLOW_PRIVACY_VERSION}`.</span>
-        </label>
-        <label className="flex items-start gap-2">
-          <input
-            type="checkbox"
-            checked={session.form.accuracyAccepted}
-            onChange={(event) => updateForm((form) => ({ ...form, accuracyAccepted: event.target.checked }))}
-          />
-          <span>I confirm the submitted information is accurate for form version `{CLAIM_FLOW_FORM_VERSION}`.</span>
-        </label>
+      {/* ===== 复选框 ===== */}
+      <div className="space-y-2 rounded border border-[#dcdfe6] p-4 text-sm text-[#606266]">
+        <ElCheckbox
+          checked={session.form.privacyAccepted}
+          onChange={(checked) => updateForm((form) => ({ ...form, privacyAccepted: checked }))}
+        >
+          I acknowledge the privacy notice version `{CLAIM_FLOW_PRIVACY_VERSION}`.
+        </ElCheckbox>
+        <ElCheckbox
+          checked={session.form.accuracyAccepted}
+          onChange={(checked) => updateForm((form) => ({ ...form, accuracyAccepted: checked }))}
+        >
+          I confirm the submitted information is accurate for form version `{CLAIM_FLOW_FORM_VERSION}`.
+        </ElCheckbox>
       </div>
 
       {validationMessage && (
-        <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">
+        <div className="rounded border border-red-500/20 bg-red-50 p-4 text-sm text-red-500">
           {validationMessage}
         </div>
       )}
 
       {problem && (
-        <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-sm text-text-secondary">
-          <p className="font-semibold text-destructive">Last API issue</p>
+        <div className="rounded border border-red-500/20 bg-red-50 p-4 text-sm text-[#606266]">
+          <p className="font-semibold text-red-500">Last API issue</p>
           <p>{problem.detail}</p>
-          {problem.requestId && <p className="text-xs text-text-tertiary mt-1">Request ID: {problem.requestId}</p>}
+          {problem.requestId && <p className="text-xs text-[#909399] mt-1">Request ID: {problem.requestId}</p>}
         </div>
       )}
 
+      {/* ===== 底部按钮 ===== */}
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" onClick={handleReset}>Reset Draft</Button>
+        <Button variant="outline" onClick={handleReset} className="border-[#dcdfe6] text-[#606266] hover:border-[#409eff] hover:text-[#409eff]">
+          Reset Draft
+        </Button>
         <Button
-          className="bg-blade-resolution hover:bg-blade-resolution-dark text-white"
+          className="bg-[#409eff] text-white hover:bg-[#337ecc] border-0 disabled:bg-[#a0cfff]"
           disabled={isSubmitting}
           onClick={async () => {
             const current = session;
@@ -736,4 +925,3 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
     </div>
   );
 }
-

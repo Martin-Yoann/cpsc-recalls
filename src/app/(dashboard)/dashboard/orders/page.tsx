@@ -38,7 +38,7 @@ export default function OrdersPage() {
             return (
               <div
                 key={order.id}
-                className="rounded-xl border bg-surface-elevated p-5 space-y-4"
+                className="rounded-md border bg-surface-elevated p-5 space-y-4"
               >
                 <div className="flex items-start justify-between">
                   <div className="space-y-1.5">
@@ -99,7 +99,7 @@ export default function OrdersPage() {
           })}
         </div>
       ) : (
-        <div className="rounded-xl border bg-surface-elevated p-10 text-center">
+        <div className="rounded-md border bg-surface-elevated p-10 text-center">
           <ShoppingBag className="h-10 w-10 mx-auto text-text-tertiary mb-3" />
           <h3 className="text-base font-semibold text-text-primary mb-1">No Linked Orders</h3>
           <p className="text-sm text-text-secondary mb-4">Link your purchase orders to automatically match them with relevant product recall information.</p>

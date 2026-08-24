@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Search, X } from 'lucide-react';
+import { ArrowRight, Check, LockKeyhole, ShieldCheck, X } from 'lucide-react';
 import { LookupForm } from '@/components/lookup/lookup-form';
 import { LookupResult } from '@/components/lookup/lookup-result';
 import { lookupConsumerClaim, type ConsumerClaim } from '@/lib/api-client';
@@ -38,80 +38,84 @@ export default function LookupPage() {
   const closeDrawer = () => setDrawerOpen(false);
 
   return (
-    <div className="min-h-[calc(100vh-3.75rem)] flex items-center justify-center px-5" style={{ background: '#faf8ff' }}>
-      {/* ═══ Centered form ═══ */}
-      <div className="w-full max-w-[440px] -mt-16">
-        <div className="text-center mb-8">
-          <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl mb-5"
-            style={{ background: 'rgba(0,53,39,0.05)' }}>
-            <Search className="h-7 w-7" style={{ color: '#003527' }} />
-          </div>
-          <h1 className="text-[32px] md:text-[40px] font-bold leading-[1.15] tracking-[-0.02em] mb-2.5"
-            style={{ color: '#003527' }}>
-            Check Your<br />Recall Status
-          </h1>
-          <p className="text-base leading-relaxed max-w-sm mx-auto" style={{ color: '#404944' }}>
-            Enter your claim number and phone number.<br />No registration required.
+    <div className="lookup-page">
+      <div className="lookup-page__inner">
+        <div className="lookup-intro">
+          <div className="lookup-intro__topline"><span>Consumer support</span><span>01 / 02</span></div>
+          <div className="lookup-intro__icon"><ShieldCheck aria-hidden="true" /><span>Secure recall centre</span></div>
+          <h1>Check your<br /><em>recall status.</em></h1>
+          <p className="lookup-intro__lead">
+            A clear answer starts with your claim number. Review your case, remedy, and next steps in one place.
           </p>
+          <div className="lookup-intro__rule" />
+          <div className="lookup-intro__points">
+            <div><Check aria-hidden="true" /><span><strong>No account required</strong>Use the details from your claim.</span></div>
+            <div><Check aria-hidden="true" /><span><strong>Private by design</strong>Your phone number verifies access.</span></div>
+          </div>
+          <div className="lookup-intro__mark">KOI<span>•</span>RECALL</div>
         </div>
 
-        {/* Form card */}
-        <div className="rounded-xl p-6 sm:p-8 shadow-sm" style={{ background: '#ffffff', border: '1px solid rgba(0,53,39,0.1)' }}>
-          <LookupForm onSearch={handleSearch} isLoading={isLoading} />
+        <div className="lookup-form-area">
+          <div className="lookup-form-area__heading">
+            <div><span className="lookup-kicker">Find a case</span><h2>Enter your details</h2></div>
+            <div className="lookup-step"><span>STEP</span><strong>01</strong></div>
+          </div>
+          <div className="lookup-form-card">
+            <LookupForm onSearch={handleSearch} isLoading={isLoading} />
 
           {/* Not Found */}
           {notFound && (
-            <div className="mt-4 p-3 rounded-lg text-center animate-in fade-in duration-150"
-              style={{ background: '#ffdad6', border: '1px solid rgba(186,26,26,0.15)', color: '#93000a', fontSize: '0.8125rem' }}>
+            <div className="mt-4 p-3 rounded-md text-center animate-in fade-in duration-150 bg-red-50 border border-red-200 text-red-800 text-[0.8125rem]">
               <p className="font-semibold mb-0.5">No Matching Record Found</p>
               <p className="opacity-80">Verify your claim number and phone number.</p>
             </div>
           )}
+            <div className="lookup-form-card__privacy"><LockKeyhole aria-hidden="true" /><span>Your information is encrypted and only used to locate your recall record.</span></div>
+          </div>
+          <div className="lookup-form-area__footer">
+            <span>Looking for a different way to get help?</span>
+            <Link href="/register">Create an account <ArrowRight aria-hidden="true" /></Link>
+          </div>
         </div>
-
-        {/* Bottom links */}
-        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm mt-5">
-          <Link href="/register" className="hover:underline transition-colors" style={{ color: '#404944' }}>
+      </div>
+      <div className="lookup-links">
+          <Link href="/register" className="text-text-secondary hover:text-brand-teal hover:underline transition-colors">
             Create Account
           </Link>
-          <span style={{ color: '#bfc9c3' }}>|</span>
-          <Link href="/login" className="hover:underline transition-colors" style={{ color: '#404944' }}>
+          <span className="text-text-tertiary">|</span>
+          <Link href="/login" className="text-text-secondary hover:text-brand-teal hover:underline transition-colors">
             Sign In
           </Link>
-          <span style={{ color: '#bfc9c3' }}>|</span>
-          <Link href="/" className="hover:underline transition-colors" style={{ color: '#404944' }}>
+          <span className="text-text-tertiary">|</span>
+          <Link href="/" className="text-text-secondary hover:text-brand-teal hover:underline transition-colors">
             Home
           </Link>
-        </div>
       </div>
 
       {/* ═══ Drawer overlay ═══ */}
       {/* Backdrop */}
       <div
         className={cn(
-          'fixed inset-0 z-50 transition-opacity duration-300',
-          drawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none',
+          'lookup-drawer-backdrop',
+          drawerOpen && 'is-open',
         )}
-        style={{ background: 'rgba(0,0,0,0.3)' }}
         onClick={closeDrawer}
       />
 
       {/* Drawer panel — slides in from right */}
       <div
         className={cn(
-          'fixed top-0 right-0 z-50 h-full w-full sm:max-w-[560px] md:max-w-[640px] lg:max-w-[720px] overflow-y-auto shadow-2xl',
-          'transition-transform duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]',
-          drawerOpen ? 'translate-x-0' : 'translate-x-full',
+          'lookup-drawer-panel',
+          drawerOpen && 'is-open',
         )}
-        style={{ background: '#faf8ff' }}
       >
         {/* Close button */}
         <button
           onClick={closeDrawer}
-          className="absolute top-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-full transition-colors cursor-pointer hover:bg-black/5"
+          className="absolute top-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-md transition-colors cursor-pointer hover:bg-surface-secondary"
           aria-label="Close"
         >
-          <X className="h-5 w-5" style={{ color: '#003527' }} />
+          <X className="h-5 w-5 text-brand-teal" />
         </button>
 
         {/* Result content */}

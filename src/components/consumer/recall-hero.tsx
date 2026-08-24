@@ -92,6 +92,8 @@ export function RecallHero({ campaign }: RecallHeroProps) {
         {/* Product image if available */}
         {campaign.images[0] && (
           <div className="mt-8 p-4 rounded-xl bg-surface-secondary border flex justify-center">
+            {/* Campaign images may be supplied by the API and are not restricted to configured Next Image hosts. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={campaign.images[0]}
               alt={campaign.title}

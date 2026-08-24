@@ -1,0 +1,86 @@
+[browser] Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+      <RedirectBoundary>
+        <RedirectErrorBoundary router={{...}}>
+          <InnerLayoutRouter url="/recalls/m..." tree={[...]} params={{slug:"musi..."}} cacheNode={{rsc:{...}, ...}} ...>
+            <SegmentViewNode type="page" pagePath="(consumer)...">
+              <SegmentTrieNode>
+              <RecallPage>
+                <div className="recall-det...">
+                  <SafetyBanner>
+                  <main className="mx-auto ma...">
+                    <header>
+                    <div className="grid gap-x...">
+                      <div className="min-w-0 sp...">
+                        <section>
+                        <section>
+                        <section>
+                          <div>
+                          <div className="rounded-[9...">
+                            <p>
+                            <ClaimSubmitWrapper campaign={{id:"ML-DEM...", ...}}>
+                              <RemedyOptions remedies={[...]} onSelect={function handleSelect} busyRemedyId={null}>
+                                <div
++                                 className="overflow-hidden rounded-md border border-[#dcdfe6] bg-white"
+-                                 className="rounded-xl border bg-surface-elevated p-6 text-sm text-text-secondary fle..."
+                                >
++                                 <div className="border-b border-[#ebeef5] bg-[#f5f7fa] px-4 py-3 sm:px-5">
+-                                 <svg
+-                                   xmlns="http://www.w3.org/2000/svg"
+-                                   width="24"
+-                                   height="24"
+-                                   viewBox="0 0 24 24"
+-                                   fill="none"
+-                                   stroke="currentColor"
+-                                   stroke-width="2"
+-                                   stroke-linecap="round"
+-                                   stroke-linejoin="round"
+-                                   className="lucide lucide-loader-circle h-4 w-4 animate-spin text-[#409eff]"
+-                                   aria-hidden="true"
+-                                 >
+                                  ...
+                      ...
+            ...
+          ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at throwOnHydrationMismatch (file://O:/cc项目/KOL/koi-recall-web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:3318:56)
+    at beginWork (file://O:/cc项目/KOL/koi-recall-web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6758:918)
+    at runWithFiberInDEV (file://O:/cc项目/KOL/koi-recall-web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://O:/cc项目/KOL/koi-recall-web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://O:/cc项目/KOL/koi-recall-web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://O:/cc项目/KOL/koi-recall-web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://O:/cc项目/KOL/koi-recall-web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9061:186)
+    at performSyncWorkOnRoot (file://O:/cc项目/KOL/koi-recall-web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (file://O:/cc项目/KOL/koi-recall-web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10179:316)
+    at flushSpawnedWork (file://O:/cc项目/KOL/koi-recall-web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9939:13)
+    at commitRoot (file://O:/cc项目/KOL/koi-recall-web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9746:441)
+    at completeRoot (file://O:/cc项目/KOL/koi-recall-web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9711:13)
+    at completeRootWhenReady (file://O:/cc项目/KOL/koi-recall-web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9187:9)
+    at performWorkOnRoot (file://O:/cc项目/KOL/koi-recall-web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9159:25)
+    at performWorkOnRootViaSchedulerTask (file://O:/cc项目/KOL/koi-recall-web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://O:/cc项目/KOL/koi-recall-web/.next/dev/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64)
+    at div (<anonymous>)
+    at RemedyOptions (file://O:/cc项目/KOL/koi-recall-web/.next/dev/static/chunks/src_03uwpch._.js:236:215)
+    at ClaimSubmitWrapper (file://O:/cc项目/KOL/koi-recall-web/.next/dev/static/chunks/src_03uwpch._.js:1482:218)
+    at RecallPage (src\app\(consumer)\recalls\[slug]\page.tsx:45:306)
+  43 | ...ll. Locate the lot code, date code, shape, and flavor on your package.</p><div classNam...
+  44 | ...lipop is covered by this safety recall.</p><RecallCheckCard campaign={campaign} product...
+> 45 | ...placement or full refund are available.</p><ClaimSubmitWrapper campaign={campaign} /></...
+     |                                               ^
+  46 | ...e="h-4 w-4" /></span><span>{campaign.manufacturerContact?.split(' (')[0]}<small classNa...
+  47 | ...
+  48 | ...
+^C^C
