@@ -16,8 +16,6 @@ import {
   Search,
   Shield,
   Sparkles,
-  UserCheck,
-  Zap,
 } from 'lucide-react';
 import {
   Accordion,
@@ -114,7 +112,7 @@ const FAQS = [
     category: 'Remedy',
     question: 'How long does the remedy process take?',
     answer:
-      'The processing time varies depending on the complexity of the claim and the remedy type. Typically, you can expect: initial review within 3-5 business days, decision notification within 7-14 business days, and remedy fulfillment (refund or replacement) within 14-21 business days after approval. You will receive email updates at each stage of the process. Check the claim status page for real-time updates on your specific claim. Complex cases may take slightly longer.',
+      'The processing time varies by claim and remedy type. You will receive status updates as your submission moves through review and fulfillment. Check the claim status page for the most up-to-date information on your specific claim.',
   },
   {
     category: 'Remedy',
@@ -160,11 +158,11 @@ const FAQS = [
 // 分类配置
 // ============================================================
 const CATEGORY_COLORS: Record<string, string> = {
-  General: 'bg-[#ecf5ff] text-[#409eff] border-[#b3d8ff]',
-  Identify: 'bg-[#f0f9eb] text-[#67c23a] border-[#b3e19d]',
-  Check: 'bg-[#fdf6ec] text-[#e6a23c] border-[#f5dab1]',
-  Remedy: 'bg-[#fef0f0] text-[#f56c6c] border-[#fbc4c4]',
-  Status: 'bg-[#f4f4f5] text-[#909399] border-[#d9d9d9]',
+  General: 'bg-[#EEF8FF] text-[#3788C8] border-[#A9D5F5]',
+  Identify: 'bg-[#EDFFF7] text-[#3FA77D] border-[#A9E5CC]',
+  Check: 'bg-[#FFF4D6] text-[#B57924] border-[#F5D98B]',
+  Remedy: 'bg-[#FFF0F4] text-[#E85D75] border-[#F4B9C6]',
+  Status: 'bg-[#FFF9F7] text-[#846E76] border-[#E8D4DA]',
 };
 
 const CATEGORY_ICONS: Record<string, typeof CircleHelp> = {
@@ -300,34 +298,34 @@ export function FaqClient() {
         <div className="mx-auto max-w-[1250px] px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
           <div className="mx-auto max-w-3xl text-center">
             {/* 标签 */}
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#ecf5ff] px-4 py-1.5 text-xs font-medium text-[#409eff]">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#EEF8FF] px-4 py-1.5 text-xs font-medium text-[#3788C8]">
               <CircleHelp className="h-3.5 w-3.5" />
               Help Center
             </div>
 
             {/* 主标题 */}
-            <h1 className="text-3xl font-bold tracking-tight text-[#1f2937] sm:text-4xl lg:text-5xl">
+            <h1 className="text-3xl font-bold tracking-tight text-[#49343D] sm:text-4xl lg:text-5xl">
               Frequently Asked <br className="sm:hidden" />
-              <span className="text-[#409eff]">Questions</span>
+              <span className="text-[#F05B78]">Questions</span>
             </h1>
 
             {/* 副标题 */}
-            <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-[#606266] sm:text-lg">
+            <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-[#765F68] sm:text-lg">
               Everything you need to know about product recalls, from identification to claim resolution.
               Find clear answers to the most common questions—all in one place.
             </p>
 
             {/* 统计信息 */}
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-sm text-[#909399]">
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-sm text-[#AA929B]">
               <span className="flex items-center gap-2">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#ecf5ff] text-xs font-bold text-[#409eff]">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#EEF8FF] text-xs font-bold text-[#3788C8]">
                   {totalQuestions}
                 </span>
                 Articles
               </span>
-              <span className="h-4 w-px bg-[#dcdfe6]" />
+              <span className="h-4 w-px bg-[#F4D5DC]" />
               <span className="flex items-center gap-2">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#ecf5ff] text-xs font-bold text-[#409eff]">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#EEF8FF] text-xs font-bold text-[#3788C8]">
                   {categories.length}
                 </span>
                 Categories

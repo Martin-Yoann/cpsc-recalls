@@ -15,7 +15,6 @@ import {
 
 const SESSION_KEY_PREFIX = 'koi_claim_flow:';
 export const CLAIM_FLOW_FORM_VERSION = 'consumer-claim-form-v1';
-export const CLAIM_FLOW_PRIVACY_VERSION = '2026-08-04';
 
 export type ClaimFlowStep = 'verification' | 'consumer' | 'incident' | 'resolution' | 'review';
 export type DocumentCategory = UploadTokenRequest['category'];
@@ -322,7 +321,7 @@ export class ClaimFlowModule {
     return nextSession;
   }
 
-  buildSubmitInput(session: ClaimFlowSession): ClaimFlowSubmitInput {
+  buildSubmitInput(session: ClaimFlowSession, privacyNoticeVersion: string): ClaimFlowSubmitInput {
     const mappedInjurySeverity: NonNullable<IncidentDetailsInput>['injurySeverity'] =
       session.form.incident.injurySeverity === ''
         ? undefined
@@ -392,7 +391,7 @@ export class ClaimFlowModule {
       consents: [
         {
           type: 'privacy_notice',
-          textVersion: CLAIM_FLOW_PRIVACY_VERSION,
+          textVersion: privacyNoticeVersion,
           accepted: true,
         },
         {

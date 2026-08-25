@@ -17,9 +17,7 @@ interface BladeStageState {
 /**
  * Derives the current blade stage.
  *
- * In Phase 1, this is driven by the active section of the consumer flow.
- * When the EligibilityWizard is complete, stage advances to 'verification'.
- * When evidence is submitted, stage advances to 'resolution'.
+ * This is driven by the active section of the consumer flow.
  */
 export function useBladeStage(
   activeSection?: 'identify' | 'verify' | 'resolve'

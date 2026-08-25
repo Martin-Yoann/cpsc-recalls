@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAuthDrawerOpen(false);
       return { success: true };
     }
-    return { success: false, error: 'Invalid email or password (password must be ≥ 12 characters)' };
+    return { success: false, error: 'Invalid email or password (password must be ≥ 9 characters)' };
   }, []);
 
   const register = useCallback(async (data: { name: string; email: string; phone: string; password: string }) => {
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAuthDrawerOpen(false);
       return { success: true };
     }
-    return { success: false, error: 'Registration failed — email may already be registered, or password must be ≥ 12 characters' };
+    return { success: false, error: 'Registration failed — email may already be registered, or password must be ≥ 9 characters' };
   }, []);
 
   const logout = useCallback(async () => {

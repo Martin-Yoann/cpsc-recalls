@@ -43,6 +43,7 @@ function campaignViewToCampaign(view: CampaignView): Campaign {
     images: [],
     affectedLots: lots.map((l) => l.lotCode).filter(Boolean),
     dateCodes,
+    privacyNotice: view.privacyNotice,
     evidenceRequirements: view.evidenceRequirements.map((requirement) => ({
       category: requirement.category,
       required: requirement.required,

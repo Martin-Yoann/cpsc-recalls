@@ -11,7 +11,6 @@ import { RemedyOptions } from '@/components/consumer/remedy-options';
 import {
   claimFlowModule,
   CLAIM_FLOW_FORM_VERSION,
-  CLAIM_FLOW_PRIVACY_VERSION,
   type ClaimConfirmation,
   type ClaimFlowDraftState,
   type ClaimFlowSession,
@@ -131,6 +130,7 @@ function ElSelect({
   return (
     <div className="relative" onBlur={() => setTimeout(() => setIsOpen(false), 150)}>
       <div
+        id={id}
         className={`
           flex h-10 w-full cursor-pointer items-center justify-between
           rounded border border-[#dcdfe6] bg-white px-3 text-sm
@@ -211,33 +211,48 @@ function ElCheckbox({
 
 export function ClaimSubmitWrapper({ campaign }: Props) {
   const firstProduct = campaign.affectedProducts[0];
-  const [session, setSession] = useState<ClaimFlowSession | null>(() => claimFlowModule.resume(campaign.slug));
+  const [session, setSession] = useState<ClaimFlowSession | null>(null);
   const [submitted, setSubmitted] = useState<ClaimConfirmation | null>(null);
   const [problem, setProblem] = useState<ProblemDetails | null>(null);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const [pendingRemedyId, setPendingRemedyId] = useState<string | null>(null);
-  const [isBootstrapping, setIsBootstrapping] = useState(() => !claimFlowModule.resume(campaign.slug));
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const evidenceRequirements = campaign.evidenceRequirements ?? [];
+  const privacyNoticeVersion = campaign.privacyNotice?.version ?? 'not-configured';
+  const privacyNoticeHref = `/privacy?campaign=${encodeURIComponent(campaign.slug)}`;
 
   useEffect(() => {
     if (session) return;
 
     let cancelled = false;
-    claimFlowModule.start(campaign.slug).then((result) => {
+    Promise.resolve().then(() => {
       if (cancelled) return;
-      if (result.ok) {
-        const seeded = claimFlowModule.save({
-          ...result.data,
-          form: buildDefaultForm(firstProduct),
-        });
-        setSession(seeded);
+
+      const restored = claimFlowModule.resume(campaign.slug);
+      if (restored) {
+        setSession(restored);
         setProblem(null);
-      } else {
-        setProblem(result.error);
+        setIsBootstrapping(false);
+        return;
       }
-      setIsBootstrapping(false);
+
+      setIsBootstrapping(true);
+      return claimFlowModule.start(campaign.slug).then((result) => {
+        if (cancelled) return;
+        if (result.ok) {
+          const seeded = claimFlowModule.save({
+            ...result.data,
+            form: buildDefaultForm(firstProduct),
+          });
+          setSession(seeded);
+          setProblem(null);
+        } else {
+          setProblem(result.error);
+        }
+        setIsBootstrapping(false);
+      });
     });
 
     return () => {
@@ -409,15 +424,25 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             Next step: {submitted.nextStep}
           </p>
         </div>
-        <div className="flex flex-wrap justify-center gap-2">
-          <Link href="/lookup">
-            <Button size="sm" variant="outline" className="border-[#dcdfe6] text-[#606266] hover:border-[#409eff] hover:text-[#409eff]">
-              Check Status
+        <div className="space-y-3">
+          <div className="space-y-1 text-sm text-[#606266]">
+            <p>Use your case reference on this device now, or create an account later for cross-device access.</p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Link href="/claims">
+              <Button size="sm" variant="outline" className="border-[#dcdfe6] text-[#606266] hover:border-[#409eff] hover:text-[#409eff]">
+                View Claims
+              </Button>
+            </Link>
+            <Link href="/lookup">
+              <Button size="sm" variant="outline" className="border-[#dcdfe6] text-[#606266] hover:border-[#409eff] hover:text-[#409eff]">
+                Check Status
+              </Button>
+            </Link>
+            <Button size="sm" onClick={handleReset} className="bg-[#409eff] text-white hover:bg-[#337ecc] border-0">
+              Start Another Claim
             </Button>
-          </Link>
-          <Button size="sm" onClick={handleReset} className="bg-[#409eff] text-white hover:bg-[#337ecc] border-0">
-            Start Another Claim
-          </Button>
+          </div>
         </div>
       </div>
     );
@@ -866,7 +891,11 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
           checked={session.form.privacyAccepted}
           onChange={(checked) => updateForm((form) => ({ ...form, privacyAccepted: checked }))}
         >
-          I acknowledge the privacy notice version `{CLAIM_FLOW_PRIVACY_VERSION}`.
+          I acknowledge{' '}
+          <Link className="font-medium text-[#409eff] underline" href={privacyNoticeHref}>
+            the privacy notice
+          </Link>{' '}
+          version `{privacyNoticeVersion}`.
         </ElCheckbox>
         <ElCheckbox
           checked={session.form.accuracyAccepted}
@@ -907,7 +936,10 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             }
 
             setIsSubmitting(true);
-            const result = await claimFlowModule.submit(current, claimFlowModule.buildSubmitInput(current));
+            const result = await claimFlowModule.submit(
+              current,
+              claimFlowModule.buildSubmitInput(current, privacyNoticeVersion),
+            );
             setIsSubmitting(false);
 
             if (result.ok) {

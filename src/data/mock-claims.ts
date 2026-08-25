@@ -188,11 +188,9 @@ export function getClaimByNumber(claimNumber: string): ClaimWithPhone | undefine
 
 export function getClaimByNumberAndPhone(
   claimNumber: string,
-  phone: string
+  reference: string
 ): ClaimWithPhone | undefined {
-  return mockClaims.find(
-    (c) => c.claimNumber === claimNumber && c.consumerPhone === phone
-  );
+  return mockClaims.find((c) => c.claimNumber === claimNumber || c.claimNumber === reference);
 }
 
 export function getClaimsByEmail(email: string): ClaimWithPhone[] {

@@ -87,7 +87,7 @@ export function RecallCard({ campaign }: RecallCardProps) {
                 : campaign.manufacturerName}
             </span>
             <span className="data-chip text-[11px] font-mono">
-              CPSC #{campaign.cpscNumber}
+              Reference #{campaign.cpscNumber}
             </span>
           </div>
 

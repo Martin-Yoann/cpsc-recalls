@@ -13,7 +13,6 @@ import {
   Phone,
   Search,
   Shield,
-  TrendingUp,
   Users,
 } from 'lucide-react';
 import { fetchCampaign } from '@/lib/api-adapter';
@@ -60,14 +59,14 @@ function SectionTitle({
 }) {
   return (
     <div className="mb-5">
-      <div className="flex items-center gap-2.5 border-b border-[#dcdfe6] pb-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded bg-[#ecf5ff] text-[#409eff]">
+      <div className="flex items-center gap-2.5 border-b border-[#F4D5DC] pb-3">
+        <div className="flex h-8 w-8 items-center justify-center rounded bg-[#EEF8FF] text-[#3788C8]">
           <Icon className="h-4 w-4" strokeWidth={1.7} />
         </div>
-        <h2 className="text-lg font-semibold text-[#303133]">{children}</h2>
+        <h2 className="text-lg font-semibold text-[#49343D]">{children}</h2>
       </div>
       {description && (
-        <p className="mt-2 text-sm text-[#606266] leading-relaxed">{description}</p>
+        <p className="mt-2 text-sm text-[#765F68] leading-relaxed">{description}</p>
       )}
     </div>
   );
@@ -75,9 +74,9 @@ function SectionTitle({
 
 function SideCard({ title, icon: Icon, children }: { title: string; icon?: typeof Info; children: React.ReactNode }) {
   return (
-    <aside className="rounded border border-[#dcdfe6] bg-white p-5 shadow-sm">
-      <h3 className="mb-3 flex items-center gap-2 border-b border-[#ebeef5] pb-2.5 text-base font-semibold text-[#303133]">
-        {Icon && <Icon className="h-4 w-4 text-[#409eff]" strokeWidth={1.7} />}
+    <aside className="rounded border border-[#F4D5DC] bg-white p-5 shadow-sm">
+      <h3 className="mb-3 flex items-center gap-2 border-b border-[#F4D5DC] pb-2.5 text-base font-semibold text-[#49343D]">
+        {Icon && <Icon className="h-4 w-4 text-[#F05B78]" strokeWidth={1.7} />}
         {title}
       </h3>
       {children}
@@ -87,13 +86,13 @@ function SideCard({ title, icon: Icon, children }: { title: string; icon?: typeo
 
 function StatCard({ label, value, icon: Icon, trend }: { label: string; value: string; icon: typeof Info; trend?: string }) {
   return (
-    <div className="rounded border border-[#ebeef5] bg-white p-4 text-center">
-      <div className="flex items-center justify-center gap-2 text-[#909399]">
+    <div className="rounded border border-[#F4D5DC] bg-white p-4 text-center">
+      <div className="flex items-center justify-center gap-2 text-[#AA929B]">
         <Icon className="h-4 w-4" />
         <span className="text-xs font-medium uppercase tracking-wider">{label}</span>
       </div>
-      <p className="mt-1.5 text-2xl font-bold text-[#303133]">{value}</p>
-      {trend && <p className="mt-0.5 text-xs text-[#67c23a]">{trend}</p>}
+      <p className="mt-1.5 text-2xl font-bold text-[#49343D]">{value}</p>
+      {trend && <p className="mt-0.5 text-xs text-[#3FA77D]">{trend}</p>}
     </div>
   );
 }
@@ -104,16 +103,13 @@ export default async function RecallPage({ params }: RecallPageProps) {
   const product = campaign.affectedProducts?.[0];
   if (!product) notFound();
 
-  // 模拟数据（实际应从 API 获取）
   const stats = {
-    affectedUnits: '12,847',
-    claimsResolved: '94%',
-    publishedDate: 'March 15, 2026',
-    recallReference: 'CPSC ML-DEMO-2026',
+    affectedUnits: String(campaign.estimatedUnits),
+    publishedDate: campaign.recallDate,
   };
 
   return (
-    <div className="recall-detail-theme bg-[#f5f7fa] text-[#303133]">
+    <div className="recall-detail-theme bg-[#FFF9F7] text-[#49343D]">
       <SafetyBanner campaign={campaign} />
 
       <main className="mx-auto max-w-[1250px] px-4 pb-24 pt-6 sm:px-6 lg:px-8">
@@ -123,7 +119,7 @@ export default async function RecallPage({ params }: RecallPageProps) {
             <StatusBadge
               variant={campaign.status}
               label="Active Recall"
-              className="rounded-full border-0 bg-[#ecf5ff] px-4 py-1 text-sm font-medium text-[#409eff]"
+              className="rounded-full border-0 bg-[#EEF8FF] px-4 py-1 text-sm font-medium text-[#3788C8]"
             />
             <span
               className={`
@@ -134,35 +130,35 @@ export default async function RecallPage({ params }: RecallPageProps) {
               <AlertCircle className="mr-1.5 h-3 w-3" />
               {riskLabels[campaign.riskLevel] || 'UNKNOWN RISK'}
             </span>
-            <span className="text-sm text-[#909399]">
-              Reference: <span className="font-mono font-medium text-[#303133]">{stats.recallReference}</span>
+            <span className="text-sm text-[#AA929B]">
+              Reference: <span className="font-mono font-medium text-[#49343D]">{campaign.cpscNumber}</span>
             </span>
           </div>
 
-          <h1 className="text-3xl font-bold leading-tight text-[#1f2937] sm:text-4xl">
+          <h1 className="text-3xl font-bold leading-tight text-[#49343D] sm:text-4xl">
             {campaign.title}
           </h1>
 
-          <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-[#606266]">
+          <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-[#765F68]">
             <span className="flex items-center gap-1.5">
-              <Factory className="h-4 w-4 text-[#909399]" strokeWidth={1.5} />
-              Manufacturer: <strong className="font-medium text-[#303133]">Candy Master</strong>
+              <Factory className="h-4 w-4 text-[#AA929B]" strokeWidth={1.5} />
+              Manufacturer: <strong className="font-medium text-[#49343D]">{campaign.manufacturerName}</strong>
             </span>
             <span className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4 text-[#909399]" strokeWidth={1.5} />
-              Published: <strong className="font-medium text-[#303133]">{stats.publishedDate}</strong>
+              <Calendar className="h-4 w-4 text-[#AA929B]" strokeWidth={1.5} />
+              Published: <strong className="font-medium text-[#49343D]">{stats.publishedDate}</strong>
             </span>
             <span className="flex items-center gap-1.5">
-              <Package className="h-4 w-4 text-[#909399]" strokeWidth={1.5} />
-              Affected Units: <strong className="font-medium text-[#303133]">{stats.affectedUnits}</strong>
+              <Package className="h-4 w-4 text-[#AA929B]" strokeWidth={1.5} />
+              Affected Units: <strong className="font-medium text-[#49343D]">{stats.affectedUnits}</strong>
             </span>
           </div>
 
-          <div className="mt-4 rounded border-l-4 border-[#e6a23c] bg-[#fdf6ec] px-4 py-3 text-sm text-[#606266]">
+          <div className="mt-4 rounded border-l-4 border-[#F28C5B] bg-[#FFF1EA] px-4 py-3 text-sm text-[#765F68]">
             <p className="flex items-start gap-2">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#e6a23c]" />
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#F28C5B]" />
               <span>
-                <strong className="text-[#303133]">Important:</strong> Do not continue using a product
+                <strong className="text-[#49343D]">Important:</strong> Do not continue using a product
                 if the recall notice instructs you to stop use. Check your product immediately.
               </span>
             </p>
@@ -172,9 +168,9 @@ export default async function RecallPage({ params }: RecallPageProps) {
         {/* ===== 统计卡片 ===== */}
         <div className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatCard label="Affected Units" value={stats.affectedUnits} icon={Package} />
-          <StatCard label="Claims Resolved" value={stats.claimsResolved} icon={TrendingUp} trend="↑ 12% this month" />
           <StatCard label="Remedies Available" value={String(campaign.remedies?.length || 0)} icon={Shield} />
           <StatCard label="Products Affected" value={String(campaign.affectedProducts?.length || 0)} icon={Users} />
+          <StatCard label="Privacy Notice" value={campaign.privacyNotice?.version ?? 'n/a'} icon={FileText} />
         </div>
 
         {/* ===== 主内容区域 ===== */}
@@ -331,15 +327,15 @@ export default async function RecallPage({ params }: RecallPageProps) {
             {/* 需要帮助？ */}
             <SideCard title="Need Help?" icon={HelpCircle}>
               <div className="flex items-start gap-3 rounded bg-[#f5f7fa] p-3 text-sm">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#ecf5ff] text-[#409eff]">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EEF8FF] text-[#3788C8]">
                   <Phone className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="font-medium text-[#303133]">Consumer Support</p>
-                  <p className="text-xs text-[#606266]">
+                  <p className="font-medium text-[#49343D]">Consumer Support</p>
+                  <p className="text-xs text-[#765F68]">
                     {campaign.manufacturerContact?.split(' (')[0] || '1-800-555-0199'}
                   </p>
-                  <p className="mt-0.5 text-[10px] text-[#909399]">
+                  <p className="mt-0.5 text-[10px] text-[#AA929B]">
                     Mon-Fri, 9:00 AM - 5:00 PM ET
                   </p>
                 </div>
@@ -371,7 +367,7 @@ export default async function RecallPage({ params }: RecallPageProps) {
                       3
                     </span>
                     <span className="text-[#606266]">
-                      You will receive confirmation and next steps within 3-5 business days
+                      You will receive confirmation after the recall team reviews your submission
                     </span>
                   </li>
                 </ol>

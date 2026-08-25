@@ -4,13 +4,13 @@ import { useState } from 'react';
 import { Search, Loader2 } from 'lucide-react';
 
 interface LookupFormProps {
-  onSearch: (claimNumber: string, phone: string) => void;
+  onSearch: (claimNumber: string, reference: string) => void;
   isLoading?: boolean;
 }
 
 export function LookupForm({ onSearch, isLoading }: LookupFormProps) {
-  const [claimNumber, setClaimNumber] = useState('KOI-0001');
-  const [phone, setPhone] = useState('13812341234');
+  const [claimNumber, setClaimNumber] = useState('');
+  const [reference, setReference] = useState('');
   const [error, setError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -21,16 +21,8 @@ export function LookupForm({ onSearch, isLoading }: LookupFormProps) {
       setError('Please enter a claim number');
       return;
     }
-    if (!phone.trim()) {
-      setError('Please enter a phone number');
-      return;
-    }
-    if (!/^1[3-9]\d{9}$/.test(phone)) {
-      setError('Please enter a valid phone number');
-      return;
-    }
 
-    onSearch(claimNumber.trim().toUpperCase(), phone.trim());
+    onSearch(claimNumber.trim().toUpperCase(), reference.trim());
   };
 
   const inputClass =
@@ -57,25 +49,24 @@ export function LookupForm({ onSearch, isLoading }: LookupFormProps) {
         />
       </div>
 
-      {/* Phone Number */}
       <div>
         <label
-          htmlFor="lookup-phone"
+          htmlFor="lookup-reference"
           className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-text-primary"
         >
-          Phone Number
+          Reference Number
         </label>
         <input
-          id="lookup-phone"
+          id="lookup-reference"
           className={inputClass}
-          type="tel"
-          placeholder="Your registered phone number"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
+          type="text"
+          placeholder="Your claim or case reference"
+          value={reference}
+          onChange={(e) => setReference(e.target.value)}
           disabled={isLoading}
         />
         <p className="mt-2 text-xs leading-relaxed text-text-tertiary">
-          Used to verify your identity and protect your information
+          Use the reference provided when your case was created.
         </p>
       </div>
 
@@ -85,23 +76,34 @@ export function LookupForm({ onSearch, isLoading }: LookupFormProps) {
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="btn-lift btn-press flex w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-brand-teal py-3 text-sm font-bold uppercase tracking-[0.05em] text-white transition-colors hover:bg-blade-resolution-dark disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Searching...
-          </>
-        ) : (
-          <>
-            <Search className="h-4 w-4" />
-            Check Status
-          </>
-        )}
-      </button>
+<button
+  type="submit"
+  disabled={isLoading}
+  className={`
+    relative flex w-full items-center justify-center gap-2 
+    rounded-lg bg-brand-teal py-3.5 px-6 
+    text-sm font-bold uppercase tracking-wider 
+    text-gray-900 shadow-md
+    transition-all duration-200 ease-in-out
+    hover:shadow-lg hover:brightness-105
+    active:scale-[0.98] active:shadow-sm
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal focus-visible:ring-offset-2
+    disabled:pointer-events-none disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none
+    ${isLoading ? 'cursor-wait' : 'cursor-pointer'}
+  `}
+>
+  {isLoading ? (
+    <>
+      <Loader2 className="h-5 w-5 animate-spin text-gray-700" />
+      <span>Searching…</span>
+    </>
+  ) : (
+    <>
+      <Search className="h-4 w-4" />
+      <span>Check Status</span>
+    </>
+  )}
+</button>
     </form>
   );
 }

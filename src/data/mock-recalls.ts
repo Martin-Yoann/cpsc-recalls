@@ -35,6 +35,10 @@ const musicLollipopCampaign: Campaign = {
   images: ['/images/music-lollipop.png'],
   affectedLots: ['ML-2406-A', 'ML-2407-B', 'ML-2408-C'],
   dateCodes: ['06/2024', '07/2024', '08/2024'],
+  privacyNotice: {
+    url: '/privacy?campaign=music-lollipop-demo-2026',
+    version: 'demo-2026-08-04',
+  },
   affectedProducts: [
     {
       id: 'prod_001',
@@ -68,7 +72,7 @@ const musicLollipopCampaign: Campaign = {
       type: RemedyType.REPLACEMENT,
       title: 'Free Replacement Product',
       description:
-        'Receive a replacement Music Lollipop from an unaffected production batch. The replacement will be shipped within 10–14 business days after your claim is verified. A prepaid return label for the affected product will be included.',
+        'Receive a replacement Music Lollipop from an unaffected production batch. Claim status and fulfillment details will be provided after review.',
       deadline: '2027-12-10',
       requiresEvidence: true,
       evidenceTypes: [EvidenceType.PRODUCT_PHOTO, EvidenceType.SERIAL_NUMBER],
@@ -78,7 +82,7 @@ const musicLollipopCampaign: Campaign = {
       type: RemedyType.REFUND,
       title: 'Full Refund',
       description:
-        'Receive a full refund of the purchase price. Proof of purchase is required. Refund will be processed to the original payment method within 7–14 business days after claim approval.',
+        'Receive a full refund of the purchase price. Proof of purchase is required. Processing details will be provided after claim approval.',
       deadline: '2027-12-10',
       requiresEvidence: true,
       evidenceTypes: [EvidenceType.PROOF_OF_PURCHASE, EvidenceType.PRODUCT_PHOTO],

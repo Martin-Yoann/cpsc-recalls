@@ -40,9 +40,9 @@ export const fadeIn: Variants = {
 
 /** Use for cards or panels sliding in from the right (wizard steps, drawers). */
 export const slideInRight: Variants = {
-  hidden: { opacity: 0, x: 24 },
-  visible: { opacity: 1, x: 0, transition: TRANSITION.normal },
-  exit: { opacity: 0, x: -24, transition: { duration: 0.15, ease: EASING.bladeOut } },
+  hidden: { opacity: 0, x: 32, scale: 0.985 },
+  visible: { opacity: 1, x: 0, scale: 1, transition: TRANSITION.normal },
+  exit: { opacity: 0, x: 18, scale: 0.985, transition: { duration: 0.18, ease: EASING.bladeOut } },
 };
 
 /** Use for panels sliding in from the left (back-navigation in wizards). */

@@ -205,8 +205,8 @@ export function validateEmail(email: string): boolean {
 }
 
 export function validatePassword(password: string): boolean {
-  // Backend enforces ≥ 12 characters (scrypt policy shared with staff accounts)
-  return password.length >= 12;
+  // Backend enforces ≥ 9 characters.
+  return password.length >= 9;
 }
 
 export function validatePhone(phone: string): boolean {

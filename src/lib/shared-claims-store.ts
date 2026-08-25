@@ -20,7 +20,6 @@ export interface SharedClaim {
   campaignSlug: string;
   consumerName: string;
   consumerEmail: string;
-  consumerPhone: string;
   productName: string;
   shape?: string;
   flavor?: string;
@@ -96,7 +95,6 @@ export async function submitClaim(data: {
   campaignSlug: string;
   consumerName: string;
   consumerEmail: string;
-  consumerPhone: string;
   productName: string;
   shape?: string;
   flavor?: string;
@@ -174,7 +172,7 @@ export function seedIfEmpty(campaigns: Array<{ id: string; title: string; slug: 
     {
       id: 'sd_001', claimNumber: 'KOI-0001', campaignId: campaigns[0]?.id ?? 'cmp_001',
       campaignTitle: campaigns[0]?.title ?? '', campaignSlug: campaigns[0]?.slug ?? '',
-      consumerName: 'Sarah Chen', consumerEmail: 'sarah.chen@email.com', consumerPhone: '13812341234',
+      consumerName: 'Sarah Chen', consumerEmail: 'sarah.chen@email.com',
       productName: 'Music Lollipop', shape: 'Bear', flavor: 'Peach', lotCode: 'ML-2406-A', dateCode: '06/2024',
       remedyId: 'replacement', remedyTitle: 'Replacement', remedyType: 'replacement',
       status: 'verified', evidenceCount: 2,
@@ -184,7 +182,7 @@ export function seedIfEmpty(campaigns: Array<{ id: string; title: string; slug: 
     {
       id: 'sd_002', claimNumber: 'KOI-0002', campaignId: campaigns[0]?.id ?? 'cmp_001',
       campaignTitle: campaigns[0]?.title ?? '', campaignSlug: campaigns[0]?.slug ?? '',
-      consumerName: 'James Wilson', consumerEmail: 'jwilson@email.com', consumerPhone: '18611223344',
+      consumerName: 'James Wilson', consumerEmail: 'jwilson@email.com',
       productName: 'Music Lollipop', shape: 'Heart', flavor: 'Peach', lotCode: 'ML-2408-C', dateCode: '08/2024',
       remedyId: 'replacement', remedyTitle: 'Replacement', remedyType: 'replacement',
       status: 'under_review', evidenceCount: 2,
@@ -194,7 +192,7 @@ export function seedIfEmpty(campaigns: Array<{ id: string; title: string; slug: 
     {
       id: 'sd_003', claimNumber: 'KOI-0003', campaignId: campaigns[0]?.id ?? 'cmp_001',
       campaignTitle: campaigns[0]?.title ?? '', campaignSlug: campaigns[0]?.slug ?? '',
-      consumerName: 'Emily Davis', consumerEmail: 'emily.d@email.com', consumerPhone: '13956785678',
+      consumerName: 'Emily Davis', consumerEmail: 'emily.d@email.com',
       productName: 'Music Lollipop', shape: 'Strawberry', flavor: 'Strawberry', lotCode: 'ML-2406-A', dateCode: '06/2024',
       remedyId: 'refund', remedyTitle: 'Refund', remedyType: 'refund', refundAmount: 5.99,
       status: 'submitted', evidenceCount: 1,
@@ -204,7 +202,7 @@ export function seedIfEmpty(campaigns: Array<{ id: string; title: string; slug: 
     {
       id: 'sd_004', claimNumber: 'KOI-0004', campaignId: campaigns[0]?.id ?? 'cmp_001',
       campaignTitle: campaigns[0]?.title ?? '', campaignSlug: campaigns[0]?.slug ?? '',
-      consumerName: 'Amanda Torres', consumerEmail: 'atorres@email.com', consumerPhone: '15287654321',
+      consumerName: 'Amanda Torres', consumerEmail: 'atorres@email.com',
       productName: 'Music Lollipop', shape: 'Bear', flavor: 'Strawberry', lotCode: 'ML-2407-B', dateCode: '07/2024',
       remedyId: 'refund', remedyTitle: 'Refund', remedyType: 'refund', refundAmount: 5.99,
       status: 'resolved', evidenceCount: 1,

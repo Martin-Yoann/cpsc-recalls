@@ -97,19 +97,13 @@ src/
 │       ├── orders/page.tsx           # 绑定订单
 │       └── profile/page.tsx          # 个人信息
 ├── components/
-│   ├── consumer/                     # 消费者业务组件 (12 个)
+│   ├── consumer/                     # 消费者业务组件
 │   │   ├── safety-banner.tsx         # 安全横幅 — 可关闭
 │   │   ├── recall-hero.tsx           # 召回 Hero — 标题+元数据+产品图
 │   │   ├── recall-card.tsx           # 召回卡片 — 网格展示
 │   │   ├── recall-check-card.tsx     # 产品校验 — Shape/Flavor/Lot/Date → API
-│   │   ├── eligibility-wizard.tsx    # 资格向导 — 多步表单 (旧版/备用)
-│   │   ├── reminder-options.tsx       # 补救选择 — 替换/退款
+│   │   ├── remedy-options.tsx        # 补救选择 — 替换/退款
 │   │   ├── claim-submit-wrapper.tsx  # 提交包装 — 写 shared-claims + 确认页
-│   │   ├── evidence-uploader.tsx     # 证据上传
-│   │   ├── incident-capture.tsx      # 事故报告
-│   │   ├── remedy-timeline.tsx       # 补救时间线
-│   │   ├── case-status-tracker.tsx   # 案件状态追踪
-│   │   └── claim-confirmation.tsx    # 索赔确认
 │   ├── shared/                       # 跨页面共享组件 (7 个)
 │   │   ├── header.tsx                # 全局 Header
 │   │   ├── footer.tsx                # 全局 Footer
@@ -151,8 +145,7 @@ src/
 │   ├── mock-users.ts                 # 3 个模拟用户
 │   └── mock-orders.ts                # 5 个绑定订单
 └── hooks/
-    ├── use-blade-stage.ts            # 三刀流阶段计算
-    └── use-claim-form.ts             # 索赔状态机 (4 步, 预留)
+    └── use-blade-stage.ts            # 三刀流阶段计算
 ```
 
 ---
@@ -225,7 +218,7 @@ src/
 
 ## 认证
 
-消费者端为**注册制**（真实 Neon 后端），无内置演示账号。首次使用请通过首页 Hero 区或 Header 右上角进入登录/注册抽屉，注册即可（密码 ≥ 12 位）。登录后跳转 `/dashboard`，Header 显示头像下拉菜单。
+消费者端为**注册制**（真实 Neon 后端），无内置演示账号。首次使用请通过首页 Hero 区或 Header 右上角进入登录/注册抽屉，注册即可（密码 ≥ 9 位）。登录后跳转 `/dashboard`，Header 显示头像下拉菜单。
 
 免登录路径：`/lookup` 通过索赔编号+手机号查询，无需账户。
 
@@ -233,14 +226,15 @@ src/
 
 ## 设计系统
 
-### 色板 — Three-Blade
+### 色板 — Candy Safety
 
-| Blade | 用途 | 主色 |
+| 色彩 | 用途 | 主色 |
 |---|---|---|
-| Safety | 危害警示 | `#EA580C` (Orange) |
-| Verification | 产品校验 | `#2563EB` (Blue) |
-| Resolution | 补救完成 | `#0D9488` (Teal) |
-| Brand | 品牌主色 | `#003527` (Emerald) |
+| Strawberry | 品牌与主要操作 | `#F05B78` (Pink) |
+| Sky | 产品校验与信息 | `#5AA9E6` (Blue) |
+| Mint | 补救完成与成功 | `#63C7A2` (Green) |
+| Lemon | 辅助强调 | `#F9D56E` (Yellow) |
+| Peach | 危害警示 | `#F28C5B` (Orange) |
 
 ### 排版
 

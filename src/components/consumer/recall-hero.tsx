@@ -53,7 +53,7 @@ export function RecallHero({ campaign }: RecallHeroProps) {
         <div className="flex flex-wrap items-center gap-3 mt-6">
           <span className="data-chip">
             <Hash className="h-3.5 w-3.5" />
-            CPSC #{campaign.cpscNumber}
+            Reference #{campaign.cpscNumber}
           </span>
           <span className="data-chip">
             <Calendar className="h-3.5 w-3.5" />

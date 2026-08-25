@@ -18,7 +18,7 @@ interface LookupResultProps {
 const PIPELINE = [
   { status: ClaimStatus.SUBMITTED, label: 'Submitted' },
   { status: ClaimStatus.UNDER_REVIEW, label: 'Under Review' },
-  { status: ClaimStatus.VERIFIED, label: 'Verified' },
+  { status: ClaimStatus.VERIFIED, label: 'Confirmed' },
   { status: ClaimStatus.REMEDY_ISSUED, label: 'Remedy Issued' },
   { status: ClaimStatus.RESOLVED, label: 'Resolved' },
 ];
@@ -27,10 +27,10 @@ const ORDER = [ClaimStatus.SUBMITTED, ClaimStatus.UNDER_REVIEW, ClaimStatus.VERI
 const STATUS_META: Record<string, { label: string; bg: string; color: string; dot: string }> = {
   submitted:    { label: 'Submitted',     bg: 'bg-blue-50',             color: 'text-trust-blue',       dot: 'bg-trust-blue' },
   under_review: { label: 'Under Review',  bg: 'bg-blue-50',             color: 'text-trust-blue',       dot: 'bg-trust-blue' },
-  verified:     { label: 'Verified',      bg: 'bg-blade-resolution-light', color: 'text-blade-resolution', dot: 'bg-blade-resolution' },
+  verified:     { label: 'Confirmed',     bg: 'bg-blade-resolution-light', color: 'text-blade-resolution', dot: 'bg-blade-resolution' },
   remedy_issued:{ label: 'Remedy Issued', bg: 'bg-blade-resolution-light', color: 'text-blade-resolution', dot: 'bg-blade-resolution' },
   resolved:     { label: 'Resolved',      bg: 'bg-blade-resolution-light', color: 'text-blade-resolution', dot: 'bg-blade-resolution' },
-  rejected:     { label: 'Rejected',      bg: 'bg-red-50',              color: 'text-status-rejected',  dot: 'bg-status-rejected' },
+  rejected:     { label: 'Not Eligible',  bg: 'bg-red-50',              color: 'text-status-rejected',  dot: 'bg-status-rejected' },
 };
 
 const REMEDY_LABELS: Record<string, string> = {

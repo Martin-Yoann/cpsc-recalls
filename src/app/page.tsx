@@ -21,9 +21,8 @@ import type { Campaign } from '@/types';
 const TRUST_ITEMS = [
   {
     icon: ShieldCheck,
-    label: 'Official notice data',
-    description:
-      'Recall information is maintained from CPSC announcements and manufacturer submissions.',
+    label: 'Campaign notice data',
+    description: 'Recall information is organized by the active campaign notice.',
   },
   {
     icon: FileText,
@@ -72,7 +71,6 @@ export default async function LandingPage() {
     criticalCount: campaigns.filter(
       (item) => item.riskLevel === 'critical' || item.riskLevel === 'high'
     ).length,
-    resolvedRate: 94,
   };
 
   const rawRecallDate = campaign?.recallDate;
@@ -158,7 +156,7 @@ export default async function LandingPage() {
               <div className="mt-6 flex flex-wrap items-center gap-4 text-xs text-[#78909c]">
                 <span className="flex items-center gap-1.5 rounded-full bg-white/60 px-3 py-1 backdrop-blur-sm">
                   <ShieldCheck className="h-3.5 w-3.5 text-[#26a69a]" />
-                  Official CPSC data
+                  Campaign notice data
                 </span>
                 <span className="flex items-center gap-1.5 rounded-full bg-white/60 px-3 py-1 backdrop-blur-sm">
                   <Clock3 className="h-3.5 w-3.5 text-[#42a5f5]" />
@@ -195,7 +193,7 @@ export default async function LandingPage() {
                     Recall reference
                   </p>
                   <p className="mt-1 font-mono text-base font-bold text-[#263238]">
-                    CPSC {campaign?.cpscNumber ?? '26-042'}
+                    Reference {campaign?.cpscNumber ?? '26-042'}
                   </p>
 
                   <dl className="mt-4 space-y-2.5 text-sm">
@@ -273,9 +271,7 @@ export default async function LandingPage() {
                 <CheckCircle className="mr-1 inline h-3 w-3 text-[#26a69a]" />
                 Claims resolved
               </p>
-              <p className="mt-0.5 text-2xl font-semibold text-[#26a69a]">
-                {stats.resolvedRate}%
-              </p>
+              <p className="mt-0.5 text-2xl font-semibold text-[#26a69a]">Campaign-defined</p>
             </div>
           </div>
 
@@ -468,7 +464,7 @@ export default async function LandingPage() {
               </p>
               <div className="mt-4 rounded-xl border border-[#fce4ec] bg-white/70 p-3 backdrop-blur-sm">
                 <p className="text-xs text-[#78909c]">Example reference</p>
-                <p className="font-mono text-sm font-bold text-[#263238]">CPSC ML-DEMO-2026</p>
+                <p className="font-mono text-sm font-bold text-[#263238]">{campaign?.cpscNumber ?? 'See notice'}</p>
               </div>
             </div>
           </div>

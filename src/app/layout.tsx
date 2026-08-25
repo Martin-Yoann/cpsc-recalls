@@ -3,14 +3,12 @@ import { Providers } from '@/components/shared/providers';
 import { Header } from '@/components/shared/header';
 import { Footer } from '@/components/shared/footer';
 import './globals.css';
-
 export const metadata: Metadata = {
   title: {
     default: 'KOI — Consumer Recall Platform',
     template: '%s | KOI Recall Platform',
   },
-  description:
-    'Check product recalls, verify your product eligibility, submit claims, and track resolutions. A CPSC partner platform for consumer product safety.',
+  description: 'Check product recalls, review campaign notices, submit claims, and track resolutions.',
   icons: {
     icon: '/favicon.ico',
   },

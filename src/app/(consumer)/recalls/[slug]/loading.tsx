@@ -14,9 +14,9 @@ export default function RecallLoading() {
       <div className="container-content pt-10 pb-8">
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1.5" aria-hidden="true">
-            <span className="blade-dot blade-dot-safety" />
-            <span className="blade-dot blade-dot-verification" />
-            <span className="blade-dot blade-dot-resolution" />
+            <span className="h-2.5 w-2.5 rounded-full animate-pulse bg-[#ff8fab]" />
+            <span className="h-2.5 w-2.5 rounded-full animate-pulse bg-[#f9d56e] [animation-delay:120ms]" />
+            <span className="h-2.5 w-2.5 rounded-full animate-pulse bg-[#63c7a2] [animation-delay:240ms]" />
           </span>
           <span className="text-sm font-medium text-text-tertiary">
             Loading recall details…

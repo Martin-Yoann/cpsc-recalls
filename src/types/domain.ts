@@ -85,6 +85,10 @@ export interface Campaign {
   affectedLots?: string[];
   dateCodes?: string[];
   evidenceRequirements?: CampaignEvidenceRequirement[];
+  privacyNotice?: {
+    url: string;
+    version: string;
+  };
 }
 
 export interface Product {

@@ -214,7 +214,7 @@ export async function getConsumerClaim(
 
 export async function lookupConsumerClaim(
   claimNumber: string,
-  phone: string,
+  reference: string,
 ): Promise<ApiResult<{
   claim: ConsumerClaim;
   campaignTitle: string;
@@ -223,7 +223,9 @@ export async function lookupConsumerClaim(
   remedyType: string;
   refundAmount?: number;
 }>> {
-  return fetchApi(`/v1/consumer-auth/lookup/${encodeURIComponent(claimNumber)}?phone=${encodeURIComponent(phone)}`);
+  return fetchApi(
+    `/v1/consumer-auth/lookup/${encodeURIComponent(claimNumber)}?reference=${encodeURIComponent(reference)}`,
+  );
 }
 
 
