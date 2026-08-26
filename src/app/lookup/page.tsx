@@ -1,138 +1,177 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { ArrowRight, Check, Clock3, LockKeyhole, Search, ShieldCheck, Sparkles, Ticket, X } from 'lucide-react';
-import { LookupForm } from '@/components/lookup/lookup-form';
-import { LookupResult } from '@/components/lookup/lookup-result';
-import { lookupConsumerClaim, type ConsumerClaim } from '@/lib/api-client';
-import { cn } from '@/lib/utils';
+import { useState } from "react";
+import Link from "next/link";
+import { ArrowRight, LockKeyhole, ShieldCheck } from "lucide-react";
+
+import { LookupForm } from "@/components/lookup/lookup-form";
+import { lookupConsumerClaim } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
 
 export default function LookupPage() {
-  const [result, setResult] = useState<{
-    claim: ConsumerClaim;
-    campaignTitle: string;
-    productName: string;
-    remedyTitle: string;
-    remedyType: string;
-    refundAmount?: number;
-  } | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const handleSearch = async (claimNumber: string, reference: string) => {
+  const handleSearch = async (
+    claimNumber: string,
+    reference: string
+  ) => {
     setIsLoading(true);
     setNotFound(false);
-    setResult(null);
-    const response = await lookupConsumerClaim(claimNumber, reference);
-    if (response.ok) {
-      setResult(response.data);
-      setDrawerOpen(true);
-    } else {
+
+    try {
+      const response = await lookupConsumerClaim(
+        claimNumber,
+        reference
+      );
+
+      if (response.ok) {
+        // 查询成功后的行为暂时保留在这里。
+        // 后续如果需要，可以跳转到案件详情页。
+        return;
+      }
+
       setNotFound(response.status === 404);
+    } catch {
+      setNotFound(false);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
-  const closeDrawer = () => setDrawerOpen(false);
-
   return (
-    <div className="lookup-page">
-      <div className="lookup-page__inner">
-        <section className="lookup-intro">
-          <div className="lookup-intro__topline"><span>Consumer support</span><span>01 / 02</span></div>
-          <div className="lookup-intro__icon"><ShieldCheck aria-hidden="true" /><span>Secure recall centre</span></div>
-          <h1>Check your<br /><em>recall status.</em></h1>
-          <p className="lookup-intro__lead">
-            A clear answer starts with your claim number. Review your case, remedy, and next steps in one place.
-          </p>
-          <div className="lookup-intro__rule" />
-          <div className="lookup-intro__stats">
-            <div><Search className="h-4 w-4" /><span><strong>Fast lookup</strong>Claim number and reference only.</span></div>
-            <div><LockKeyhole className="h-4 w-4" /><span><strong>Private by design</strong>Access stays tied to this case.</span></div>
-            <div><Ticket className="h-4 w-4" /><span><strong>Recall ready</strong>Track remedy, evidence, and status.</span></div>
-          </div>
-          <div className="lookup-intro__footer">
-            <div className="lookup-intro__mark">KOI<span>•</span>RECALL</div>
-            <div className="lookup-intro__chips">
-              <span><Sparkles className="h-3.5 w-3.5" /> Candy support</span>
-              <span><Clock3 className="h-3.5 w-3.5" /> Status updates</span>
-            </div>
-          </div>
-        </section>
+    <main className="min-h-[calc(100vh-64px)] bg-slate-50">
+      <div className="container-content flex min-h-[calc(100vh-64px)] items-center justify-center py-12 sm:py-16">
+        <section className="w-full max-w-[560px]">
 
-        <section className="lookup-form-area">
-          <div className="lookup-form-area__heading">
-            <div>
-              <span className="lookup-kicker">Find a case</span>
-              <h2>Enter your details</h2>
-              <p className="lookup-form-area__lead">Use the claim number and reference from your recall notice to open the latest progress view.</p>
+          {/* =================================================
+              Header
+          ================================================== */}
+
+          <div className="text-center">
+
+            <div
+              className={cn(
+                "mx-auto inline-flex items-center gap-2",
+                "text-[12px] font-medium",
+                "text-[#163A5F]"
+              )}
+            >
+              <ShieldCheck className="h-4 w-4" />
+              <span>KOI Recall</span>
             </div>
-            <div className="lookup-step"><span>STEP</span><strong>01</strong></div>
+
+            <h1
+              className={cn(
+                "mt-4",
+                "text-[34px] leading-[1.1]",
+                "font-bold tracking-[-0.025em]",
+                "text-slate-900",
+                "sm:text-[40px]"
+              )}
+            >
+              Check your recall status
+            </h1>
+
+            <p
+              className={cn(
+                "mx-auto mt-3 max-w-md",
+                "text-[15px] leading-6",
+                "text-slate-500"
+              )}
+            >
+              Enter your claim number and reference number
+              to view your case.
+            </p>
           </div>
-          <div className="lookup-form-card">
-            <LookupForm onSearch={handleSearch} isLoading={isLoading} />
+
+          {/* =================================================
+              Lookup Form
+          ================================================== */}
+
+          <div
+            className={cn(
+              "mt-8",
+              "rounded-[4px]",
+              "border border-slate-200",
+              "bg-white",
+              "p-6",
+              "shadow-[0_4px_18px_rgba(15,23,42,0.05)]",
+              "sm:p-8"
+            )}
+          >
+            <LookupForm
+              onSearch={handleSearch}
+              isLoading={isLoading}
+            />
+
+            {/* Not Found */}
 
             {notFound && (
-              <div className="lookup-form-card__alert">
-                <p className="mb-0.5 font-semibold">No Matching Record Found</p>
-                <p className="opacity-80">Verify your claim number and reference number.</p>
+              <div
+                className={cn(
+                  "mt-4",
+                  "border border-slate-200",
+                  "rounded-[3px]",
+                  "bg-slate-50",
+                  "px-4 py-3"
+                )}
+              >
+                <p className="text-[13px] font-semibold text-slate-800">
+                  No matching record found.
+                </p>
+
+                <p className="mt-0.5 text-[12px] leading-5 text-slate-500">
+                  Check your claim number and reference number
+                  and try again.
+                </p>
               </div>
             )}
-            <div className="lookup-form-card__privacy"><LockKeyhole aria-hidden="true" /><span>Your information is encrypted and only used to locate your recall record.</span></div>
+
+            {/* Security */}
+
+            <div
+              className={cn(
+                "mt-5 flex items-start gap-2",
+                "border-t border-slate-200",
+                "pt-4"
+              )}
+            >
+              <LockKeyhole className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+
+              <p className="text-[11px] leading-5 text-slate-500">
+                Your information is encrypted and only used
+                to locate your recall record.
+              </p>
+            </div>
           </div>
-          <div className="lookup-form-area__footer">
-            <span>Need another path?</span>
-            <Link href="/register">Create an account <ArrowRight aria-hidden="true" /></Link>
+
+          {/* =================================================
+              Secondary Action
+          ================================================== */}
+
+          <div className="mt-6 text-center">
+            <span className="text-[13px] text-slate-500">
+              Don`&apos;t have a claim yet?
+            </span>{" "}
+
+            <Link
+              href="/recalls/music-lollipop-demo-2026"
+              className={cn(
+                "inline-flex items-center gap-1",
+                "text-[13px] font-semibold",
+                "text-[#163A5F]",
+                "transition-colors",
+                "hover:text-[#1D4F7A]"
+              )}
+            >
+              File a new claim
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
+
         </section>
       </div>
-      <div className="lookup-links">
-        <Link href="/register" className="text-[#4A2C2A] transition-colors hover:text-[#FF6B8A]">
-          Create Account
-        </Link>
-        <span className="text-[#D7B8C0]">|</span>
-        <Link href="/login" className="text-[#4A2C2A] transition-colors hover:text-[#FF6B8A]">
-          Sign In
-        </Link>
-        <span className="text-[#D7B8C0]">|</span>
-        <Link href="/" className="text-[#4A2C2A] transition-colors hover:text-[#FF6B8A]">
-          Home
-        </Link>
-      </div>
-
-      {/* ═══ Drawer overlay ═══ */}
-      {/* Backdrop */}
-      <div
-        className={cn(
-          'lookup-drawer-backdrop',
-          drawerOpen && 'is-open',
-        )}
-        onClick={closeDrawer}
-      />
-
-      {/* Drawer panel — slides in from right */}
-      <div
-        className={cn(
-          'lookup-drawer-panel',
-          drawerOpen && 'is-open',
-        )}
-      >
-        {/* Close button */}
-        <button
-          onClick={closeDrawer}
-          className="absolute top-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-md transition-colors cursor-pointer hover:bg-surface-secondary"
-          aria-label="Close"
-        >
-          <X className="h-5 w-5 text-brand-teal" />
-        </button>
-
-        {/* Result content */}
-        <div className="p-6 sm:p-8 lg:p-10 pt-14 min-h-full">
-          {result && <LookupResult {...result} />}
-        </div>
-      </div>
-    </div>
+    </main>
   );
 }

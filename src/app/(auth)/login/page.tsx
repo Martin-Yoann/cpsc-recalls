@@ -13,17 +13,14 @@ export default function LoginRedirect() {
       router.replace('/dashboard');
       return;
     }
-
     openAuthDrawer('signin');
   }, [isAuthenticated, openAuthDrawer, router]);
 
-  if (isAuthenticated) {
-    return null;
-  }
+  if (isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-primary">
-      <p className="text-sm text-text-secondary">Opening sign in...</p>
+    <div className="flex items-center justify-center min-h-[40vh] text-sm text-secondary">
+      Opening sign in...
     </div>
   );
 }

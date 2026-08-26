@@ -1,0 +1,31 @@
+﻿:root {
+  --primary: #111d23;
+  --on-primary: #ffffff;
+  --secondary: #48626e;
+  --emergency-red: #c62828;
+  --background: #f8fafb;
+  --foreground: #191c1d;
+  --border-subtle: #cfd8dc;
+  --surface-container-low: #f2f4f5;
+  --on-surface-variant: #43474a;
+}
+.btn{
+  background-color: var(--primary);
+  color: var(--on-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem; /* 相当于 rounded-md */
+  padding: 0 1rem;
+  height: 2.5rem; /* h-10 */
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.btn:hover{
+  background-color: var(--primary);
+  color: var(--on-primary);
+}
+html {
+    /* stable 意为：无论是否有滚动条，都预留出滚动条的空间 */
+    scrollbar-gutter: stable;
+}

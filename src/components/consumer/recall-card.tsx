@@ -1,5 +1,5 @@
 // ============================================================
-// KOI Recall Platform — Recall Card v3.0
+// KOI Recall Platform �?Recall Card v3.0
 // Clean, warm cards with risk accent
 // ============================================================
 
@@ -83,7 +83,7 @@ export function RecallCard({ campaign }: RecallCardProps) {
             <span className="data-chip text-[11px]">
               <Factory className="h-3 w-3" />
               {campaign.manufacturerName.length > 16
-                ? campaign.manufacturerName.slice(0, 16) + '…'
+                ? campaign.manufacturerName.slice(0, 16) + '...'
                 : campaign.manufacturerName}
             </span>
             <span className="data-chip text-[11px] font-mono">
@@ -106,3 +106,4 @@ export function RecallCard({ campaign }: RecallCardProps) {
     </Link>
   );
 }
+

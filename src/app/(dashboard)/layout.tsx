@@ -1,12 +1,11 @@
 'use client';
 
 // ============================================================
-// KOI Recall Platform — Dashboard Layout
-// Protected: redirects to /login if not authenticated
+// KOI Recall Platform — Dashboard Layout v4
 // ============================================================
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   Shield,
@@ -15,10 +14,10 @@ import {
   Package,
   User,
   ChevronRight,
+  ArrowLeft,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { cn } from '@/lib/utils';
-import { usePathname } from 'next/navigation';
 
 const SIDEBAR_LINKS = [
   { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
@@ -44,8 +43,8 @@ export default function DashboardLayout({
 
   if (isLoading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="animate-pulse text-text-tertiary">Loading...</div>
+      <div className="min-h-[60vh] flex items-center justify-center text-secondary text-sm">
+        Loading...
       </div>
     );
   }
@@ -55,53 +54,57 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.75rem)] bg-surface-primary">
-      <div className="container-content py-6 sm:py-8">
+    <div className="bg-background text-foreground min-h-[calc(100vh-64px)]">
+      <div className="container-content py-8">
         <div className="flex gap-8">
           {/* Sidebar */}
-          <aside className="hidden lg:block w-56 shrink-0">
-            <div className="sticky top-24 space-y-1">
+          <aside className="hidden lg:block w-60 shrink-0">
+            <div className="sticky top-20 space-y-2">
               {/* User info */}
-              <div className="mb-4 border border-border border-l-4 border-l-brand-teal bg-surface-elevated px-3 py-3">
+              <div className="p-4 bg-foreground text-white rounded-md">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-teal text-white text-sm font-bold">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-md bg-white text-foreground text-sm font-bold">
                     {user?.name?.slice(0, 2).toUpperCase() || 'U'}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-text-primary truncate">{user?.name}</p>
-                    <p className="text-xs text-text-tertiary truncate">{user?.email}</p>
+                    <p className="text-sm font-semibold truncate">{user?.name}</p>
+                    <p className="text-xs text-white/70 truncate">{user?.email}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Nav */}
-              {SIDEBAR_LINKS.map((link) => {
-                const Icon = link.icon;
-                const isActive = pathname === link.href;
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={cn(
-                      'flex items-center gap-3 border-l-2 px-3 py-2.5 text-sm font-medium transition-colors duration-200',
-                      isActive
-                        ? 'border-l-brand-teal bg-brand-teal text-white'
-                        : 'border-l-transparent text-text-secondary hover:border-l-border hover:bg-surface-elevated hover:text-text-primary'
-                    )}
-                  >
-                    <Icon className="h-4.5 w-4.5" />
-                    {link.label}
-                    {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
-                  </Link>
-                );
-              })}
+              <div className="pt-3">
+                <p className="label-eyebrow px-3 mb-2">Dashboard</p>
+                <nav className="space-y-1">
+                  {SIDEBAR_LINKS.map((link) => {
+                    const Icon = link.icon;
+                    const isActive = pathname === link.href;
+                    return (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                          isActive
+                            ? "bg-brand-light text-brand"
+                            : "text-secondary hover:bg-surface-dim hover:text-foreground"
+                        )}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {link.label}
+                        {isActive && <ChevronRight className="h-3.5 w-3.5 ml-auto" />}
+                      </Link>
+                    );
+                  })}
+                </nav>
+              </div>
 
               <div className="pt-4 mt-4 border-t border-border">
                 <Link
                   href="/"
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-text-tertiary hover:text-text-primary transition-colors"
+                  className="flex items-center gap-3 px-3 py-2 text-sm text-secondary hover:text-foreground transition-colors rounded-md hover:bg-surface-dim"
                 >
-                  <Shield className="h-4.5 w-4.5" />
+                  <ArrowLeft className="h-4 w-4" />
                   Back to Home
                 </Link>
               </div>
