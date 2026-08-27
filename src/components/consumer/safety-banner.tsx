@@ -19,10 +19,12 @@ export function SafetyBanner() {
         </span>
         <button
           onClick={() => setDismissed(true)}
-          className="shrink-0 h-7 w-7 flex items-center justify-center rounded-md text-white/70 hover:text-white hover:bg-white/10 transition-colors"
-          aria-label="Dismiss"
+          className="group shrink-0 inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-white/80 bg-white px-2.5 text-sm font-semibold text-brand shadow-sm transition-colors hover:bg-white/90 hover:border-white active:bg-white/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand"
+          aria-label="Dismiss safety recall notice"
+          title="Dismiss safety recall notice"
         >
-          <X className="h-4 w-4" />
+          <span className="hidden sm:inline">Dismiss</span>
+          <X className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
     </div>

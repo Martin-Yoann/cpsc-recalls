@@ -8,6 +8,7 @@
 // ============================================================
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { ShieldCheck, XCircle, Loader2, AlertTriangle, Info } from 'lucide-react';
 import Select from 'react-tailwindcss-select';
 import { Button } from '@/components/ui/button';
@@ -21,10 +22,13 @@ type SelectOption = { value: string; label: string };
 
 const selectClassNames = {
   menuButton: () => 'flex h-10 w-full cursor-pointer items-center justify-between rounded-md border border-[#dcdfe6] bg-white px-3 text-sm text-gray-900 shadow-none transition-colors hover:border-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20',
-  menu: 'z-20 mt-1 overflow-hidden rounded-md border border-[#e4e7ed] bg-white py-1 shadow-[0_4px_12px_rgba(0,0,0,0.12)]',
+  menu: 'absolute left-0 top-full z-50 mt-1 w-full overflow-hidden rounded-md border border-[#e4e7ed] bg-white py-1 shadow-[0_4px_12px_rgba(0,0,0,0.12)]',
   list: 'max-h-52 overflow-y-auto py-1',
   listItem: ({ isSelected }: { isSelected?: boolean } = {}) => `cursor-pointer px-3 py-2 text-sm text-[#606266] transition-colors hover:bg-[#ecf5ff] hover:text-[#409eff] ${isSelected ? 'bg-[#ecf5ff] text-[#409eff]' : ''}`,
-  ChevronIcon: ({ open }: { open?: boolean } = {}) => `h-4 w-4 text-[#c0c4cc] transition-transform ${open ? 'rotate-180' : ''}`,
+  // Keep the chevron state explicit so the legacy Select stylesheet cannot
+  // leave a stale transform after the menu closes.
+  ChevronIcon: ({ open }: { open?: boolean } = {}) =>
+    `h-4 w-4 text-[#c0c4cc] transform-gpu transition-transform duration-200 ${open ? '!rotate-180' : '!rotate-0'}`, 
 };
 
 export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
@@ -77,8 +81,8 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
   const reset = () => { setShape(''); setFlavor(''); setLotCode(''); setDateCode(''); setResult(null); setError(''); setApiError(null); };
 
   return (
-    <div className="w-full h-full rounded-xl border bg-surface-elevated overflow-hidden flex flex-col">
-      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-center">
+    <div className="relative z-0 w-full h-full rounded-xl border bg-surface-elevated flex flex-col">
+      <div className="relative z-0 p-4 sm:p-5 flex-1 flex flex-col justify-center">
         {result === 'potential_match' ? (
           <div className="text-center py-4 space-y-3">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blade-resolution-light border border-blade-resolution-medium/30">
@@ -95,7 +99,15 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
             <p className="text-xs text-text-tertiary">
               This check is preliminary and is not a final eligibility decision.
             </p>
-            <Button variant="outline" size="sm" onClick={reset}>Check Again</Button>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button variant="outline" size="default" onClick={reset}>Check Again</Button>
+              <Link
+                href={`/recalls/${campaign.slug}`}
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-foreground bg-foreground px-3 text-sm font-medium text-white transition-colors hover:bg-foreground/90"
+              >
+                Go to Recall Page
+              </Link>
+            </div>
           </div>
         ) : result === 'not_matched' ? (
           <div className="text-center py-4 space-y-3">
@@ -106,7 +118,7 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
             <p className="text-sm text-text-secondary">
               The values you selected were not found in this recall scope. This does not confirm your product is safe — please try different selections or continue to manual review.
             </p>
-            <Button variant="outline" size="sm" onClick={reset}>Try Again</Button>
+            <Button variant="outline" size="default" onClick={reset}>Try Again</Button>
           </div>
         ) : result === 'manual_review' ? (
           <div className="text-center py-4 space-y-3">
@@ -129,7 +141,7 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {/* Candy Shape */}
             {shapes.length > 0 && (
-              <div className="space-y-1.5">
+              <div className="relative space-y-1.5">
                 <p className="text-xs font-semibold">Candy Shape</p>
                 <Select value={optionFor(shape, shapes)} onChange={selectValue(setShape)} options={optionsFor(shapes)} placeholder="Select Shape" primaryColor="blue" isSearchable={false} isClearable={false} classNames={selectClassNames} />
               </div>
@@ -137,7 +149,7 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
 
             {/* Flavor */}
             {flavors.length > 0 && (
-              <div className="space-y-1.5">
+              <div className="relative space-y-1.5">
                 <p className="text-xs font-semibold">Flavor</p>
                 <Select value={optionFor(flavor, flavors)} onChange={selectValue(setFlavor)} options={optionsFor(flavors)} placeholder="Select Flavor" primaryColor="blue" isSearchable={false} isClearable={false} classNames={selectClassNames} />
               </div>
@@ -145,7 +157,7 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
 
             {/* Lot Code */}
             {lots.length > 0 && (
-              <div className="space-y-1.5">
+              <div className="relative space-y-1.5">
                 <p className="text-xs font-semibold">Affected Lot Code</p>
                 <Select value={optionFor(lotCode, lots)} onChange={selectValue(setLotCode)} options={optionsFor(lots)} placeholder="Select Lot Code" primaryColor="blue" isSearchable={false} isClearable={false} classNames={selectClassNames} />
               </div>
@@ -153,7 +165,7 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
 
             {/* Date Code */}
             {dates.length > 0 && (
-              <div className="space-y-1.5">
+              <div className="relative space-y-1.5">
                 <p className="text-xs font-semibold">Date Code</p>
                 <Select value={optionFor(dateCode, dates)} onChange={selectValue(setDateCode)} options={optionsFor(dates)} placeholder="Select Date Code" primaryColor="blue" isSearchable={false} isClearable={false} classNames={selectClassNames} />
               </div>
@@ -171,7 +183,7 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
 
             <Button onClick={handleCheck} disabled={isChecking}
               className="h-10 w-full font-semibold cursor-pointer btn-lift btn-press sm:col-span-2"
-              style={{ backgroundColor: isChecking ? '#a0cfff' : '#409eff', borderColor: isChecking ? '#a0cfff' : '#409eff', color: '#fff', opacity: 1 }}>
+              style={{ backgroundColor: isChecking ? '#7B7A7A' : '#363434', borderColor: isChecking ? '#0d0d0d' : '#1B1B1B', color: '#fff', opacity: 1 }}>
               {isChecking ? <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Checking...</> : 'Check My Product'}
             </Button>
           </div>

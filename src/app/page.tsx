@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Search, FileText, CheckCircle2, ShieldCheck, AlertTriangle, ArrowRight, Package } from "lucide-react";
+import { Search, FileText, CheckCircle2, ShieldCheck, ArrowRight, Package } from "lucide-react";
 import { fetchCampaign } from "@/lib/api-adapter";
 import { DEMO_MODE } from "@/lib/demo-mode";
 import { FAQGrid, FAQCTA } from "@/components/consumer/faq-grid";
 import { getCampaignBySlug } from "@/data/mock-recalls";
+import { RecallCheckCard } from "@/components/consumer/recall-check-card";
 
 const HOW_IT_WORKS = [
   {
@@ -91,44 +92,27 @@ export default async function LandingPage() {
               </div>
             </div>
 
-            {/* Right: real claim flow entry */}
+            {/* Right: product check moved from the recall detail page */}
             <div className="lg:pt-2">
               {campaign ? (
-                <div className="card-elevated p-6 sm:p-8 space-y-5">
-                  <div>
-                    <p className="label-eyebrow text-brand">{campaign.title}</p>
-                    <h2 className="mt-2 text-xl font-bold leading-snug text-foreground">
-                      Think you have an affected product?
-                    </h2>
-                    <p className="mt-2 text-sm leading-relaxed text-secondary">
-                      Check your lot code against the recall scope, choose a remedy,
-                      and submit — the whole flow takes a few minutes.
-                    </p>
-                  </div>
-                  <ul className="space-y-2 text-sm text-secondary">
-                    {[campaign.summary].filter(Boolean).map((line, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-brand" />
-                        <span>{line}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="flex flex-wrap items-center gap-3 pt-1">
-                    <Link href={`/recalls/${campaign.slug}`} className="btn-dark">
-                      <Package className="h-4 w-4" />
-                      Start a claim
-                    </Link>
+                  <div className="card-elevated p-6 sm:p-8 space-y-5">
+                    <div>
+                      <p className="label-eyebrow text-brand">{campaign.title}</p>
+                      <h2 className="mt-2 text-xl font-bold leading-snug text-foreground">Check Your Product</h2>
+                      <p className="mt-2 text-sm leading-relaxed text-secondary">
+                        Enter the product details from your package to see whether it is covered by this recall.
+                      </p>
+                    </div>
+                    <RecallCheckCard campaign={campaign} product={campaign.affectedProducts[0]} />
                     <Link href="/how-it-works" className="link-underline text-sm font-medium">
                       How it works →
                     </Link>
                   </div>
-                </div>
-              ) : (
-                <div className="card-elevated p-8 text-center text-secondary">
-                  No active recall campaign.
-                </div>
-              )}
-            </div>
+                ) : (
+                  <div className="card-elevated p-8 text-center text-secondary">No active recall campaign.</div>
+                )}
+              </div>
+
           </div>
         </div>
       </section>

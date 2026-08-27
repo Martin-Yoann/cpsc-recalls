@@ -15,6 +15,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
+import { SafetyBanner } from "@/components/consumer/safety-banner";
 
 const NAV_ITEMS = [
   { label: "Home", href: "/" },
@@ -70,6 +71,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white border-b border-border">
+      <SafetyBanner />
       <nav className="container-content flex h-[64px] items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
@@ -156,19 +158,13 @@ export function Header() {
             <div className="hidden items-center gap-2 sm:flex">
               <button
                 onClick={() => openAuthDrawer("signin")}
-                className=" h-9 w-30"
-                style={{
-                  backgroundColor: "#ffffff",
-                  color: "black",
-                  border: "1px solid black",
-                }}
+                className="h-9 w-[120px] cursor-pointer rounded-md border border-foreground bg-white text-sm font-semibold text-foreground transition-colors duration-200 hover:border-neutral-700 hover:bg-neutral-100 active:bg-neutral-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2"
               >
                 Sign In
               </button>
               <button
                 onClick={() => openAuthDrawer("register")}
-                className=" h-9 w-30"
-                style={{ backgroundColor: "#EA0D2A", color: "#ffffff" }}
+                className="h-9 w-[120px] cursor-pointer rounded-md border border-brand bg-brand text-sm font-semibold text-white transition-colors duration-200 hover:border-brand-hover hover:bg-brand-hover active:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
               >
                 Register
               </button>

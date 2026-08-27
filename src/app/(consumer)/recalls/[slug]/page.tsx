@@ -3,7 +3,6 @@ import type { Metadata } from 'next';
 import {
   AlertTriangle,
   Calendar,
-  CheckSquare,
   Eye,
   Factory,
   FileText,
@@ -19,8 +18,6 @@ import {
 import Link from 'next/link';
 import { fetchCampaign } from '@/lib/api-adapter';
 import { ClaimSubmitWrapper } from '@/components/consumer/claim-submit-wrapper';
-import { RecallCheckCard } from '@/components/consumer/recall-check-card';
-import { SafetyBanner } from '@/components/consumer/safety-banner';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { RiskLevel } from '@/types';
 
@@ -103,8 +100,6 @@ export default async function RecallPage({ params }: RecallPageProps) {
 
   return (
     <div className="bg-background text-foreground">
-      <SafetyBanner />
-
       <main className="container-content py-10 sm:py-12">
         {/* ── Header ── */}
         <header className="mb-10 pb-8 border-b border-border">
@@ -249,25 +244,10 @@ export default async function RecallPage({ params }: RecallPageProps) {
               </div>
             </section>
 
-            {/* 2. Check Your Product */}
+            {/* 2. Submit Claim */}
             <section>
               <SectionHeading
                 step="02"
-                icon={CheckSquare}
-                description="Enter your product codes below to verify whether your item is covered by this safety recall."
-              >
-                Check Your Product
-              </SectionHeading>
-
-              <div className="card-surface p-6">
-                <RecallCheckCard campaign={campaign} product={product} />
-              </div>
-            </section>
-
-            {/* 3. Submit Claim */}
-            <section>
-              <SectionHeading
-                step="03"
                 icon={FileText}
                 description={campaign.remedySummary || 'Select the resolution option that works best for you.'}
               >
