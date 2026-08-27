@@ -213,12 +213,20 @@ export default async function LandingPage() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-5 border-t border-border">
                     <div>
                       <p className="label-eyebrow">Recall Date</p>
-                      <p className="text-sm font-medium text-foreground mt-1">{campaign.recallDate}</p>
+                      <p className="text-sm font-medium text-foreground mt-1">
+                        {campaign.recallDate
+                          ? new Date(campaign.recallDate).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })
+                          : '—'}
+                      </p>
                     </div>
                     <div>
                       <p className="label-eyebrow">Units</p>
                       <p className="text-sm font-mono font-medium text-foreground mt-1">
-                        {campaign.estimatedUnits.toLocaleString()}
+                        {campaign.estimatedUnits > 0 ? campaign.estimatedUnits.toLocaleString() : '—'}
                       </p>
                     </div>
                     <div>

@@ -93,6 +93,14 @@ export default async function RecallPage({ params }: RecallPageProps) {
   const product = campaign.affectedProducts?.[0];
   if (!product) notFound();
 
+  // Adapter packs contact as "phone (hours)" — split instead of inventing
+  // defaults for either part.
+  const rawContact = campaign.manufacturerContact || '';
+  const openParen = rawContact.indexOf(' (');
+  const supportPhone = (openParen === -1 ? rawContact : rawContact.slice(0, openParen)).trim();
+  const supportHours =
+    openParen === -1 ? '' : rawContact.slice(openParen + 2).replace(/\)\s*$/, '').trim();
+
   return (
     <div className="bg-background text-foreground">
       <SafetyBanner />
@@ -109,17 +117,15 @@ export default async function RecallPage({ params }: RecallPageProps) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2 mb-4">
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-brand-light px-2.5 py-1 text-xs font-semibold text-brand">
-              <AlertTriangle className="h-3.5 w-3.5" />
-              High Priority
-            </span>
             <StatusBadge variant={campaign.status} />
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold uppercase tracking-wider ${riskStyles[campaign.riskLevel] || 'bg-surface-dim text-foreground'}`}
-            >
-              {riskLabels[campaign.riskLevel] || 'UNKNOWN RISK'}
-            </span>
-            <span className="label-data">Notice #{campaign.cpscNumber}</span>
+            {campaign.riskLevel && (
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold uppercase tracking-wider ${riskStyles[campaign.riskLevel] || 'bg-surface-dim text-foreground'}`}
+              >
+                {riskLabels[campaign.riskLevel] || campaign.riskLevel}
+              </span>
+            )}
+            <span className="label-data">Reference #{campaign.cpscNumber}</span>
           </div>
 
           <h1 className="text-[36px] sm:text-[40px] leading-[1.1] font-bold tracking-[-0.02em] text-foreground max-w-4xl">
@@ -130,19 +136,29 @@ export default async function RecallPage({ params }: RecallPageProps) {
             {campaign.summary}
           </p>
 
-          {/* Data strip */}
+          {/* Data strip — only API-provided facts; absent values render as em dash */}
           <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-border">
             <div>
               <p className="label-eyebrow">Recall Date</p>
-              <p className="mt-1 text-sm font-semibold text-foreground">{campaign.recallDate}</p>
+              <p className="mt-1 text-sm font-semibold text-foreground">
+                {campaign.recallDate
+                  ? new Date(campaign.recallDate).toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })
+                  : '—'}
+              </p>
             </div>
             <div>
               <p className="label-eyebrow">Manufacturer</p>
-              <p className="mt-1 text-sm font-semibold text-foreground truncate">{campaign.manufacturerName}</p>
+              <p className="mt-1 text-sm font-semibold text-foreground truncate">{campaign.manufacturerName || '—'}</p>
             </div>
             <div>
               <p className="label-eyebrow">Affected Units</p>
-              <p className="mt-1 text-sm font-mono font-semibold text-foreground">{campaign.estimatedUnits.toLocaleString()}</p>
+              <p className="mt-1 text-sm font-mono font-semibold text-foreground">
+                {campaign.estimatedUnits > 0 ? campaign.estimatedUnits.toLocaleString() : '—'}
+              </p>
             </div>
             <div>
               <p className="label-eyebrow">Last Updated</p>
@@ -253,7 +269,7 @@ export default async function RecallPage({ params }: RecallPageProps) {
               <SectionHeading
                 step="03"
                 icon={FileText}
-                description="Select the resolution option that works best for you. Free replacement or full refund are available."
+                description={campaign.remedySummary || 'Select the resolution option that works best for you.'}
               >
                 Submit a Claim
               </SectionHeading>
@@ -267,20 +283,22 @@ export default async function RecallPage({ params }: RecallPageProps) {
           {/* Right sidebar */}
           <aside className="space-y-5 lg:sticky lg:top-20 lg:self-start">
             <SideCard title="Need Help?" icon={HelpCircle}>
-              <div className="flex items-start gap-3 p-3 bg-surface-dim rounded-md text-sm">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground text-white">
-                  <Phone className="h-4 w-4" />
+              {supportPhone ? (
+                <div className="flex items-start gap-3 p-3 bg-surface-dim rounded-md text-sm">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground text-white">
+                    <Phone className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Consumer Support</p>
+                    <p className="text-xs text-secondary mt-0.5">{supportPhone}</p>
+                    {supportHours && (
+                      <p className="mt-1 text-[10px] text-secondary">{supportHours}</p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-foreground">Consumer Support</p>
-                  <p className="text-xs text-secondary mt-0.5">
-                    {campaign.manufacturerContact?.split(' (')[0] || '1-800-555-SAFE'}
-                  </p>
-                  <p className="mt-1 text-[10px] text-secondary">
-                    Mon–Fri, 9:00 AM – 5:00 PM ET
-                  </p>
-                </div>
-              </div>
+              ) : (
+                <p className="text-sm text-secondary">Contact details are provided in the campaign notice.</p>
+              )}
 
               <div className="mt-5">
                 <p className="label-eyebrow mb-3">What to Expect</p>
@@ -291,11 +309,11 @@ export default async function RecallPage({ params }: RecallPageProps) {
                   </li>
                   <li className="flex gap-3">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-bold text-white">2</span>
-                    <span className="text-foreground leading-relaxed pt-0.5">Our team reviews your submission within 5–7 business days.</span>
+                    <span className="text-foreground leading-relaxed pt-0.5">The review team checks your submission and keeps your case status updated.</span>
                   </li>
                   <li className="flex gap-3">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-bold text-white">3</span>
-                    <span className="text-foreground leading-relaxed pt-0.5">Receive your replacement or refund and track status in your dashboard.</span>
+                    <span className="text-foreground leading-relaxed pt-0.5">Track progress any time with your case reference via status lookup.</span>
                   </li>
                 </ol>
               </div>

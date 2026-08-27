@@ -5,7 +5,7 @@
 // ============================================================
 
 import { cache } from 'react';
-import { RiskLevel, RecallStatus, RemedyType, EvidenceType } from '@/types';
+import { RecallStatus, RemedyType, EvidenceType } from '@/types';
 import type { Campaign } from '@/types';
 import type { CampaignView } from '@/lib/api-client';
 import { getCampaign as apiGetCampaign } from '@/lib/api-client';
@@ -28,11 +28,13 @@ function campaignViewToCampaign(view: CampaignView): Campaign {
     title: view.title,
     summary: view.summary,
     description: view.summary,
-    riskLevel: RiskLevel.MODERATE,
+    // riskLevel intentionally absent: the API provides no severity signal yet
+    // (P1-5) and the UI hides the badge rather than guessing one.
     status: RecallStatus.ACTIVE,
     cpscNumber: view.code,
-    recallDate: '',
+    recallDate: view.publishedAt ?? '',
     lastUpdated: '',
+    remedySummary: view.remedySummary,
     manufacturerName: firstProduct?.brand ?? '',
     manufacturerContact: view.support?.phone
       ? `${view.support.phone} (${view.support.hours ?? ''})`
@@ -57,7 +59,7 @@ function campaignViewToCampaign(view: CampaignView): Campaign {
       id: p.productId,
       name: p.name,
       modelNumber: p.sku,
-      upc: p.sku, // Note: sku ≠ UPC; this will be refined when the API provides unit UPCs
+      upc: '', // unit UPC not provided by the API yet; empty until it is
       manufactureDateStart: lots[0]?.dateCode ?? '',
       manufactureDateEnd: lots[lots.length - 1]?.dateCode ?? '',
       description: `${p.name}`,

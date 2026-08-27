@@ -69,11 +69,13 @@ export interface Campaign {
   title: string;
   summary: string;
   description: string;
-  riskLevel: RiskLevel;
+  /** Only rendered when the API actually provides a severity signal. */
+  riskLevel?: RiskLevel;
   status: RecallStatus;
   cpscNumber: string;
   recallDate: string;
   lastUpdated: string;
+  remedySummary?: string;
   affectedProducts: Product[];
   remedies: Remedy[];
   manufacturerName: string;

@@ -101,16 +101,18 @@ export function ProductIdentityCard({ product, affectedLots, dateCodes }: Produc
             </div>
           )}
 
-          {/* UPC */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest flex items-center gap-1">
-              <Barcode className="h-3 w-3" />
-              UPC Code
-            </label>
-            <p className="text-sm font-mono font-semibold text-text-primary bg-surface-secondary rounded-md px-3 py-2 border">
-              {product.upc}
-            </p>
-          </div>
+          {/* UPC — hidden until the API provides real unit UPCs (P1-5) */}
+          {product.upc && (
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest flex items-center gap-1">
+                <Barcode className="h-3 w-3" />
+                UPC Code
+              </label>
+              <p className="text-sm font-mono font-semibold text-text-primary bg-surface-secondary rounded-md px-3 py-2 border">
+                {product.upc}
+              </p>
+            </div>
+          )}
 
           {/* Manufacture Dates */}
           <div className="space-y-1">

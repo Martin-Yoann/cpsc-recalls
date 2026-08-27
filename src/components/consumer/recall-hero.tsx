@@ -20,7 +20,8 @@ const RISK_CONFIG: Record<string, { bg: string; text: string; border: string; la
 };
 
 export function RecallHero({ campaign }: RecallHeroProps) {
-  const risk = RISK_CONFIG[campaign.riskLevel];
+  // Risk is only shown when the API provides a severity signal (P1-5).
+  const risk = (campaign.riskLevel && RISK_CONFIG[campaign.riskLevel]) || null;
 
   return (
     <section className="bg-surface-primary border-b">
@@ -28,15 +29,17 @@ export function RecallHero({ campaign }: RecallHeroProps) {
         {/* Badge row */}
         <div className="flex flex-wrap items-center gap-2 mb-5">
           <StatusBadge variant={campaign.status} />
-          <span
-            className={cn(
-              'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-bold uppercase tracking-wider',
-              risk.bg, risk.text, risk.border
-            )}
-          >
-            <AlertTriangle className="h-3.5 w-3.5" />
-            {risk.label}
-          </span>
+          {risk && (
+            <span
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-bold uppercase tracking-wider',
+                risk.bg, risk.text, risk.border
+              )}
+            >
+              <AlertTriangle className="h-3.5 w-3.5" />
+              {risk.label}
+            </span>
+          )}
         </div>
 
         {/* Title */}
@@ -55,18 +58,24 @@ export function RecallHero({ campaign }: RecallHeroProps) {
             <Hash className="h-3.5 w-3.5" />
             Reference #{campaign.cpscNumber}
           </span>
-          <span className="data-chip">
-            <Calendar className="h-3.5 w-3.5" />
-            Recalled {campaign.recallDate}
-          </span>
-          <span className="data-chip">
-            <Factory className="h-3.5 w-3.5" />
-            {campaign.manufacturerName}
-          </span>
-          <span className="data-chip">
-            <Package className="h-3.5 w-3.5" />
-            {campaign.estimatedUnits.toLocaleString()} units
-          </span>
+          {campaign.recallDate && (
+            <span className="data-chip">
+              <Calendar className="h-3.5 w-3.5" />
+              Recalled {campaign.recallDate}
+            </span>
+          )}
+          {campaign.manufacturerName && (
+            <span className="data-chip">
+              <Factory className="h-3.5 w-3.5" />
+              {campaign.manufacturerName}
+            </span>
+          )}
+          {campaign.estimatedUnits > 0 && (
+            <span className="data-chip">
+              <Package className="h-3.5 w-3.5" />
+              {campaign.estimatedUnits.toLocaleString()} units
+            </span>
+          )}
         </div>
 
         {/* Hazard description */}

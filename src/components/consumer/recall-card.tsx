@@ -42,30 +42,33 @@ const RISK_CONFIG: Record<string, { accent: string; bg: string; text: string; la
 };
 
 export function RecallCard({ campaign }: RecallCardProps) {
-  const risk = RISK_CONFIG[campaign.riskLevel];
+  // Risk is only shown when the API provides a severity signal (P1-5).
+  const risk = (campaign.riskLevel && RISK_CONFIG[campaign.riskLevel]) || null;
 
   return (
     <Link href={`/recalls/${campaign.slug}`} className="block group h-full cursor-pointer">
       <article
         className={cn(
           'h-full rounded-md border-l-[3px] bg-surface-elevated border shadow-sm transition-all duration-300 flex flex-col card-lift',
-          risk.accent
+          risk ? risk.accent : 'border-l-border'
         )}
       >
         <div className="p-5 flex-1 flex flex-col">
           {/* Header row */}
           <div className="flex items-center justify-between mb-3">
             <StatusBadge variant={campaign.status} />
-            <span
-              className={cn(
-                'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider',
-                risk.bg,
-                risk.text
-              )}
-            >
-              <AlertTriangle className="h-3 w-3" />
-              {risk.label}
-            </span>
+            {risk && (
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider',
+                  risk.bg,
+                  risk.text
+                )}
+              >
+                <AlertTriangle className="h-3 w-3" />
+                {risk.label}
+              </span>
+            )}
           </div>
 
           {/* Title */}
@@ -93,9 +96,11 @@ export function RecallCard({ campaign }: RecallCardProps) {
 
           {/* Units & link */}
           <div className="flex items-center justify-between mt-3">
-            <span className="text-xs text-text-tertiary">
-              {campaign.estimatedUnits.toLocaleString()} units affected
-            </span>
+            {campaign.estimatedUnits > 0 && (
+              <span className="text-xs text-text-tertiary">
+                {campaign.estimatedUnits.toLocaleString()} units affected
+              </span>
+            )}
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-brand-teal opacity-0 group-hover:opacity-100 transition-opacity duration-250">
               View Recall
               <ArrowRight className="h-3.5 w-3.5" />
