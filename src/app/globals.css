@@ -194,6 +194,7 @@
 
   /* Brand (red) button — overridden to dark for now */
   .btn-brand {
+    
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -210,8 +211,9 @@
     cursor: pointer;
   }
   .btn-brand:hover {
-    background-color: #090909;
+    background-color: #a4a3a3;
     border-color: #090909;
+    color: #ffffff;
     box-shadow: 0 6px 16px rgba(38, 38, 38, 0.28);
     transform: translateY(-1px);
   }

@@ -1,13 +1,36 @@
-import { ShieldCheck, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export default function RootLoading() {
   return (
-    <div className="flex min-h-[70vh] items-center justify-center px-4 py-10" aria-busy="true">
-      <div className="w-full max-w-md border border-outline bg-surface p-8 text-center shadow-none">
-        <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
-        <h2 className="mt-6 text-xl font-semibold text-primary">System loading</h2>
-        <p className="mt-2 text-sm text-secondary">Retrieving recall details and notice information.</p>
+    <div
+      className="flex min-h-[70vh] items-center justify-center px-4 py-10"
+      aria-busy="true"
+    >
+      <div className="flex flex-col items-center gap-5">
+        {/* 黑色圆环旋转 */}
+        <Loader2 className="h-12 w-12 animate-spin text-black" strokeWidth={1.5} />
+        
+        {/* 白色文字渐入，模拟“延伸”效果 */}
+        <div className="overflow-hidden">
+          <p className="animate-[fadeInUp_0.8s_ease-out] text-sm font-medium text-black/80">
+            Loading…
+          </p>
+        </div>
       </div>
+
+      {/* 自定义动画：从下向上淡入，模拟延伸 */}
+      <style>{`
+        @keyframes fadeInUp {
+          0% {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }

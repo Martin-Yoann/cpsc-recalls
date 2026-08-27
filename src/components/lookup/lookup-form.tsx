@@ -76,6 +76,11 @@ export function LookupForm({ onSearch, isLoading }: LookupFormProps) {
 <button
   type="submit"
   disabled={isLoading}
+  style={{
+    background: "linear-gradient(to right, #A3A3A3, #7B7878, #A3A3A3)",
+    border: ".5px solid #707070",
+    color: "#FFFFFF",
+  }}
   className="btn-dark h-10 w-full flex items-center justify-center gap-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 >
   {isLoading ? (

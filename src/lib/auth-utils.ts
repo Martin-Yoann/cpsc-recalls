@@ -127,24 +127,26 @@ async function getJson<T>(path: string, token: string): Promise<AuthResult<T>> {
 
 // ── Auth actions ──
 
-export async function login(email: string, password: string): Promise<User | null> {
+export type AuthActionResult = { user: User } | { user: null; error: string };
+
+export async function login(email: string, password: string): Promise<AuthActionResult> {
   const result = await postJson<AuthSessionResponse>('/v1/consumer-auth/login', { email, password });
-  if (!result.ok) return null;
+  if (!result.ok) return { user: null, error: result.detail };
   const user = mapUser(result.data);
   storeUser(user);
-  return user;
+  return { user };
 }
 
-export async function register(data: RegisterData): Promise<User | null> {
+export async function register(data: RegisterData): Promise<AuthActionResult> {
   const result = await postJson<AuthSessionResponse>('/v1/consumer-auth/register', {
     email: data.email,
     password: data.password,
     displayName: data.name,
   });
-  if (!result.ok) return null;
+  if (!result.ok) return { user: null, error: result.detail };
   const user = mapUser(result.data, data.phone);
   storeUser(user);
-  return user;
+  return { user };
 }
 
 export async function logout(): Promise<void> {
@@ -155,18 +157,27 @@ export async function logout(): Promise<void> {
   removeStoredUser();
 }
 
-/** Revalidate the stored token against GET /me; returns fresh user or null. */
+/**
+ * Revalidate the stored token against GET /me.
+ *
+ * Cached credentials are kept through transient network/server failures so a
+ * page refresh does not log the user out during a cold start or outage. Only
+ * an expired token or an explicit authentication failure clears the cache.
+ */
 export async function refreshSession(): Promise<User | null> {
   const stored = getStoredUser();
   if (!stored?.token) return null;
-  if (stored.expiresAt && new Date(stored.expiresAt).getTime() < Date.now()) {
-    removeStoredUser();
-    return null;
+  if (stored.expiresAt) {
+    const expiresAt = new Date(stored.expiresAt).getTime();
+    if (Number.isFinite(expiresAt) && expiresAt <= Date.now()) {
+      removeStoredUser();
+      return null;
+    }
   }
   const result = await getJson<{ user: ConsumerPublic }>('/v1/consumer-auth/me', stored.token);
   if (!result.ok) {
-    removeStoredUser();
-    return null;
+    if (result.status === 401 || result.status === 403) removeStoredUser();
+    return getStoredUser();
   }
   const refreshed: User = {
     ...stored,
@@ -205,8 +216,8 @@ export function validateEmail(email: string): boolean {
 }
 
 export function validatePassword(password: string): boolean {
-  // Backend enforces ≥ 9 characters.
-  return password.length >= 9;
+  // Backend enforces ≥ 6 characters.
+  return password.length >= 6;
 }
 
 export function validatePhone(phone: string): boolean {

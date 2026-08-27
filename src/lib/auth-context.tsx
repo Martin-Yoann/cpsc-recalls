@@ -33,13 +33,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      // Revalidate the stored token against the backend before trusting it
+      // Restore the cached session immediately, then revalidate it in the background.
+      // This prevents a refresh from briefly (or permanently, on transient errors)
+      // appearing as a signed-out state.
       const stored = getStoredUser();
+      if (!cancelled) setUser(stored);
       if (stored?.token) {
         const refreshed = await refreshSession();
         if (!cancelled) setUser(refreshed);
-      } else {
-        if (!cancelled) setUser(stored);
       }
       if (!cancelled) setIsLoading(false);
     })();
@@ -48,22 +49,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const result = await authLogin(email, password);
-    if (result) {
-      setUser(result);
+    if (result.user) {
+      setUser(result.user);
       setAuthDrawerOpen(false);
       return { success: true };
     }
-    return { success: false, error: 'Invalid email or password (password must be ≥ 9 characters)' };
+    return { success: false, error: result.error };
   }, []);
 
   const register = useCallback(async (data: { name: string; email: string; phone: string; password: string }) => {
     const result = await authRegister(data);
-    if (result) {
-      setUser(result);
+    if (result.user) {
+      setUser(result.user);
       setAuthDrawerOpen(false);
       return { success: true };
     }
-    return { success: false, error: 'Registration failed — email may already be registered, or password must be ≥ 9 characters' };
+    return { success: false, error: result.error };
   }, []);
 
   const logout = useCallback(async () => {

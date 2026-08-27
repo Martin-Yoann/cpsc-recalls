@@ -23,7 +23,7 @@ const registerSchema = z
     name: z.string().min(1, "Name is required").min(2, "Name must be at least 2 characters"),
     email: z.string().min(1, "Email is required").email("Invalid email format"),
     phone: z.string().min(1, "Phone number is required").refine(validatePhone, "Please enter a valid phone number"),
-    password: z.string().min(9, "Password must be at least 9 characters"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(1, "Please confirm your password"),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -143,7 +143,7 @@ export function AuthDrawer() {
       {authDrawerOpen && (
         <>
           <motion.div
-            className="fixed inset-0 z-50 bg-foreground/50 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-foreground/50 backdrop-blur-sm cursor-pointer"
             variants={backdropVariants}
             initial="hidden"
             animate="visible"
@@ -262,6 +262,13 @@ export function AuthDrawer() {
 
                     <button
                       type="submit"
+                      style={{ 
+                        transition: "all 0.2s ease-in-out",
+                        border: "1px solid #AFA3A3",
+                        background: "#3f3f3f",
+                        color: "white",
+                        fontWeight: "bold"
+                       }}
                       disabled={signingIn}
                       className="btn-brand w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed h-11"
                     >
@@ -312,7 +319,7 @@ export function AuthDrawer() {
                         <input
                           id="sd-rpw"
                           type={showPw ? "text" : "password"}
-                          placeholder="At least 9 characters"
+                          placeholder="At least 6 characters"
                           autoComplete="new-password"
                           className={cn(
                             "h-10 w-full px-3 pr-10 border bg-white text-sm rounded-md outline-none transition-colors",
@@ -345,6 +352,13 @@ export function AuthDrawer() {
                     <button
                       type="submit"
                       disabled={registering}
+                      style={{ 
+                        transition: "all 0.2s ease-in-out",
+                        border: "1px solid #AFA3A3",
+                        background: "#3f3f3f",
+                        color: "white",
+                        fontWeight: "bold"
+                       }}
                       className="btn-brand w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed h-11"
                     >
                       {registering ? <><Loader2 className="h-4 w-4 animate-spin" /> Creating Account…</> : "Create Account"}

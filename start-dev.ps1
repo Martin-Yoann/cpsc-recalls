@@ -47,7 +47,7 @@ Write-Host "  Consumer Web:  http://localhost:3000" -ForegroundColor Green
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "消费者端为注册制，无内置演示账号。" -ForegroundColor Gray
-Write-Host "首次使用请在首页 / Header 右上角注册（密码 ≥ 9 位）。" -ForegroundColor Gray
+Write-Host "首次使用请在首页 / Header 右上角注册（密码 ≥ 6 位）。" -ForegroundColor Gray
 Write-Host ""
 Write-Host "切换后端: .\start-dev.ps1 -ApiUrl http://localhost:3002" -ForegroundColor Gray
 Write-Host ""

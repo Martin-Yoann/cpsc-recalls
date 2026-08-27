@@ -42,7 +42,7 @@ function NavItem({
         "group relative inline-flex items-center px-1 py-2 text-[15px] font-medium transition-all duration-300",
         active
           ? "text-foreground"
-          : "text-muted-foreground hover:text-foreground"
+          : "text-muted-foreground hover:text-foreground",
       )}
     >
       {label}
@@ -54,7 +54,7 @@ function NavItem({
           "bg-foreground transition-all duration-300 ease-out",
           active
             ? "w-full opacity-100"
-            : "w-0 opacity-0 group-hover:w-full group-hover:opacity-100"
+            : "w-0 opacity-0 group-hover:w-full group-hover:opacity-100",
         )}
       />
     </Link>
@@ -77,7 +77,9 @@ export function Header() {
             <ShieldCheck className="h-4 w-4" />
           </span>
           <span className="flex flex-col leading-tight">
-            <span className="text-[16px] font-bold tracking-tight text-foreground">KOI Recall</span>
+            <span className="text-[16px] font-bold tracking-tight text-foreground">
+              KOI Recall
+            </span>
           </span>
         </Link>
 
@@ -107,7 +109,11 @@ export function Header() {
                   <span className="inline-flex items-center gap-2 border border-border bg-white px-2 py-1.5 rounded-md hover:border-foreground/40 transition-colors">
                     <Avatar className="h-7 w-7 rounded-full">
                       {user?.avatarDataUrl && (
-                        <AvatarImage src={user.avatarDataUrl} alt={user.name || "User avatar"} className="rounded-full" />
+                        <AvatarImage
+                          src={user.avatarDataUrl}
+                          alt={user.name || "User avatar"}
+                          className="rounded-full"
+                        />
                       )}
                       <AvatarFallback className="rounded-full bg-foreground text-xs font-semibold text-white">
                         {initials}
@@ -116,15 +122,31 @@ export function Header() {
                     <ChevronDown className="h-3.5 w-3.5 text-secondary" />
                   </span>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52 border border-border bg-white rounded-md shadow-lg">
-                  <DropdownMenuItem onClick={() => setMobileOpen(false)}>
-                    <Link href="/dashboard" className="block w-full">Dashboard</Link>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-50 h-30 border border-border bg-white rounded-md shadow-lg"
+                >
+                  <DropdownMenuItem
+                    onClick={() => setMobileOpen(false)}
+                    className="hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200 h-8"
+                  >
+                    <Link href="/dashboard" className="block w-full">
+                      Dashboard
+                    </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setMobileOpen(false)}>
-                    <Link href="/dashboard/claims" className="block w-full">My Claims</Link>
+                  <DropdownMenuItem
+                    onClick={() => setMobileOpen(false)}
+                    className="hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200 h-8"
+                  >
+                    <Link href="/dashboard/claims" className="block w-full">
+                      My Claims
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => logout()} className="text-brand focus:text-brand">
+                  <DropdownMenuItem
+                    onClick={() => logout()}
+                    className="h-9 text-brand focus:text-brand cursor-pointer hover:bg-red-50 hover:text-red-600 transition-colors duration-200"
+                  >
                     Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -135,12 +157,18 @@ export function Header() {
               <button
                 onClick={() => openAuthDrawer("signin")}
                 className=" h-9 w-30"
+                style={{
+                  backgroundColor: "#ffffff",
+                  color: "black",
+                  border: "1px solid black",
+                }}
               >
                 Sign In
               </button>
               <button
                 onClick={() => openAuthDrawer("register")}
                 className=" h-9 w-30"
+                style={{ backgroundColor: "#EA0D2A", color: "#ffffff" }}
               >
                 Register
               </button>
@@ -155,7 +183,11 @@ export function Header() {
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
           >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </Button>
         </div>
       </nav>
@@ -171,7 +203,7 @@ export function Header() {
                 onClick={() => setMobileOpen(false)}
                 className={cn(
                   "block py-2.5 text-[15px] font-medium",
-                  pathname === item.href ? "text-foreground" : "text-secondary"
+                  pathname === item.href ? "text-foreground" : "text-secondary",
                 )}
               >
                 {item.label}
@@ -189,7 +221,10 @@ export function Header() {
                     Dashboard
                   </Link>
                   <button
-                    onClick={() => { logout(); setMobileOpen(false); }}
+                    onClick={() => {
+                      logout();
+                      setMobileOpen(false);
+                    }}
                     className="block w-full text-left py-2 text-sm font-medium text-brand"
                   >
                     Sign Out
@@ -198,13 +233,19 @@ export function Header() {
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   <button
-                    onClick={() => { openAuthDrawer("signin"); setMobileOpen(false); }}
+                    onClick={() => {
+                      openAuthDrawer("signin");
+                      setMobileOpen(false);
+                    }}
                     className="btn-outline justify-center"
                   >
                     Sign In
                   </button>
                   <button
-                    onClick={() => { openAuthDrawer("register"); setMobileOpen(false); }}
+                    onClick={() => {
+                      openAuthDrawer("register");
+                      setMobileOpen(false);
+                    }}
                     className="btn-brand justify-center"
                   >
                     Register
