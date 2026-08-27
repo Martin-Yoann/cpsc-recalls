@@ -4,36 +4,50 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, LockKeyhole, ShieldCheck } from "lucide-react";
 
+import { caseStatusLookup, type CaseStatusLookupOk } from "@/lib/api-client";
 import { LookupForm } from "@/components/lookup/lookup-form";
-import { lookupConsumerClaim } from "@/lib/api-client";
+import { LookupResult } from "@/components/lookup/lookup-result";
 import { cn } from "@/lib/utils";
 
+// The contract returns an identical 404 for an unknown reference and a
+// mismatched email, so both cases share one neutral message by design.
+const NOT_FOUND_MESSAGE = {
+  title: "No matching record found.",
+  body: "Check your case reference and email address and try again.",
+};
+
 export default function LookupPage() {
-  const [notFound, setNotFound] = useState(false);
+  const [result, setResult] = useState<CaseStatusLookupOk | null>(null);
+  const [failure, setFailure] = useState<typeof NOT_FOUND_MESSAGE | null>(null);
+  const [genericError, setGenericError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSearch = async (
-    claimNumber: string,
-    reference: string
-  ) => {
+  const handleSearch = async (caseReference: string, email: string) => {
     setIsLoading(true);
-    setNotFound(false);
+    setResult(null);
+    setFailure(null);
+    setGenericError(null);
 
     try {
-      const response = await lookupConsumerClaim(
-        claimNumber,
-        reference
-      );
+      const response = await caseStatusLookup({ caseReference, email });
 
       if (response.ok) {
-        // 查询成功后的行为暂时保留在这里。
-        // 后续如果需要，可以跳转到案件详情页。
+        setResult(response.data);
         return;
       }
 
-      setNotFound(response.status === 404);
+      if (response.status === 404) {
+        setFailure(NOT_FOUND_MESSAGE);
+        return;
+      }
+
+      setGenericError(
+        response.status === 429
+          ? "Too many attempts. Please wait about a minute and try again."
+          : `Something went wrong while checking your case. Please try again shortly.${response.error.requestId ? ` Request ID: ${response.error.requestId}` : ""}`,
+      );
     } catch {
-      setNotFound(false);
+      setGenericError("Could not reach the recall service. Please try again shortly.");
     } finally {
       setIsLoading(false);
     }
@@ -80,13 +94,13 @@ export default function LookupPage() {
                 "text-slate-500"
               )}
             >
-              Enter your claim number and reference number
+              Enter your case reference and the email you filed with
               to view your case.
             </p>
           </div>
 
           {/* =================================================
-              Lookup Form
+              Result / Lookup Form
           ================================================== */}
 
           <div
@@ -97,78 +111,102 @@ export default function LookupPage() {
               "bg-white",
               "p-6",
               "shadow-[0_4px_18px_rgba(15,23,42,0.05)]",
-              "sm:p-8"
+              result ? "sm:p-8" : "sm:p-8"
             )}
           >
-            <LookupForm
-              onSearch={handleSearch}
-              isLoading={isLoading}
-            />
+            {result ? (
+              <LookupResult result={result} />
+            ) : (
+              <>
+                <LookupForm
+                  onSearch={handleSearch}
+                  isLoading={isLoading}
+                />
 
-            {/* Not Found */}
+                {/* Not Found (identical response for unknown reference or
+                    mismatched email — one message for both by design). */}
 
-            {notFound && (
-              <div
-                className={cn(
-                  "mt-4",
-                  "border border-slate-200",
-                  "rounded-[3px]",
-                  "bg-slate-50",
-                  "px-4 py-3"
+                {failure && (
+                  <div
+                    className={cn(
+                      "mt-4",
+                      "border border-slate-200",
+                      "rounded-[3px]",
+                      "bg-slate-50",
+                      "px-4 py-3"
+                    )}
+                  >
+                    <p className="text-[13px] font-semibold text-slate-800">
+                      {failure.title}
+                    </p>
+
+                    <p className="mt-0.5 text-[12px] leading-5 text-slate-500">
+                      {failure.body}
+                    </p>
+                  </div>
                 )}
-              >
-                <p className="text-[13px] font-semibold text-slate-800">
-                  No matching record found.
-                </p>
 
-                <p className="mt-0.5 text-[12px] leading-5 text-slate-500">
-                  Check your claim number and reference number
-                  and try again.
-                </p>
-              </div>
+                {genericError && (
+                  <div
+                    className={cn(
+                      "mt-4",
+                      "border border-red-200",
+                      "rounded-[3px]",
+                      "bg-red-50",
+                      "px-4 py-3"
+                    )}
+                  >
+                    <p className="text-[13px] leading-5 text-red-700">
+                      {genericError}
+                    </p>
+                  </div>
+                )}
+
+                {/* Security */}
+
+                <div
+                  className={cn(
+                    "mt-5 flex items-start gap-2",
+                    "border-t border-slate-200",
+                    "pt-4"
+                  )}
+                >
+                  <LockKeyhole className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+
+                  <p className="text-[11px] leading-5 text-slate-500">
+                    Your information is encrypted and only used
+                    to locate your recall record.
+                  </p>
+                </div>
+              </>
             )}
-
-            {/* Security */}
-
-            <div
-              className={cn(
-                "mt-5 flex items-start gap-2",
-                "border-t border-slate-200",
-                "pt-4"
-              )}
-            >
-              <LockKeyhole className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
-
-              <p className="text-[11px] leading-5 text-slate-500">
-                Your information is encrypted and only used
-                to locate your recall record.
-              </p>
-            </div>
           </div>
 
           {/* =================================================
               Secondary Action
           ================================================== */}
 
-          <div className="mt-6 text-center">
-            <span className="text-[13px] text-slate-500">
-              Don`&apos;t have a claim yet?
-            </span>{" "}
+          {!result && (
+            <div className="mt-6 text-center">
+              <span className="text-[13px] text-slate-500">
+                Don`&apos;t have a claim yet?
+              </span>{" "}
 
-            <Link
-              href="/recalls/music-lollipop-demo-2026"
-              className={cn(
-                "inline-flex items-center gap-1",
-                "text-[13px] font-semibold",
-                "text-[#163A5F]",
-                "transition-colors",
-                "hover:text-[#1D4F7A]"
-              )}
-            >
-              File a new claim
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
+              <Link
+                href="/recalls/music-lollipop-demo-2026"
+                className={cn(
+                  "inline-flex items-center gap-1",
+                  "text-[13px] font-semibold",
+                  "text-[#163A5F]",
+                  "transition-colors",
+                  "hover:text-[#1D4F7A]"
+                )}
+              >
+                File a new claim
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          )}
 
         </section>
       </div>

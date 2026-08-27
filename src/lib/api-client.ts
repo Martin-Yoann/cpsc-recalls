@@ -14,6 +14,11 @@ export type ClaimSubmissionRequest = paths['/v1/recall-campaigns/{slug}/claims']
 export type ClaimSubmissionOk = paths['/v1/recall-campaigns/{slug}/claims']['post']['responses'][201]['content']['application/json'];
 export type UploadTokenRequest = components['schemas']['UploadTokenRequest'];
 export type UploadTokenOk = components['schemas']['UploadTokenResponse'];
+export type CaseStatusLookupRequest = components['schemas']['CaseStatusLookupRequest'];
+export type CaseStatusLookupOk = paths['/v1/case-status-lookups']['post']['responses'][200]['content']['application/json'];
+export type DraftDocument = components['schemas']['DraftDocument'];
+export type DraftDocumentStatus = components['schemas']['DraftDocumentStatus'];
+export type DraftDocumentListOk = paths['/v1/claim-drafts/{draftId}/documents']['get']['responses'][200]['content']['application/json'];
 
 // ── Product check (mode-based contract — inline; generated types are stale) ──
 export type ProductIdentifierInput = {
@@ -116,6 +121,8 @@ async function fetchApi<T>(
       });
 
       if (res.ok) {
+        // 204 No Content (e.g. document DELETE) has no body to parse.
+        if (res.status === 204) return { ok: true, data: undefined as T };
         const data = (await res.json()) as T;
         return { ok: true, data };
       }
@@ -212,19 +219,45 @@ export async function getConsumerClaim(
   });
 }
 
-export async function lookupConsumerClaim(
-  claimNumber: string,
-  reference: string,
-): Promise<ApiResult<{
-  claim: ConsumerClaim;
-  campaignTitle: string;
-  productName: string;
-  remedyTitle: string;
-  remedyType: string;
-  refundAmount?: number;
-}>> {
-  return fetchApi(
-    `/v1/consumer-auth/lookup/${encodeURIComponent(claimNumber)}?reference=${encodeURIComponent(reference)}`,
+// ── Case status lookup (public, PII-free contract) ──
+
+/**
+ * POST /v1/case-status-lookups — public, whitelisted status lookup.
+ * Wrong caseReference and wrong email return the identical 404, so callers
+ * must not attempt to distinguish them in the UI either.
+ */
+export async function caseStatusLookup(
+  body: CaseStatusLookupRequest,
+): Promise<ApiResult<CaseStatusLookupOk>> {
+  return fetchApi<CaseStatusLookupOk>('/v1/case-status-lookups', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+/** GET /v1/claim-drafts/{draftId}/documents — six-state upload lifecycle */
+export async function listDraftDocuments(
+  draftId: string,
+  draftToken: string,
+): Promise<ApiResult<DraftDocumentListOk>> {
+  return fetchApi<DraftDocumentListOk>(
+    `/v1/claim-drafts/${draftId}/documents`,
+    { headers: { 'X-Draft-Token': draftToken } },
+  );
+}
+
+/** DELETE /v1/claim-drafts/{draftId}/documents/{documentId} — 204 No Content */
+export async function deleteDraftDocument(
+  draftId: string,
+  draftToken: string,
+  documentId: string,
+): Promise<ApiResult<void>> {
+  return fetchApi<void>(
+    `/v1/claim-drafts/${draftId}/documents/${encodeURIComponent(documentId)}`,
+    {
+      method: 'DELETE',
+      headers: { 'X-Draft-Token': draftToken },
+    },
   );
 }
 

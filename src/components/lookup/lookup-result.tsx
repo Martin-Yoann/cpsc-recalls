@@ -1,150 +1,92 @@
 'use client';
 
-import { Check, Clock, Circle } from 'lucide-react';
-import { ClaimStatus } from '@/types';
-import type { ConsumerClaim } from '@/lib/api-client';
+import { CheckCircle2, Clock, FileQuestion, LockKeyhole } from 'lucide-react';
+import type { CaseStatusLookupOk } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
-interface LookupResultProps {
-  claim: ConsumerClaim;
-  campaignTitle?: string;
-  productName?: string;
-  remedyTitle?: string;
-  remedyType?: string;
-  refundAmount?: number;
+/**
+ * Renders the case-status-lookups whitelist verbatim (design §7/§8). Labels
+ * come from the API (`publicStatusLabel`); color here keys off the enum value
+ * for accessibility only and never reinterprets an internal status.
+ */
+const PUBLIC_STATUS_TONE: Record<string, { chip: string; icon: 'progress' | 'done' | 'blocked' }> = {
+  received:               { chip: 'bg-[#ecf5ff] text-[#409eff]',         icon: 'progress' },
+  in_review:              { chip: 'bg-[#ecf5ff] text-[#409eff]',         icon: 'progress' },
+  action_required:        { chip: 'bg-[#fdf6ec] text-[#b88230]',         icon: 'progress' },
+  resolution_approved:    { chip: 'bg-[#f0f9eb] text-[#529b2e]',         icon: 'done' },
+  resolution_in_progress: { chip: 'bg-[#f0f9eb] text-[#529b2e]',         icon: 'done' },
+  completed:              { chip: 'bg-[#f0f9eb] text-[#529b2e]',         icon: 'done' },
+  not_approved:           { chip: 'bg-[#f4f4f5] text-[#606266]',         icon: 'blocked' },
+  closed:                 { chip: 'bg-[#f4f4f5] text-[#606266]',         icon: 'blocked' },
+};
+
+function StatusIcon({ tone }: { tone: PublicStatusTone }) {
+  if (!tone || tone.icon === 'done') return <CheckCircle2 className="h-3.5 w-3.5" />;
+  if (tone.icon === 'blocked') return <FileQuestion className="h-3.5 w-3.5" />;
+  return <Clock className="h-3.5 w-3.5" />;
 }
 
-const PIPELINE = [
-  { status: ClaimStatus.SUBMITTED, label: 'Submitted' },
-  { status: ClaimStatus.UNDER_REVIEW, label: 'Under Review' },
-  { status: ClaimStatus.VERIFIED, label: 'Confirmed' },
-  { status: ClaimStatus.REMEDY_ISSUED, label: 'Remedy Issued' },
-  { status: ClaimStatus.RESOLVED, label: 'Resolved' },
-];
-const ORDER = [ClaimStatus.SUBMITTED, ClaimStatus.UNDER_REVIEW, ClaimStatus.VERIFIED, ClaimStatus.REMEDY_ISSUED, ClaimStatus.RESOLVED];
+type PublicStatusTone = (typeof PUBLIC_STATUS_TONE)[string];
 
-const STATUS_META: Record<string, { label: string; bg: string; color: string; dot: string }> = {
-  submitted:     { label: 'Submitted',     bg: 'bg-info/10',    color: 'text-info',     dot: 'bg-info' },
-  under_review:  { label: 'Under Review',  bg: 'bg-info/10',    color: 'text-info',     dot: 'bg-info' },
-  verified:      { label: 'Confirmed',     bg: 'bg-success/10', color: 'text-success', dot: 'bg-success' },
-  remedy_issued: { label: 'Remedy Issued', bg: 'bg-success/10', color: 'text-success', dot: 'bg-success' },
-  resolved:      { label: 'Resolved',      bg: 'bg-success/10', color: 'text-success', dot: 'bg-success' },
-  rejected:      { label: 'Not Eligible',  bg: 'bg-brand-light', color: 'text-brand', dot: 'bg-brand' },
-};
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
 
-const REMEDY_LABELS: Record<string, string> = {
-  refund: 'Refund', replacement: 'Replacement', repair: 'Repair',
-  voucher: 'Store Credit', disposal_instruction: 'Disposal',
-};
-
-export function LookupResult({
-  claim, campaignTitle, productName, remedyTitle, remedyType, refundAmount,
-}: LookupResultProps) {
-  const idx = ORDER.indexOf(claim.status as ClaimStatus);
-  const meta = STATUS_META[claim.status] || STATUS_META.submitted;
+export function LookupResult({ result }: { result: CaseStatusLookupOk }) {
+  const tone = PUBLIC_STATUS_TONE[result.publicStatus];
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="pb-5 border-b border-border">
-        <span className={cn('mb-3 inline-flex items-center gap-1.5 rounded-md border border-current/15 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide', meta.bg, meta.color)}>
-          <span className={cn('h-1.5 w-1.5 rounded-full', meta.dot)} />
-          {meta.label}
+      <div className="pb-5 border-b border-slate-200">
+        <span className={cn('mb-3 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-semibold uppercase tracking-wide', tone?.chip ?? 'bg-slate-100 text-slate-600')}>
+          <StatusIcon tone={tone} />
+          {result.publicStatusLabel}
         </span>
-        <h2 className="font-mono text-[24px] font-bold leading-tight tracking-[-0.02em] text-foreground">
-          {claim.claimNumber}
+        <h2 className="font-mono text-[24px] font-bold leading-tight tracking-[-0.02em] text-slate-900">
+          {result.caseReference}
         </h2>
-        <p className="mt-1 text-sm text-secondary">{campaignTitle}</p>
+        <p className="mt-1 text-sm text-slate-500">{result.campaignTitle}</p>
       </div>
 
-      {/* Timeline */}
-      <div className="card-surface p-5">
-        <h3 className="text-sm font-bold text-foreground mb-5">Processing Status</h3>
-        <div className="flex items-start">
-          {PIPELINE.map((stage, i) => {
-            const done = i < idx;
-            const cur = i === idx;
-            const future = i > idx;
-
-            return (
-              <div key={stage.status} className="flex-1 flex items-start min-w-0 first:flex-none last:flex-none">
-                {i > 0 && (
-                  <div className={cn('h-[2px] flex-1 mt-[13px]', done ? 'bg-foreground' : 'bg-border')} />
-                )}
-                <div className="flex flex-col items-center min-w-0 shrink-0">
-                  <div className={cn(
-                    'flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full',
-                    cur || done
-                      ? 'bg-foreground text-white'
-                      : 'border-2 border-border bg-white text-transparent',
-                  )}>
-                    {done ? <Check className="h-3 w-3" /> :
-                     cur  ? <Clock className="h-3 w-3" /> :
-                     <Circle className="h-3 w-3" />}
-                  </div>
-                  <p className={cn(
-                    'mt-2 px-1 text-center text-[10px] font-semibold leading-tight',
-                    cur ? 'text-foreground' : future ? 'text-secondary opacity-50' : 'text-foreground',
-                  )}>
-                    {stage.label}
-                  </p>
-                </div>
-                {i < PIPELINE.length - 1 && (
-                  <div className={cn('h-[2px] flex-1 mt-[13px]', done ? 'bg-foreground' : 'bg-border')} />
-                )}
-              </div>
-            );
-          })}
-        </div>
+      {/* Next action */}
+      <div className="rounded-[4px] border border-slate-200 bg-slate-50 p-4">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Next step</p>
+        <p className="mt-1.5 text-sm leading-relaxed text-slate-700">{result.consumerNextAction}</p>
       </div>
 
-      {/* Bottom row */}
-      <div className="grid sm:grid-cols-3 gap-3">
+      {/* Whitelisted facts only */}
+      <div className="grid sm:grid-cols-2 gap-3">
         <div className="card-surface p-4">
-          <p className="label-eyebrow">Product</p>
-          <p className="mt-2 text-sm font-bold leading-snug text-foreground">
-            {productName || '—'}
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Requested resolution</p>
+          <p className="mt-2 text-sm font-bold text-slate-900">
+            {result.requestedResolution ?? '—'}
           </p>
         </div>
-
-        <div className="card-surface p-4">
-          <p className="label-eyebrow">Remedy</p>
-          {remedyType && (
-            <span className="mt-2 inline-block rounded-md bg-surface-dim px-2 py-0.5 text-[10px] font-semibold text-foreground">
-              {REMEDY_LABELS[remedyType] || remedyType}
-            </span>
-          )}
-          <p className="mt-2 text-sm font-bold leading-snug text-foreground">
-            {remedyTitle || '—'}
-          </p>
-          {refundAmount != null && refundAmount > 0 && (
-            <p className="mt-1 text-sm font-bold text-foreground">${refundAmount.toFixed(2)}</p>
-          )}
-        </div>
-
-        <div className="card-surface p-4">
-          <p className="label-eyebrow">Timeline</p>
-          <div className="mt-2 space-y-2 text-xs">
-            <div className="flex justify-between">
-              <span className="text-secondary">Submitted</span>
-              <span className="font-semibold text-foreground">
-                {new Date(claim.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-secondary">Updated</span>
-              <span className="font-semibold text-foreground">
-                {new Date(claim.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-              </span>
-            </div>
+        {result.approvedResolution != null && (
+          <div className="card-surface p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Approved resolution</p>
+            <p className="mt-2 text-sm font-bold text-slate-900">{result.approvedResolution}</p>
           </div>
+        )}
+        <div className="card-surface p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Last updated</p>
+          <p className="mt-2 text-sm font-bold text-slate-900">
+            {formatDate(result.lastUpdatedAt)}
+          </p>
         </div>
       </div>
 
-      <div className="rounded-md border border-border bg-surface-dim p-3 text-center text-xs text-secondary">
-        Want more details?{' '}
-        <Link href="/" className="font-semibold text-brand hover:underline">Return home</Link>
+      <div className="flex items-start gap-2 rounded-md border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-500">
+        <LockKeyhole className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+        <p>Only minimal case facts are shown here. Internal handling details are never published.</p>
+      </div>
+
+      <div className="text-center">
+        <Link href="/" className="text-[13px] font-semibold text-[#163A5F] hover:text-[#1D4F7A] transition-colors">
+          Return home
+        </Link>
       </div>
     </div>
   );

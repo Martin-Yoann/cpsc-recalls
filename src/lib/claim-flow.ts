@@ -3,7 +3,9 @@
 import { put } from '@vercel/blob/client';
 
 import {
+  deleteDraftDocument,
   getUploadToken,
+  listDraftDocuments,
   submitClaim,
   submitClaimDraft,
   type ClaimSubmissionOk,
@@ -34,7 +36,17 @@ export interface ClaimFlowDocumentReceipt {
   fileName: string;
   mimeType: string;
   sizeBytes: number;
-  status: 'uploading' | 'uploaded' | 'verifying' | 'verified' | 'scan_pending' | 'rejected' | 'expired';
+  status: 'uploading' | 'verifying' | 'verified' | 'scan_pending' | 'rejected' | 'expired';
+}
+
+/** Receipts whose server lifecycle has not reached a terminal state yet. */
+export function isPendingDocument(receipt: ClaimFlowDocumentReceipt): boolean {
+  return receipt.status === 'uploading' || receipt.status === 'verifying' || receipt.status === 'scan_pending';
+}
+
+/** Only verified documents may enter Claim Submission (design §5.4 / §16). */
+export function allDocumentsVerified(documents: ClaimFlowDocumentReceipt[]): boolean {
+  return documents.every((document) => document.status === 'verified');
 }
 
 export interface ClaimFlowDraftState {
@@ -291,34 +303,83 @@ export class ClaimFlowModule {
       };
     }
 
-    const receipt = this.toDocumentReceipt(file, category, token.data);
+    // Bytes are stored by the time `put` resolves; reconciliation on the API
+    // side now decides between verified / rejected / expired.
+    const receipt: ClaimFlowDocumentReceipt = {
+      ...this.toDocumentReceipt(file, category, token.data),
+      status: 'verifying',
+    };
     const nextSession = { ...session, documents: [...session.documents, receipt] };
     writeSession(nextSession);
     return { ok: true, data: { session: nextSession, receipt } };
   }
 
-  removeDocument(session: ClaimFlowSession, documentId: string): ClaimFlowSession {
+  /**
+   * Deletes the document server-side first, then drops it from the local
+   * session. A 404 means the server already dropped it (e.g. duplicate
+   * delete or reconciliation expiry) and the local removal still proceeds;
+   * other failures leave both sides untouched so the UI can surface them.
+   */
+  async removeDocument(
+    session: ClaimFlowSession,
+    documentId: string,
+  ): Promise<ClaimFlowResult<ClaimFlowSession>> {
+    const result = await deleteDraftDocument(session.draftId, session.draftToken, documentId);
+    const gone = result.ok || (!result.ok && result.status === 404);
+    if (!gone) return { ok: false, error: result.error, status: result.status };
+
     const nextSession = {
       ...session,
       documents: session.documents.filter((document) => document.documentId !== documentId),
     };
     writeSession(nextSession);
-    return nextSession;
+    return { ok: true, data: nextSession };
   }
 
-  markDocumentStatus(
-    session: ClaimFlowSession,
-    documentId: string,
-    status: ClaimFlowDocumentReceipt['status'],
-  ): ClaimFlowSession {
-    const nextSession = {
-      ...session,
-      documents: session.documents.map((document) =>
-        document.documentId === documentId ? { ...document, status } : document,
-      ),
-    };
-    writeSession(nextSession);
-    return nextSession;
+  /**
+   * Pulls authoritative six-state statuses from the Draft and merges them into
+   * local receipts. Documents created elsewhere against the same draft are
+   * adopted so evidence requirement checks stay aligned with the server list.
+   */
+  async refreshDocuments(session: ClaimFlowSession): Promise<ClaimFlowResult<ClaimFlowSession>> {
+    const result = await listDraftDocuments(session.draftId, session.draftToken);
+    if (!result.ok) return result;
+
+    const serverById = new Map(result.data.documents.map((document) => [document.documentId, document]));
+    const merged: ClaimFlowDocumentReceipt[] = session.documents.map((receipt) => {
+      const server = serverById.get(receipt.documentId);
+      if (!server) return receipt;
+      return {
+        ...receipt,
+        fileName: server.fileName || receipt.fileName,
+        status: server.status,
+      };
+    });
+
+    for (const server of result.data.documents) {
+      if (merged.some((receipt) => receipt.documentId === server.documentId)) continue;
+      merged.push({
+        documentId: server.documentId,
+        pathname: '',
+        clientToken: '',
+        expiresAt: session.expiresAt,
+        category: server.category,
+        fileName: server.fileName,
+        mimeType: '',
+        sizeBytes: 0,
+        status: server.status,
+      });
+    }
+
+    const changed =
+      merged.length !== session.documents.length ||
+      merged.some((document, index) => {
+        const before = session.documents[index];
+        return !before || before.status !== document.status || before.fileName !== document.fileName;
+      });
+    const nextSession = { ...session, documents: merged };
+    if (changed) writeSession(nextSession);
+    return { ok: true, data: nextSession };
   }
 
   buildSubmitInput(session: ClaimFlowSession, privacyNoticeVersion: string): ClaimFlowSubmitInput {
@@ -452,7 +513,7 @@ export class ClaimFlowModule {
       fileName: file.name,
       mimeType: file.type,
       sizeBytes: file.size,
-      status: 'uploaded',
+      status: 'uploading',
     };
   }
 }

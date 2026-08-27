@@ -1,14 +1,6 @@
-import { getConsumerClaim, listConsumerClaims, lookupConsumerClaim, type ConsumerClaim } from '@/lib/api-client';
-import { getGuestClaimAccess, listGuestClaimPayloads, saveGuestClaimAccess } from '@/lib/guest-claim-session';
+import { getConsumerClaim, listConsumerClaims, type ConsumerClaim } from '@/lib/api-client';
+import { getGuestClaimAccess, listGuestClaimPayloads } from '@/lib/guest-claim-session';
 import type { ClaimLookupPayload } from '@/types/claims';
-
-export async function lookupClaimForGuest(claimNumber: string, reference: string) {
-  const response = await lookupConsumerClaim(claimNumber, reference);
-  if (response.ok) {
-    saveGuestClaimAccess(reference, response.data);
-  }
-  return response;
-}
 
 export async function getClaimsForViewer(token?: string): Promise<ConsumerClaim[]> {
   if (!token) {

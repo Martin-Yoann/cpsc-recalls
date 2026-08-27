@@ -2,16 +2,19 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { AlertCircle, CheckCircle2, ChevronDown, ClipboardList, Loader2, Upload, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ChevronDown, ClipboardList, Loader2, RefreshCw, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RemedyOptions } from '@/components/consumer/remedy-options';
 import {
+  allDocumentsVerified,
   claimFlowModule,
   CLAIM_FLOW_FORM_VERSION,
+  isPendingDocument,
   type ClaimConfirmation,
+  type ClaimFlowDocumentReceipt,
   type ClaimFlowDraftState,
   type ClaimFlowSession,
   type DocumentCategory,
@@ -64,6 +67,26 @@ function describeEvidenceRule(rule: CampaignEvidenceRequirement) {
 
 function formatMimeTypes(mimeTypes: string[]) {
   return mimeTypes.map((mimeType) => mimeType.replace('image/', '').replace('application/', '')).join(', ');
+}
+
+// Six-state upload lifecycle labels (design §5.4). Colors only — the wording
+// tracks the server-derived status values, never an optimistic "accepted".
+const DOCUMENT_STATUS_META: Record<string, { label: string; className: string }> = {
+  uploading:    { label: 'Uploading',        className: 'bg-[#f4f4f5] text-[#606266] border-[#dcdfe6]' },
+  verifying:    { label: 'Verifying…',       className: 'bg-[#ecf5ff] text-[#409eff] border-[#b3d8ff]' },
+  verified:     { label: 'Verified',         className: 'bg-[#f0f9eb] text-[#529b2e] border-[#c2e7b0]' },
+  scan_pending: { label: 'Scan pending',     className: 'bg-[#fdf6ec] text-[#b88230] border-[#f5dab1]' },
+  rejected:     { label: 'Rejected',         className: 'bg-[#fef0f0] text-[#f56c6c] border-[#fbc4c4]' },
+  expired:      { label: 'Expired',          className: 'bg-[#fef0f0] text-[#f56c6c] border-[#fbc4c4]' },
+};
+
+function DocumentStatusChip({ status }: { status: ClaimFlowDocumentReceipt['status'] }) {
+  const meta = DOCUMENT_STATUS_META[status] ?? DOCUMENT_STATUS_META.uploading;
+  return (
+    <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] font-medium ${meta.className}`}>
+      {meta.label}
+    </span>
+  );
 }
 
 function buildDefaultForm(product: Product | undefined): ClaimFlowDraftState {
@@ -265,6 +288,54 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
     [campaign.remedies, session?.remedyCode],
   );
 
+  const hasPendingDocuments = session?.documents.some(isPendingDocument) ?? false;
+
+  // Poll the authoritative six-state document statuses while anything is still
+  // reconciling so chips and the submit gate track server verification.
+  useEffect(() => {
+    if (!session || !hasPendingDocuments) return;
+
+    let cancelled = false;
+    const refresh = async () => {
+      const result = await claimFlowModule.refreshDocuments(session);
+      if (cancelled || !result.ok) return;
+      setSession((current) => {
+        if (!current) return current;
+        if (JSON.stringify(current.documents) === JSON.stringify(result.data.documents)) return current;
+        return result.data;
+      });
+    };
+
+    void refresh();
+    const timer = setInterval(() => void refresh(), 4000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [session, hasPendingDocuments]);
+
+  const handleRemoveDocument = async (documentId: string) => {
+    if (!session) return;
+    setValidationMessage(null);
+    setProblem(null);
+    const result = await claimFlowModule.removeDocument(session, documentId);
+    if (result.ok) {
+      setSession(result.data);
+    } else {
+      setProblem(result.error);
+    }
+  };
+
+  const handleRefreshDocuments = async () => {
+    if (!session) return;
+    const result = await claimFlowModule.refreshDocuments(session);
+    if (result.ok) {
+      setSession(result.data);
+    } else {
+      setProblem(result.error);
+    }
+  };
+
   const syncSession = (updater: (current: ClaimFlowSession) => ClaimFlowSession) => {
     setSession((current) => {
       if (!current) return current;
@@ -358,6 +429,24 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
     }
     const evidenceError = validateEvidenceRequirements(current.documents);
     if (evidenceError) return evidenceError;
+    // Design §16: only verified documents may enter submission. The API
+    // enforces the same rule server-side; this is the consumer-side mirror.
+    if (!allDocumentsVerified(current.documents)) {
+      const blocker = current.documents.find((document) => document.status !== 'verified');
+      switch (blocker?.status) {
+        case 'uploading':
+        case 'verifying':
+          return 'One or more files are still being verified by the recall team. Please wait a moment and try again.';
+        case 'scan_pending':
+          return 'Security scanning is still in progress for one of your files.';
+        case 'rejected':
+          return 'A file was rejected during verification. Please remove it and upload a different one.';
+        case 'expired':
+          return 'An upload expired before it could be verified. Please remove that file and upload it again.';
+        default:
+          return 'All evidence files must be verified before submitting.';
+      }
+    }
     if (form.incidentAnswer !== 'no') {
       if (!form.incident.occurredDate && !form.incident.occurredDateUnknown) {
         return 'For incident claims, provide an incident date or mark it as unknown.';
@@ -847,13 +936,24 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
 
         {session.documents.length > 0 ? (
           <div className="space-y-2">
+            {hasPendingDocuments && (
+              <div className="flex justify-end">
+                <Button variant="ghost" size="sm" onClick={handleRefreshDocuments} className="h-7 px-2 text-xs text-[#409eff] hover:text-[#337ecc]">
+                  <RefreshCw className="mr-1 h-3 w-3" />
+                  Refresh status
+                </Button>
+              </div>
+            )}
             {session.documents.map((document) => (
               <div key={document.documentId} className="flex items-center justify-between rounded border border-[#dcdfe6] px-3 py-2 text-sm">
                 <div>
-                  <p className="font-medium text-[#303133]">{document.fileName}</p>
-                  <p className="text-xs text-[#909399]">{formatDocumentCategory(document.category)} | {document.status} | {document.documentId}</p>
+                  <p className="flex items-center gap-2 font-medium text-[#303133]">
+                    {document.fileName}
+                    <DocumentStatusChip status={document.status} />
+                  </p>
+                  <p className="text-xs text-[#909399]">{formatDocumentCategory(document.category)} | {document.documentId}</p>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setSession(claimFlowModule.removeDocument(session, document.documentId))} className="text-[#909399] hover:text-[#409eff]">
+                <Button variant="ghost" size="icon" onClick={() => void handleRemoveDocument(document.documentId)} className="text-[#909399] hover:text-[#409eff]">
                   <X className="h-4 w-4" />
                 </Button>
               </div>

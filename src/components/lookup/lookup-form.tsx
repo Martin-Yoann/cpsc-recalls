@@ -1,26 +1,36 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { Search, Loader2 } from "lucide-react";
 
+// Mirrors the contract pattern ^KOI-[A-Z0-9]{4}-[A-Z0-9]{8}$ (server-side
+// normalization uppercases the reference before HMAC comparison).
+const CASE_REFERENCE_PATTERN = /^KOI-[A-Z0-9]{4}-[A-Z0-9]{8}$/;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 interface LookupFormProps {
-  onSearch: (claimNumber: string, reference: string) => void;
+  onSearch: (caseReference: string, email: string) => void;
   isLoading?: boolean;
 }
 
 export function LookupForm({ onSearch, isLoading }: LookupFormProps) {
-  const [claimNumber, setClaimNumber] = useState("");
-  const [reference, setReference] = useState("");
+  const [caseReference, setCaseReference] = useState("");
+  const [email, setEmail] = useState("");
   const [error, setError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!claimNumber.trim()) {
-      setError("Please enter a claim number");
+
+    const normalizedReference = caseReference.trim().toUpperCase();
+    const trimmedEmail = email.trim();
+
+    if (!CASE_REFERENCE_PATTERN.test(normalizedReference) || !EMAIL_PATTERN.test(trimmedEmail)) {
+      setError("Enter your case reference in the KOI-XXXX-XXXXXXXX format and the email you filed the claim with.");
       return;
     }
-    onSearch(claimNumber.trim().toUpperCase(), reference.trim());
+
+    onSearch(normalizedReference, trimmedEmail);
   };
 
   const inputClass =
@@ -30,40 +40,45 @@ export function LookupForm({ onSearch, isLoading }: LookupFormProps) {
     <form onSubmit={handleSubmit} className="space-y-4 text-left">
       <div>
         <label
-          htmlFor="lookup-claim"
+          htmlFor="lookup-case-reference"
           className="block text-xs font-semibold text-foreground mb-1.5"
         >
-          Claim Number
+          Case Reference
         </label>
         <input
-          id="lookup-claim"
+          id="lookup-case-reference"
           className={inputClass}
           type="text"
-          placeholder="e.g., KOI-1234-5678"
-          value={claimNumber}
-          onChange={(e) => setClaimNumber(e.target.value)}
+          placeholder="KOI-1234-56789012"
+          autoComplete="off"
+          value={caseReference}
+          onChange={(e) => setCaseReference(e.target.value.toUpperCase())}
           disabled={isLoading}
         />
+        <p className="mt-1.5 text-xs text-secondary">
+          Shown on your confirmation screen and email after submitting a claim.
+        </p>
       </div>
 
       <div>
         <label
-          htmlFor="lookup-reference"
+          htmlFor="lookup-email"
           className="block text-xs font-semibold text-foreground mb-1.5"
         >
-          Reference Number
+          Email Address
         </label>
         <input
-          id="lookup-reference"
+          id="lookup-email"
           className={inputClass}
-          type="text"
-          placeholder="Your claim or case reference"
-          value={reference}
-          onChange={(e) => setReference(e.target.value)}
+          type="email"
+          placeholder="you@example.com"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           disabled={isLoading}
         />
         <p className="mt-1.5 text-xs text-secondary">
-          Use the reference provided when your case was created.
+          Used only to verify this combination — never displayed or stored by this page.
         </p>
       </div>
 
