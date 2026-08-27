@@ -6,16 +6,18 @@ import { StatusBadge } from '@/components/shared/status-badge';
 import { useAuth } from '@/lib/auth-context';
 import { getOrdersByUserId } from '@/data/mock-orders';
 import { getClaimByNumber } from '@/lib/shared-claims-store';
+import { DEMO_MODE } from '@/lib/demo-mode';
 
 export default function OrdersPage() {
   const { user } = useAuth();
-  const orders = user ? getOrdersByUserId(user.id) : [];
+  // Design §9/§14: mock orders and the legacy shared store are demo-only.
+  const orders = DEMO_MODE && user ? getOrdersByUserId(user.id) : [];
 
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <p className="label-eyebrow text-brand">Linked Orders</p>
+          <p className="label-eyebrow text-brand">{DEMO_MODE ? 'Linked Orders · Demo data' : 'Linked Orders'}</p>
           <h1 className="mt-2 text-[28px] leading-tight font-bold text-foreground">
             Linked Orders
           </h1>
@@ -23,13 +25,27 @@ export default function OrdersPage() {
             {orders.length} order{orders.length !== 1 ? 's' : ''} · Link your purchases to automatically track recall status
           </p>
         </div>
-        <button className="btn-brand">
-          <Plus className="h-4 w-4" />
-          Link New Order
-        </button>
+        {DEMO_MODE && (
+          <button className="btn-brand">
+            <Plus className="h-4 w-4" />
+            Link New Order
+          </button>
+        )}
       </div>
 
-      {orders.length > 0 ? (
+      {!DEMO_MODE ? (
+        <div className="card-surface p-10 text-center">
+          <Package className="h-10 w-10 mx-auto text-secondary mb-3" />
+          <h3 className="text-base font-semibold text-foreground mb-1">No linked orders</h3>
+          <p className="text-sm text-secondary mb-5 max-w-md mx-auto">
+            Order linking is not part of the production consumer flow. Track your claim any time with its case reference.
+          </p>
+          <Link href="/lookup" className="btn-dark inline-flex items-center gap-2">
+            <ExternalLink className="h-4 w-4" />
+            Check Claim Status
+          </Link>
+        </div>
+      ) : orders.length > 0? (
         <div className="space-y-3">
           {orders.map((order) => {
             const claim = order.claimId ? getClaimByNumber(order.claimId) : undefined;

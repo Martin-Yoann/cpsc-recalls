@@ -80,8 +80,10 @@ export interface ClaimFlowDraftState {
     occurredDate: string;
     occurredDateUnknown: boolean;
     eventTypes: string[];
-    injurySeverity: '' | 'none' | 'minor' | 'moderate' | 'severe' | 'death' | 'unknown';
-    medicalTreatment: '' | 'yes' | 'no' | 'unknown';
+    // Values are exactly the OpenAPI enum values (design §5.6) — no
+    // frontend-only severity model and no remapping layer at submit time.
+    injurySeverity: '' | 'none' | 'minor' | 'medical_attention' | 'hospitalized' | 'death' | 'unknown';
+    medicalTreatment: '' | 'none' | 'first_aid' | 'outpatient' | 'emergency' | 'hospitalized' | 'unknown';
     usedAsIntended: '' | 'yes' | 'no' | 'unknown';
   };
   privacyAccepted: boolean;
@@ -99,6 +101,72 @@ export interface ClaimFlowSession {
   remedyCode?: string;
   documents: ClaimFlowDocumentReceipt[];
   form: ClaimFlowDraftState;
+}
+
+/**
+ * What is allowed to touch sessionStorage (design §5.3): tokens, step, and
+ * non-sensitive choices only. Consumer identity/contact/address and the
+ * incident narrative never leave React state; losing them on refresh is
+ * accepted behavior. Document receipts persist a minimal projection — no
+ * blob pathname or clientToken (§5.3 note on minimization).
+ */
+export interface ClaimFlowSessionSnapshot {
+  draftId: string;
+  draftToken: string;
+  expiresAt: string;
+  idempotencyKey: string;
+  currentStep: ClaimFlowStep;
+  remedyCode?: string;
+  documents: Array<
+    Pick<ClaimFlowDocumentReceipt, 'documentId' | 'category' | 'fileName' | 'status'> & {
+      expiresAt?: string;
+    }
+  >;
+  form: {
+    locale: string;
+    incidentAnswer: IncidentAnswer;
+    eventTypes: string[];
+    privacyAccepted: boolean;
+    accuracyAccepted: boolean;
+    product: Pick<
+      ClaimFlowDraftState['product'],
+      'campaignProductId' | 'quantity' | 'purchaseChannel' | 'lotCode' | 'dateCode' | 'flavor' | 'shape'
+    >;
+  };
+}
+
+function toSnapshot(session: ClaimFlowSession): ClaimFlowSessionSnapshot {
+  return {
+    draftId: session.draftId,
+    draftToken: session.draftToken,
+    expiresAt: session.expiresAt,
+    idempotencyKey: session.idempotencyKey,
+    currentStep: session.currentStep,
+    remedyCode: session.remedyCode,
+    documents: session.documents.map((document) => ({
+      documentId: document.documentId,
+      category: document.category,
+      fileName: document.fileName,
+      status: document.status,
+      expiresAt: document.expiresAt,
+    })),
+    form: {
+      locale: session.form.locale,
+      incidentAnswer: session.form.incidentAnswer,
+      eventTypes: session.form.incident.eventTypes,
+      privacyAccepted: session.form.privacyAccepted,
+      accuracyAccepted: session.form.accuracyAccepted,
+      product: {
+        campaignProductId: session.form.product.campaignProductId,
+        quantity: session.form.product.quantity,
+        purchaseChannel: session.form.product.purchaseChannel,
+        lotCode: session.form.product.lotCode,
+        dateCode: session.form.product.dateCode,
+        flavor: session.form.product.flavor,
+        shape: session.form.product.shape,
+      },
+    },
+  };
 }
 
 export interface ClaimFlowSubmitInput {
@@ -195,7 +263,10 @@ function readSession(campaignSlug: string): ClaimFlowSession | null {
   if (!raw) return null;
 
   try {
-    const parsed = JSON.parse(raw) as Partial<ClaimFlowSession>;
+    // Only the non-sensitive snapshot is ever persisted; identity, contact,
+    // address, purchase order details, and incident narrative start empty.
+    const parsed = JSON.parse(raw) as Partial<ClaimFlowSessionSnapshot>;
+    const defaults = createDefaultForm();
     return {
       sessionKey: sessionStorageKey(campaignSlug),
       campaignSlug,
@@ -205,21 +276,28 @@ function readSession(campaignSlug: string): ClaimFlowSession | null {
       idempotencyKey: parsed.idempotencyKey ?? makeIdempotencyKey(),
       currentStep: parsed.currentStep ?? 'verification',
       remedyCode: parsed.remedyCode,
-      documents: parsed.documents ?? [],
+      documents: (parsed.documents ?? []).map((document) => ({
+        pathname: '',
+        clientToken: '',
+        mimeType: '',
+        sizeBytes: 0,
+        ...document,
+        expiresAt: document.expiresAt ?? parsed.expiresAt ?? '',
+      })),
       form: {
-        ...createDefaultForm(),
-        ...parsed.form,
-        consumer: {
-          ...createDefaultForm().consumer,
-          ...parsed.form?.consumer,
-        },
+        ...defaults,
+        locale: parsed.form?.locale ?? defaults.locale,
+        incidentAnswer: parsed.form?.incidentAnswer ?? defaults.incidentAnswer,
+        privacyAccepted: parsed.form?.privacyAccepted ?? false,
+        accuracyAccepted: parsed.form?.accuracyAccepted ?? false,
+        consumer: defaults.consumer,
         product: {
-          ...createDefaultForm().product,
-          ...parsed.form?.product,
+          ...defaults.product,
+          ...(parsed.form?.product ?? {}),
         },
         incident: {
-          ...createDefaultForm().incident,
-          ...parsed.form?.incident,
+          ...defaults.incident,
+          eventTypes: parsed.form?.eventTypes ?? [],
         },
       },
     };
@@ -231,7 +309,7 @@ function readSession(campaignSlug: string): ClaimFlowSession | null {
 
 function writeSession(session: ClaimFlowSession) {
   if (typeof window === 'undefined') return;
-  sessionStorage.setItem(session.sessionKey, JSON.stringify(session));
+  sessionStorage.setItem(session.sessionKey, JSON.stringify(toSnapshot(session)));
 }
 
 function removeSession(campaignSlug: string) {
@@ -382,25 +460,17 @@ export class ClaimFlowModule {
     return { ok: true, data: nextSession };
   }
 
-  buildSubmitInput(session: ClaimFlowSession, privacyNoticeVersion: string): ClaimFlowSubmitInput {
-    const mappedInjurySeverity: NonNullable<IncidentDetailsInput>['injurySeverity'] =
-      session.form.incident.injurySeverity === ''
-        ? undefined
-        : session.form.incident.injurySeverity === 'moderate'
-          ? 'medical_attention'
-          : session.form.incident.injurySeverity === 'severe'
-            ? 'hospitalized'
-            : session.form.incident.injurySeverity;
-
-    const mappedMedicalTreatment: NonNullable<IncidentDetailsInput>['medicalTreatment'] =
-      session.form.incident.medicalTreatment === ''
-        ? undefined
-        : session.form.incident.medicalTreatment === 'yes'
-          ? 'outpatient'
-          : session.form.incident.medicalTreatment === 'no'
-            ? 'none'
-            : session.form.incident.medicalTreatment;
-
+  /**
+   * `addressRequired` comes from the selected remedy: shipment-style remedies
+   * (replacement) require it; refund may omit it entirely (design §5.5). A
+   * partially entered address is still sent so the backend can validate it.
+   */
+  buildSubmitInput(
+    session: ClaimFlowSession,
+    privacyNoticeVersion: string,
+    options?: { addressRequired?: boolean },
+  ): ClaimFlowSubmitInput {
+    // UI values ARE the OpenAPI enum values — no conversion layer (design §5.6).
     const incidentDetails: IncidentDetailsInput = session.form.incidentAnswer === 'no'
       ? undefined
       : {
@@ -410,10 +480,24 @@ export class ClaimFlowModule {
           eventTypes: session.form.incident.eventTypes.length
             ? (session.form.incident.eventTypes as NonNullable<IncidentDetailsInput>['eventTypes'])
             : undefined,
-          injurySeverity: mappedInjurySeverity,
-          medicalTreatment: mappedMedicalTreatment,
+          injurySeverity: session.form.incident.injurySeverity || undefined,
+          medicalTreatment: session.form.incident.medicalTreatment || undefined,
           usedAsIntended: session.form.incident.usedAsIntended || undefined,
         };
+
+    const deliveryAddress = {
+      line1: session.form.consumer.addressLine1.trim(),
+      line2: session.form.consumer.addressLine2.trim() || undefined,
+      city: session.form.consumer.city.trim(),
+      state: session.form.consumer.state.trim(),
+      postalCode: session.form.consumer.postalCode.trim(),
+      countryCode: (session.form.consumer.countryCode.trim() || 'US').toUpperCase(),
+    };
+    const hasAddressInput =
+      Boolean(deliveryAddress.line1) ||
+      Boolean(deliveryAddress.city) ||
+      Boolean(deliveryAddress.state) ||
+      Boolean(deliveryAddress.postalCode);
 
     return {
       locale: session.form.locale,
@@ -425,14 +509,8 @@ export class ClaimFlowModule {
         firstName: session.form.consumer.firstName.trim(),
         lastName: session.form.consumer.lastName.trim(),
         email: session.form.consumer.email.trim(),
-        currentDeliveryAddress: {
-          line1: session.form.consumer.addressLine1.trim(),
-          line2: session.form.consumer.addressLine2.trim() || undefined,
-          city: session.form.consumer.city.trim(),
-          state: session.form.consumer.state.trim(),
-          postalCode: session.form.consumer.postalCode.trim(),
-          countryCode: (session.form.consumer.countryCode.trim() || 'US').toUpperCase(),
-        },
+        currentDeliveryAddress:
+          options?.addressRequired || hasAddressInput ? deliveryAddress : undefined,
         phone: session.form.consumer.phone.trim() || undefined,
       },
       products: [

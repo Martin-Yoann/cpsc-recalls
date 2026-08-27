@@ -20,6 +20,7 @@ import {
   type DocumentCategory,
 } from '@/lib/claim-flow';
 import type { ProblemDetails } from '@/lib/api-client';
+import { RemedyType } from '@/types';
 import type { Campaign, CampaignEvidenceRequirement, Product, Remedy } from '@/types';
 
 interface Props {
@@ -417,8 +418,23 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
     if (!form.consumer.firstName.trim() || !form.consumer.lastName.trim() || !form.consumer.email.trim()) {
       return 'Please complete first name, last name, and email.';
     }
-    if (!form.consumer.addressLine1.trim() || !form.consumer.city.trim() || !form.consumer.state.trim() || !form.consumer.postalCode.trim()) {
+    // Design §5.5 / P2-1: shipment-style remedies require the delivery
+    // address; a refund may leave it out entirely. A partially typed refund
+    // address must be completed or cleared — never submitted half-formed.
+    const isRefundRemedy = selectedRemedy?.type === RemedyType.REFUND;
+    const addressValues = [
+      form.consumer.addressLine1,
+      form.consumer.city,
+      form.consumer.state,
+      form.consumer.postalCode,
+    ];
+    const addressComplete = addressValues.every((field) => field.trim().length > 0);
+    const addressStarted = addressValues.some((field) => field.trim().length > 0);
+    if (!isRefundRemedy && !addressComplete) {
       return 'Please complete your mailing address before submission.';
+    }
+    if (isRefundRemedy && addressStarted && !addressComplete) {
+      return 'Please finish or clear the mailing address before submission.';
     }
     if ((form.consumer.countryCode.trim() || 'US').length !== 2) {
       return 'Please enter a valid 2-letter country code.';
@@ -839,8 +855,8 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                     { value: '', label: 'Select' },
                     { value: 'none', label: 'None' },
                     { value: 'minor', label: 'Minor' },
-                    { value: 'moderate', label: 'Moderate' },
-                    { value: 'severe', label: 'Severe' },
+                    { value: 'medical_attention', label: 'Needed medical attention' },
+                    { value: 'hospitalized', label: 'Hospitalized' },
                     { value: 'death', label: 'Death' },
                     { value: 'unknown', label: 'Unknown' },
                   ]}
@@ -854,8 +870,11 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                   onChange={(value) => updateForm((form) => ({ ...form, incident: { ...form.incident, medicalTreatment: value as ClaimFlowDraftState['incident']['medicalTreatment'] } }))}
                   options={[
                     { value: '', label: 'Select' },
-                    { value: 'yes', label: 'Yes' },
-                    { value: 'no', label: 'No' },
+                    { value: 'none', label: 'None' },
+                    { value: 'first_aid', label: 'First aid' },
+                    { value: 'outpatient', label: 'Outpatient clinic' },
+                    { value: 'emergency', label: 'Emergency room' },
+                    { value: 'hospitalized', label: 'Hospitalized' },
                     { value: 'unknown', label: 'Unknown' },
                   ]}
                 />
@@ -981,7 +1000,9 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
       </div>
 
       <div className="rounded border border-[#dcdfe6] p-4 text-sm text-[#606266]">
-        <p className="font-medium text-[#303133]">Mailing address</p>
+        <p className="font-medium text-[#303133]">
+          Mailing address{selectedRemedy?.type === RemedyType.REFUND ? ' (optional for refunds)' : ''}
+        </p>
         <p className="mt-1 text-xs text-[#909399]">Used for replacement or other remedies that need shipment details.</p>
       </div>
 
@@ -1038,7 +1059,9 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             setIsSubmitting(true);
             const result = await claimFlowModule.submit(
               current,
-              claimFlowModule.buildSubmitInput(current, privacyNoticeVersion),
+              claimFlowModule.buildSubmitInput(current, privacyNoticeVersion, {
+                addressRequired: selectedRemedy?.type !== RemedyType.REFUND,
+              }),
             );
             setIsSubmitting(false);
 

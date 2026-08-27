@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Search, FileText, CheckCircle2, ShieldCheck, AlertTriangle, ArrowRight, Package } from "lucide-react";
 import { fetchCampaign } from "@/lib/api-adapter";
-import { ClaimFormHero } from "@/components/consumer/claim-form-hero";
+import { DEMO_MODE } from "@/lib/demo-mode";
 import { FAQGrid, FAQCTA } from "@/components/consumer/faq-grid";
 import { getCampaignBySlug } from "@/data/mock-recalls";
 
@@ -15,7 +15,7 @@ const HOW_IT_WORKS = [
   {
     step: "02",
     title: "Submit your claim",
-    description: "Provide your contact details, product information, and choose a remedy. Most claims take 5–7 business days to review.",
+    description: "Provide your contact details, product information, and choose a remedy. Review times vary by campaign.",
     icon: FileText,
   },
   {
@@ -34,9 +34,10 @@ const TRUST_ITEMS = [
 ];
 
 export default async function LandingPage() {
-  // Fetch the active campaign for the hero form
+  // Fetch the active campaign for the highlight section. Mock fallback is a
+  // demo-mode-only affordance — production never renders fabricated campaigns.
   const { campaign: fetched } = await fetchCampaign("music-lollipop-demo-2026");
-  const campaign = fetched ?? getCampaignBySlug("music-lollipop-demo-2026");
+  const campaign = fetched ?? (DEMO_MODE ? getCampaignBySlug("music-lollipop-demo-2026") : undefined);
 
   return (
     <>
@@ -72,27 +73,56 @@ export default async function LandingPage() {
                 </Link>
               </div>
 
-              {/* Mini stats strip */}
+              {/* Service commitments (no invented figures — facts must come
+                  from the API per design §11/§16) */}
               <div className="grid grid-cols-3 gap-3 pt-6 border-t border-border">
-                <div>
-                  <p className="text-[28px] font-bold text-foreground leading-none">26-042</p>
-                  <p className="label-eyebrow mt-2">Notice ID</p>
+                <div className="flex items-start gap-2">
+                  <ShieldCheck className="h-4 w-4 mt-1 shrink-0 text-foreground" />
+                  <p className="text-xs leading-5 text-secondary">No payment details collected, ever</p>
                 </div>
-                <div>
-                  <p className="text-[28px] font-bold text-foreground leading-none">45K</p>
-                  <p className="label-eyebrow mt-2">Units Affected</p>
+                <div className="flex items-start gap-2">
+                  <FileText className="h-4 w-4 mt-1 shrink-0 text-foreground" />
+                  <p className="text-xs leading-5 text-secondary">Documents stored privately and reviewed server-side</p>
                 </div>
-                <div>
-                  <p className="text-[28px] font-bold text-foreground leading-none">7d</p>
-                  <p className="label-eyebrow mt-2">Avg Resolution</p>
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 mt-1 shrink-0 text-foreground" />
+                  <p className="text-xs leading-5 text-secondary">Track progress any time via case status lookup</p>
                 </div>
               </div>
             </div>
 
-            {/* Right: claim form */}
+            {/* Right: real claim flow entry */}
             <div className="lg:pt-2">
               {campaign ? (
-                <ClaimFormHero campaign={campaign} />
+                <div className="card-elevated p-6 sm:p-8 space-y-5">
+                  <div>
+                    <p className="label-eyebrow text-brand">{campaign.title}</p>
+                    <h2 className="mt-2 text-xl font-bold leading-snug text-foreground">
+                      Think you have an affected product?
+                    </h2>
+                    <p className="mt-2 text-sm leading-relaxed text-secondary">
+                      Check your lot code against the recall scope, choose a remedy,
+                      and submit — the whole flow takes a few minutes.
+                    </p>
+                  </div>
+                  <ul className="space-y-2 text-sm text-secondary">
+                    {[campaign.summary].filter(Boolean).map((line, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-brand" />
+                        <span>{line}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex flex-wrap items-center gap-3 pt-1">
+                    <Link href={`/recalls/${campaign.slug}`} className="btn-dark">
+                      <Package className="h-4 w-4" />
+                      Start a claim
+                    </Link>
+                    <Link href="/how-it-works" className="link-underline text-sm font-medium">
+                      How it works →
+                    </Link>
+                  </div>
+                </div>
               ) : (
                 <div className="card-elevated p-8 text-center text-secondary">
                   No active recall campaign.
@@ -172,11 +202,7 @@ export default async function LandingPage() {
                 {/* Content */}
                 <div>
                   <div className="flex flex-wrap items-center gap-2 mb-3">
-                    <span className="inline-flex items-center gap-1.5 rounded-md bg-brand-light px-2.5 py-1 text-xs font-semibold text-brand">
-                      <AlertTriangle className="h-3.5 w-3.5" />
-                      High Priority
-                    </span>
-                    <span className="label-data">Notice #{campaign.cpscNumber}</span>
+                    <span className="label-data">Reference #{campaign.cpscNumber}</span>
                   </div>
 
                   <h3 className="text-2xl font-bold text-foreground mb-3 group-hover:text-brand transition-colors">

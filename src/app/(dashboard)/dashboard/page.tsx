@@ -23,6 +23,7 @@ import { StatusBadge } from '@/components/shared/status-badge';
 import { useAuth } from '@/lib/auth-context';
 import { listConsumerClaims, type ConsumerClaim } from '@/lib/api-client';
 import { getOrdersByUserId } from '@/data/mock-orders';
+import { DEMO_MODE } from '@/lib/demo-mode';
 
 type ClaimStatusKey =
   | 'submitted'
@@ -53,7 +54,8 @@ const STATUS_BAR_COLORS: Record<ClaimStatusKey, string> = {
 export default function DashboardPage() {
   const { user } = useAuth();
   const [claims, setClaims] = useState<ConsumerClaim[] | null>(null);
-  const orders = user ? getOrdersByUserId(user.id) : [];
+  // Design §9/§14: mock orders are demo-only fixtures.
+  const orders = DEMO_MODE && user ? getOrdersByUserId(user.id) : [];
 
   useEffect(() => {
     let cancelled = false;
@@ -108,7 +110,7 @@ export default function DashboardPage() {
           { label: 'Total Claims', value: claimsList.length, icon: ClipboardList },
           { label: 'In Progress', value: activeClaims.length, icon: Clock },
           { label: 'Resolved', value: resolvedClaims.length, icon: CheckCircle2 },
-          { label: 'Linked Orders', value: orders.length, icon: Package },
+          { label: DEMO_MODE ? 'Linked Orders · Demo' : 'Linked Orders', value: orders.length, icon: Package },
         ].map((stat) => (
           <div key={stat.label} className="card-surface p-5">
             <div className="flex items-center justify-between">

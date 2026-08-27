@@ -10,7 +10,7 @@ const FOOTER_LINKS = [
 ];
 
 const FOOTER_LEGAL = [
-  { label: "Privacy Policy", href: "/faq" },
+  { label: "Privacy Policy", href: "/privacy" },
   { label: "Terms of Service", href: "/faq" },
   { label: "Accessibility", href: "/faq" },
   { label: "Contact Support", href: "/faq" },
