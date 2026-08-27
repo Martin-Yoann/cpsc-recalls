@@ -157,7 +157,7 @@ export function FaqClient() {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
 
-      <div className="container-content py-12 sm:py-16 lg:py-20">
+      <div className="container-content py-10 sm:py-12 lg:py-16">
 
         {/* =================================================
             HEADER
@@ -217,62 +217,136 @@ export function FaqClient() {
 
         <section className="mx-auto mt-8 max-w-3xl">
 
-          <div className="relative">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
 
-            <Input
-              type="text"
-              value={searchQuery}
-              onChange={(e) =>
-                setSearchQuery(e.target.value)
-              }
-              placeholder="Search recall questions..."
-              className={cn(
-                "h-12 w-full",
-                "rounded-[4px]",
-                "border-slate-300",
-                "bg-white",
-                "pl-12 pr-10",
-                "text-[14px]",
-                "text-slate-900",
-                "placeholder:text-slate-400",
-                "shadow-none",
-                "outline-none",
-                "ring-0",
-                "focus:outline-none",
-                "focus:ring-0",
-                "focus-visible:outline-none",
-                "focus-visible:ring-0",
-                "focus-visible:border-[#163A5F]"
-              )}
-            />
+            <div className="relative flex-1">
 
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery("")}
-                aria-label="Clear search"
+              <Search
+                aria-hidden="true"
                 className={cn(
-                  "absolute right-3 top-1/2 z-10",
-                  "flex h-7 w-7",
-                  "-translate-y-1/2",
-                  "items-center justify-center",
-                  "rounded-[3px]",
-                  "text-slate-400",
-                  "transition-colors",
-                  "hover:bg-slate-100",
-                  "hover:text-slate-700",
-                  "focus:outline-none"
+                  "pointer-events-none",
+                  "absolute left-4 top-1/2 z-10",
+                  "h-4 w-4 -translate-y-1/2",
+                  "text-slate-400"
                 )}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
+              />
+
+              <Input
+                type="text"
+                value={searchQuery}
+                onChange={(e) =>
+                  setSearchQuery(e.target.value)
+                }
+                placeholder="Search recall questions..."
+                className={cn(
+                  "h-12 w-full",
+                  "rounded-xl",
+                  "border-slate-200",
+                  "bg-white",
+                  "pl-11! pr-10!",
+                  "text-[14px]",
+                  "text-slate-900",
+                  "placeholder:text-slate-400",
+                  "shadow-sm",
+                  "outline-none",
+                  "ring-0",
+                  "focus:outline-none",
+                  "focus:ring-0",
+                  "focus-visible:outline-none",
+                  "focus-visible:ring-4 focus-visible:ring-[#163A5F]/10",
+                  "focus-visible:border-[#163A5F]"
+                )}
+              />
+
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  aria-label="Clear search"
+                  className={cn(
+                    "absolute right-3 top-1/2 z-10",
+                    "flex h-7 w-7",
+                    "-translate-y-1/2",
+                    "items-center justify-center",
+                    "rounded-full",
+                    "text-slate-400",
+                    "transition-colors",
+                    "hover:bg-slate-100",
+                    "hover:text-slate-700",
+                    "focus:outline-none"
+                  )}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+
+            </div>
+
+            <p
+              className={cn(
+                "shrink-0",
+                "text-[13px]",
+                "text-slate-400",
+                "sm:text-right"
+              )}
+            >
+              {filteredFaqs.length}{" "}
+              {filteredFaqs.length === 1
+                ? "question"
+                : "questions"}
+            </p>
 
           </div>
 
           {/* =================================================
-              FILTERS  — 优化后的按钮组
+              FILTERS
           ================================================== */}
+
+          <div
+            className={cn(
+              "mt-4 flex flex-wrap items-center gap-2"
+            )}
+          >
+
+            {[{ id: null, label: "All" }, ...CATEGORIES].map(
+              (cat) => {
+                const isActive =
+                  activeCategory === cat.id;
+
+                return (
+                  <button
+                    key={cat.label}
+                    type="button"
+                    onClick={() => handleToggle(cat.id)}
+                    aria-pressed={isActive}
+                    className={cn(
+                      "rounded-full border px-3.5 py-1.5",
+                      "text-[13px] font-medium",
+                      "transition-colors",
+                      "focus:outline-none",
+                      "focus-visible:ring-2 focus-visible:ring-[#163A5F]/30",
+                      isActive
+                        ? cn(
+                            "border-[#163A5F]",
+                            "bg-[#163A5F]",
+                            "text-white"
+                          )
+                        : cn(
+                            "border-slate-200",
+                            "bg-white",
+                            "text-slate-600",
+                            "hover:border-slate-300",
+                            "hover:text-slate-900"
+                          )
+                    )}
+                  >
+                    {cat.label}
+                  </button>
+                );
+              }
+            )}
+
+          </div>
 
         </section>
 
@@ -283,75 +357,76 @@ export function FaqClient() {
         <section className="mx-auto mt-8 max-w-3xl">
 
           {filteredFaqs.length > 0 ? (
-            <div
-              className={cn(
-                "overflow-hidden",
-                "rounded-[4px]",
-                "border border-slate-200",
-                "bg-white"
-              )}
-            >
+            <Accordion className="gap-2.5">
 
-              <Accordion
-                className="w-full"
-              >
+              {filteredFaqs.map((faq, index) => (
+                <AccordionItem
+                  key={`${faq.category}-${faq.question}`}
+                  value={`faq-${index}`}
+                  className={cn(
+                    "not-last:border-b-0",
+                    "rounded-xl border bg-white",
+                    "shadow-sm",
+                    "transition-[border-color,box-shadow]",
+                    "duration-200",
+                    "border-slate-200",
+                    "hover:border-slate-300",
+                    "has-data-open:border-[#163A5F]/40",
+                    "has-data-open:ring-1 has-data-open:ring-[#163A5F]/10"
+                  )}
+                >
 
-                {filteredFaqs.map((faq, index) => (
-                  <AccordionItem
-                    key={`${faq.category}-${faq.question}`}
-                    value={`faq-${index}`}
+                  <AccordionTrigger
                     className={cn(
-                      "border-b border-slate-200",
-                      "last:border-b-0"
+                      "group",
+                      "px-5 py-4",
+                      "text-left",
+                      "text-[14px]",
+                      "font-semibold",
+                      "leading-6",
+                      "text-slate-800",
+                      "hover:no-underline",
+                      "hover:text-[#163A5F]",
+                      "aria-expanded:text-[#163A5F]",
+                      "sm:px-6",
+                      "[&>svg]:h-4",
+                      "[&>svg]:w-4",
+                      "[&>svg]:text-slate-400"
                     )}
                   >
+                    <span className="pr-6">
+                      {faq.question}
+                    </span>
+                  </AccordionTrigger>
 
-                    <AccordionTrigger
+                  <AccordionContent
+                    className={cn(
+                      "px-5 pb-5 pt-0",
+                      "sm:px-6"
+                    )}
+                  >
+                    <div
                       className={cn(
-                        "group",
-                        "px-5 py-5",
-                        "text-left",
+                        "rounded-lg bg-slate-50",
+                        "px-4 py-3.5",
                         "text-[14px]",
-                        "font-semibold",
-                        "leading-6",
-                        "text-slate-800",
-                        "hover:no-underline",
-                        "hover:text-[#163A5F]",
-                        "sm:px-6",
-                        "[&>svg]:h-4",
-                        "[&>svg]:w-4",
-                        "[&>svg]:text-slate-400"
-                      )}
-                    >
-                      <span className="pr-6">
-                        {faq.question}
-                      </span>
-                    </AccordionTrigger>
-
-                    <AccordionContent
-                      className={cn(
-                        "border-t border-slate-100",
-                        "px-5 pb-5 pt-4",
-                        "text-[13px]",
-                        "leading-6",
-                        "text-slate-600",
-                        "sm:px-6"
+                        "leading-7",
+                        "text-slate-600"
                       )}
                     >
                       {faq.answer}
-                    </AccordionContent>
+                    </div>
+                  </AccordionContent>
 
-                  </AccordionItem>
-                ))}
+                </AccordionItem>
+              ))}
 
-              </Accordion>
-
-            </div>
+            </Accordion>
           ) : (
             <div
               className={cn(
                 "border border-slate-200",
-                "rounded-[4px]",
+                "rounded-xl",
                 "bg-white",
                 "px-6 py-12",
                 "text-center"
@@ -380,13 +455,6 @@ export function FaqClient() {
             </div>
           )}
 
-          <div className="mt-3 text-[11px] text-slate-400">
-            {filteredFaqs.length}{" "}
-            {filteredFaqs.length === 1
-              ? "question"
-              : "questions"}
-          </div>
-
         </section>
 
         {/* =================================================
@@ -397,9 +465,9 @@ export function FaqClient() {
 
           <div
             className={cn(
-              "border-t border-slate-200",
-              "pt-7",
-              "flex flex-col gap-3",
+              "rounded-xl bg-[#163A5F]/[0.04]",
+              "p-6 sm:p-7",
+              "flex flex-col gap-4",
               "sm:flex-row",
               "sm:items-center",
               "sm:justify-between"
@@ -424,7 +492,7 @@ export function FaqClient() {
               className={cn(
                 "inline-flex h-9 shrink-0",
                 "items-center justify-center gap-1.5",
-                "rounded-[3px]",
+                "rounded-lg",
                 "border border-[#163A5F]",
                 "bg-[#163A5F]",
                 "px-4",

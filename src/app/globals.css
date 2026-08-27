@@ -1,7 +1,13 @@
+/* 预声明遗留样式所在层：CSS 层叠层中"越晚声明优先级越高"，先声明使其成为
+   全局最低优先级，避免第三方捆绑的 v3 preflight 压过本项目工具类 */
+@layer rtw-select-legacy;
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "react-tailwindcss-select/dist/index.css";
+/* react-tailwindcss-select 的 css 捆绑了完整 Tailwind v3 preflight 与一批
+   同名工具类，全局生效会静默覆盖 button/input 的 padding、font-size、
+   背景色等样式。放入上述最低优先级 layer，Select 组件自身样式不受影响。 */
+@import "react-tailwindcss-select/dist/index.css" layer(rtw-select-legacy);
 @custom-variant dark (&:is(.dark *));
 
 /* ============================================================
@@ -225,10 +231,14 @@
 
 
   .btn-dark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
     color: #1a1a1a;
   }
   .btn-dark:hover {
-    
+    color: #000000;
   }
   .btn-dark:active {
     
