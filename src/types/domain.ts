@@ -22,6 +22,8 @@ export enum ClaimStatus {
   DRAFT = 'draft',
   SUBMITTED = 'submitted',
   UNDER_REVIEW = 'under_review',
+  /** Backend need_info — the review team asked the consumer for more input. */
+  ACTION_REQUIRED = 'action_required',
   VERIFIED = 'verified',
   REMEDY_ISSUED = 'remedy_issued',
   RESOLVED = 'resolved',

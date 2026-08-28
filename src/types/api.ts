@@ -75,7 +75,7 @@ export interface paths {
                         "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
-                /** @description The contract exists, but the Phase 1 skeleton has no provider implementation. */
+                /** @description This capability is not enabled in this environment because a required service or adapter is not configured. */
                 501: {
                     headers: {
                         [name: string]: unknown;
@@ -179,7 +179,7 @@ export interface paths {
                         "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
-                /** @description The contract exists, but the Phase 1 skeleton has no provider implementation. */
+                /** @description This capability is not enabled in this environment because a required service or adapter is not configured. */
                 501: {
                     headers: {
                         [name: string]: unknown;
@@ -284,7 +284,7 @@ export interface paths {
                         "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
-                /** @description The contract exists, but the Phase 1 skeleton has no provider implementation. */
+                /** @description This capability is not enabled in this environment because a required service or adapter is not configured. */
                 501: {
                     headers: {
                         [name: string]: unknown;
@@ -417,7 +417,7 @@ export interface paths {
                         "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
-                /** @description The contract exists, but the Phase 1 skeleton has no provider implementation. */
+                /** @description This capability is not enabled in this environment because a required service or adapter is not configured. */
                 501: {
                     headers: {
                         [name: string]: unknown;
@@ -513,7 +513,7 @@ export interface paths {
                         "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
-                /** @description The contract exists, but the Phase 1 skeleton has no provider implementation. */
+                /** @description This capability is not enabled in this environment because a required service or adapter is not configured. */
                 501: {
                     headers: {
                         [name: string]: unknown;
@@ -610,7 +610,7 @@ export interface paths {
                         "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
-                /** @description The contract exists, but the Phase 1 skeleton has no provider implementation. */
+                /** @description This capability is not enabled in this environment because a required service or adapter is not configured. */
                 501: {
                     headers: {
                         [name: string]: unknown;
@@ -704,7 +704,7 @@ export interface paths {
                         "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
-                /** @description The contract exists, but the Phase 1 skeleton has no provider implementation. */
+                /** @description This capability is not enabled in this environment because a required service or adapter is not configured. */
                 501: {
                     headers: {
                         [name: string]: unknown;
@@ -829,7 +829,7 @@ export interface paths {
                         "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
-                /** @description The contract exists, but the Phase 1 skeleton has no provider implementation. */
+                /** @description This capability is not enabled in this environment because a required service or adapter is not configured. */
                 501: {
                     headers: {
                         [name: string]: unknown;
@@ -925,7 +925,7 @@ export interface paths {
                         "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
-                /** @description The contract exists, but the Phase 1 skeleton has no provider implementation. */
+                /** @description This capability is not enabled in this environment because a required service or adapter is not configured. */
                 501: {
                     headers: {
                         [name: string]: unknown;
@@ -1172,6 +1172,7 @@ export interface components {
             flavor?: string;
             /** Format: uuid */
             id: string;
+            infoRequest?: string;
             lotCode?: string;
             productName: string;
             refundAmount?: number;
@@ -1193,7 +1194,7 @@ export interface components {
             remedyType: string;
         };
         /** @enum {string} */
-        LegacyConsumerClaimStatus: "submitted" | "under_review" | "verified" | "remedy_issued" | "resolved" | "rejected";
+        LegacyConsumerClaimStatus: "submitted" | "under_review" | "action_required" | "verified" | "remedy_issued" | "resolved" | "rejected";
         ProblemDetails: {
             detail: string;
             errors?: {

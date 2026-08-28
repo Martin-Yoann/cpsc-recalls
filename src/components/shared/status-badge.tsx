@@ -17,6 +17,7 @@ type StatusVariant =
   | 'draft'
   | 'submitted'
   | 'under_review'
+  | 'action_required'
   | 'remedy_issued';
 
 const STATUS_COLORS: Record<StatusVariant, { dot: string; text: string; bg: string }> = {
@@ -32,6 +33,7 @@ const STATUS_COLORS: Record<StatusVariant, { dot: string; text: string; bg: stri
   draft: { dot: 'bg-text-tertiary', text: 'text-text-tertiary', bg: 'bg-slate-50' },
   submitted: { dot: 'bg-status-reviewing', text: 'text-status-reviewing', bg: 'bg-blue-50' },
   under_review: { dot: 'bg-status-reviewing', text: 'text-status-reviewing', bg: 'bg-blue-50' },
+  action_required: { dot: 'bg-status-open', text: 'text-status-open', bg: 'bg-orange-50' },
   remedy_issued: { dot: 'bg-status-verified', text: 'text-status-verified', bg: 'bg-emerald-50' },
 };
 
@@ -48,6 +50,7 @@ const STATUS_LABELS: Record<StatusVariant, string> = {
   draft: 'Draft',
   submitted: 'Submitted',
   under_review: 'Under Review',
+  action_required: 'Action Required',
   remedy_issued: 'Remedy Issued',
 };
 

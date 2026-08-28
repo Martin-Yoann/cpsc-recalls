@@ -61,7 +61,9 @@ export type ConsumerClaim = {
   remedyTitle: string;
   remedyType: string;
   refundAmount?: number;
-  status: 'submitted' | 'under_review' | 'verified' | 'remedy_issued' | 'resolved' | 'rejected';
+  status: 'submitted' | 'under_review' | 'action_required' | 'verified' | 'remedy_issued' | 'resolved' | 'rejected';
+  /** What the review team asked the consumer to provide (set when status is action_required). */
+  infoRequest?: string;
   evidenceCount: number;
   submittedAt: string;
   updatedAt: string;

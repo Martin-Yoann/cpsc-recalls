@@ -65,8 +65,13 @@ export default function ClaimDetailPage({
   if (!claim) notFound();
   if (!claim) return null;
 
-  const currentStatusIdx = STATUS_ORDER.indexOf(claim.status as ClaimStatus);
+  const rawStatusIdx = STATUS_ORDER.indexOf(claim.status as ClaimStatus);
+  // action_required (and any unknown status) keeps the pipeline at "Submitted
+  // complete" — progress must never advance because the consumer was asked
+  // for more information.
+  const currentStatusIdx = rawStatusIdx >= 0 ? rawStatusIdx : 0;
   const isRejected = claim.status === 'rejected';
+  const isActionRequired = claim.status === 'action_required';
 
   return (
     <div className="space-y-6">
@@ -90,6 +95,30 @@ export default function ClaimDetailPage({
           {claim.resolutionDate && ` · Resolved ${new Date(claim.resolutionDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`}
         </p>
       </div>
+
+      {/* Action Required Notice (need_info loop with the review team) */}
+      {isActionRequired && (
+        <Card className="border-amber-200 bg-amber-50/60">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-amber-800">We need more information</p>
+                {claim.infoRequest ? (
+                  <p className="text-sm text-amber-900/90 mt-1 whitespace-pre-wrap leading-relaxed">{claim.infoRequest}</p>
+                ) : (
+                  <p className="text-sm text-amber-700/80 mt-1">
+                    Our review team has requested additional details for this claim.
+                  </p>
+                )}
+                <p className="text-xs text-amber-700 mt-2">
+                  Your claim is paused until the requested information is received — progress resumes once it is verified.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Progress Pipeline */}
       {!isRejected && (
@@ -212,12 +241,19 @@ export default function ClaimDetailPage({
       </Card>
 
       {/* Estimated Resolution */}
-      {!isRejected && claim.status !== 'resolved' && (
+      {!isRejected && !isActionRequired && claim.status !== 'resolved' && (
         <div className="rounded-md border border-brand-teal/20 bg-brand-teal/5 p-5 flex items-center gap-4">
           <Clock className="h-6 w-6 text-brand-teal shrink-0" />
           <div>
             <p className="text-sm font-semibold text-text-primary">Estimated Completion</p>
-            <p className="text-xl font-bold text-brand-teal mt-0.5">Aug 8, 2025</p>
+            <p className="text-xl font-bold text-brand-teal mt-0.5">
+              {(() => {
+                const submitted = new Date(claim.submittedAt).getTime();
+                const fmt = (t: number) =>
+                  new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                return `${fmt(submitted + 14 * 864e5)} – ${fmt(submitted + 28 * 864e5)}`;
+              })()}
+            </p>
             <p className="text-xs text-text-tertiary mt-1">Processing time may vary based on evidence verification</p>
           </div>
         </div>

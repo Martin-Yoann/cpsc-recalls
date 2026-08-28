@@ -26,6 +26,27 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   [RemedyType.VOUCHER]: Ticket,
 };
 
+const ICON_STYLES: Record<string, { base: string; active: string; hover: string }> = {
+  // Recall-related remedies use the brand red safety accent.
+  [RemedyType.REPLACEMENT]: {
+    base: 'border-brand/20 bg-brand-light text-brand',
+    active: 'border-brand bg-brand text-white',
+    hover: 'group-hover:border-brand/40 group-hover:text-brand',
+  },
+  // Green signals the positive financial outcome of a refund.
+  [RemedyType.REFUND]: {
+    base: 'border-success/20 bg-success/10 text-success',
+    active: 'border-success bg-success text-white',
+    hover: 'group-hover:border-success/40 group-hover:text-success',
+  },
+};
+
+const DEFAULT_ICON_STYLE = {
+  base: 'border-[#dcdfe6] bg-[#f5f7fa] text-[#606266]',
+  active: 'border-[#409eff] bg-[#409eff] text-white',
+  hover: 'group-hover:border-[#a0cfff] group-hover:text-[#409eff]',
+};
+
 export function RemedyOptions({ remedies, onSelect, busyRemedyId }: RemedyOptionsProps) {
   const [sel, setSel] = useState<string | null>(null);
 
@@ -47,6 +68,7 @@ export function RemedyOptions({ remedies, onSelect, busyRemedyId }: RemedyOption
         <div className="flex w-full max-w-2xl flex-col gap-3 sm:flex-row sm:gap-4">
           {remedies.map((r) => {
             const Icon = ICONS[r.type] || Package;
+            const iconStyle = ICON_STYLES[r.type] || DEFAULT_ICON_STYLE;
             const active = sel === r.id;
             return (
               <button
@@ -67,9 +89,7 @@ export function RemedyOptions({ remedies, onSelect, busyRemedyId }: RemedyOption
                   <div
                     className={cn(
                       'flex h-12 w-12 shrink-0 items-center justify-center rounded-full border transition-colors',
-                      active
-                        ? 'border-[#409eff] bg-[#409eff] text-white'
-                        : 'border-[#dcdfe6] bg-[#f5f7fa] text-[#606266] group-hover:border-[#a0cfff] group-hover:text-[#409eff]'
+                      active ? iconStyle.active : `${iconStyle.base} ${iconStyle.hover}`
                     )}
                   >
                     <Icon className="h-5 w-5" />
