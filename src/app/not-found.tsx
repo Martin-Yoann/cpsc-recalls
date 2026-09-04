@@ -8,7 +8,7 @@ export default function NotFound() {
         <p className="label-eyebrow text-brand">Error 404</p>
         <h1 className="mt-3 text-[40px] leading-none font-bold tracking-[-0.02em] text-foreground">Page Not Found</h1>
         <p className="mt-4 text-secondary leading-relaxed">
-          The page you're looking for doesn't exist or has been moved. Check the URL or return home to continue.
+          The page you&apos;re looking for doesn&apos;t exist or has been moved. Check the URL or return home to continue.
         </p>
         <div className="mt-8">
           <Link href="/" className="btn-dark">
