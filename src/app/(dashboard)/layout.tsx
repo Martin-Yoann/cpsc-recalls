@@ -8,7 +8,6 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
-  Shield,
   LayoutDashboard,
   ClipboardList,
   Package,

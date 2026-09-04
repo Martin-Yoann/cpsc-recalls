@@ -2,17 +2,13 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import {
   AlertTriangle,
-  Calendar,
   Eye,
-  Factory,
   FileText,
   HelpCircle,
   Info,
   Package,
   Phone,
   Search,
-  Shield,
-  Users,
   ArrowRight,
 } from 'lucide-react';
 import Link from 'next/link';
