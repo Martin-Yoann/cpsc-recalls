@@ -16,6 +16,9 @@
    ============================================================ */
 
 @theme {
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
   --color-primary: #1a1a1a;
   --color-primary-foreground: #ffffff;
 
@@ -71,8 +74,7 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
-    font-family: Inter, "Hanken Grotesk", system-ui, sans-serif;
+    @apply bg-background text-foreground antialiased font-sans;
     font-feature-settings: "cv11", "ss01";
   }
 
@@ -87,7 +89,6 @@
   h5,
   h6 {
     color: #1a1a1a;
-    font-family: Inter, "Hanken Grotesk", system-ui, sans-serif;
     letter-spacing: -0.02em;
   }
 
@@ -118,13 +119,12 @@
   textarea,
   select {
     color: #1a1a1a;
-    font-family: Inter, "Hanken Grotesk", system-ui, sans-serif;
   }
 
   code,
   pre,
   .font-mono {
-    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-family: var(--font-mono);
   }
 
   button,
@@ -275,7 +275,7 @@
 
   /* Eyebrow / uppercase label */
   .label-eyebrow {
-    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 12px;
     line-height: 16px;
     font-weight: 500;
@@ -285,9 +285,9 @@
   }
 
   .label-data {
-    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 13px;
-    line-height: 18px;
+    line-height: 16px;
     font-weight: 500;
     color: #1a1a1a;
   }
