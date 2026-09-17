@@ -21,6 +21,26 @@ interface RecallPageProps {
   params: Promise<{ slug: string }>;
 }
 
+/**
+ * Revalidate window for the public recall notice.
+ *
+ * This page reads only route params — no cookies, headers, or search params —
+ * so nothing here is per-visitor and the campaign data it awaits is shared. The
+ * campaign fetch itself carries the same window (see
+ * CAMPAIGN_REVALIDATE_SECONDS in src/lib/api-client.ts), and that fetch-level
+ * value is what currently governs: with no campaign-list endpoint there is no
+ * `generateStaticParams` to enumerate slugs, so Next still renders this segment
+ * on demand and the HTML itself is not cached. What is cached is the backend
+ * read, which is the part that was putting a request spike onto the database.
+ * Keep both values in sync — changing this literal alone has no effect today,
+ * but it becomes the route's ISR window if slugs ever become enumerable.
+ *
+ * The window is short on purpose: this is safety content, and a superseded lot
+ * list or hazard description must not linger. Next requires a literal here — an
+ * imported constant is not statically analysable.
+ */
+export const revalidate = 60;
+
 const riskLabels: Record<string, string> = {
   [RiskLevel.CRITICAL]: 'CRITICAL RISK',
   [RiskLevel.HIGH]: 'HIGH RISK',
@@ -36,7 +56,22 @@ const riskStyles: Record<string, string> = {
 };
 
 export async function generateMetadata({ params }: RecallPageProps): Promise<Metadata> {
-  const { campaign } = await fetchCampaign((await params).slug);
+  const { campaign, error } = await fetchCampaign((await params).slug);
+
+  // Metadata resolves before the response shell is flushed, so raising notFound
+  // here is what actually produces a 404 status. The same call in the page body
+  // is too late: loading.tsx has already streamed the shell out with a 200.
+  // Only a genuine "no such campaign" is a 404 — see the note in the page body.
+  if (error?.status === 404) notFound();
+
+  // The page will render the outage boundary instead of a notice. Keep a
+  // transient failure out of search results so it is never indexed against a
+  // real recall URL — the boundary itself cannot declare this, since a client
+  // component cannot export metadata.
+  if (error) {
+    return { title: 'Recall notice unavailable', robots: { index: false } };
+  }
+
   return {
     title: campaign?.title ?? 'Recall Details',
     description: campaign?.hazardDescription ?? 'Product safety recall information',
@@ -81,8 +116,19 @@ function SideCard({ title, icon: Icon, children }: { title: string; icon?: typeo
 }
 
 export default async function RecallPage({ params }: RecallPageProps) {
-  const { campaign } = await fetchCampaign((await params).slug);
+  const { campaign, error } = await fetchCampaign((await params).slug);
+
+  // Distinguish "there is no such notice" from "we could not load it". Only the
+  // first is a 404. A backend outage must never render as "this recall does not
+  // exist" — on a safety notice that tells a consumer their product is fine when
+  // the system merely could not answer. Non-404 failures surface as an error so
+  // the page reports a problem instead of denying the recall.
+  if (error) {
+    if (error.status === 404) notFound();
+    throw new Error(`Recall notice could not be loaded (backend responded ${error.status}).`);
+  }
   if (!campaign) notFound();
+
   const product = campaign.affectedProducts?.[0];
   if (!product) notFound();
 

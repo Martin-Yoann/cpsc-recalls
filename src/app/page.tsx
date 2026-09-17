@@ -6,6 +6,16 @@ import { FAQGrid, FAQCTA } from "@/components/consumer/faq-grid";
 import { getCampaignBySlug } from "@/data/mock-recalls";
 import { RecallCheckCard } from "@/components/consumer/recall-check-card";
 
+/**
+ * The landing page reads its highlighted campaign during the build. With no
+ * revalidate window that fetch is frozen into the static HTML, so an edited or
+ * newly published campaign would stay invisible until the next deploy.
+ * Revalidating keeps the shell static — still no per-request render — while
+ * letting the highlight catch up. Keep in sync with
+ * CAMPAIGN_REVALIDATE_SECONDS in src/lib/api-client.ts.
+ */
+export const revalidate = 60;
+
 const HOW_IT_WORKS = [
   {
     step: "01",

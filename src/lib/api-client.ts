@@ -6,6 +6,8 @@
 
 import type { paths, components } from '@/types/api';
 
+import { campaignTag } from '@/lib/cache-tags';
+
 // ── Convenience type aliases from generated paths ──
 
 export type GetCampaignOk = paths['/v1/recall-campaigns/{slug}']['get']['responses'][200]['content']['application/json'];
@@ -70,7 +72,6 @@ export type ConsumerClaim = {
   resolutionDate?: string;
 };
 
-
 // ── Runtime ──
 
 const ONLINE_API_BASE = 'https://koi-recall-backend.vercel.app';
@@ -93,6 +94,22 @@ type ApiResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: ProblemDetails; status: number };
 
+/**
+ * A read that is safe to share between visitors (public, unauthenticated GET).
+ * Setting `revalidateSeconds` turns on Next's Data Cache and bounds how stale a
+ * served copy may be. Anything that carries a consumer token or writes must
+ * leave it unset so it stays uncached.
+ */
+interface FetchOptions extends RequestInit {
+  revalidateSeconds?: number;
+  /**
+   * Cache tags for this read. Publishing a campaign calls the web revalidate
+   * endpoint with the same tag, so an edited notice can be expired immediately
+   * instead of waiting out `revalidateSeconds`.
+   */
+  cacheTags?: readonly string[];
+}
+
 function requestId(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
@@ -102,23 +119,42 @@ function requestId(): string {
 
 async function fetchApi<T>(
   path: string,
-  options: RequestInit = {},
+  options: FetchOptions = {},
 ): Promise<ApiResult<T>> {
+  const { revalidateSeconds, cacheTags, ...init } = options;
   const rid = requestId();
+  const cacheable = revalidateSeconds !== undefined;
 
   for (const base of API_BASES) {
     const url = `${base}${path}`;
 
     try {
       const res = await fetch(url, {
-        ...options,
+        ...init,
+        // Caching is opt-in: the default (`auto no cache`) would leave this
+        // read uncached even with a revalidate set.
+        ...(cacheable
+          ? {
+              cache: 'force-cache' as const,
+              next: {
+                revalidate: revalidateSeconds,
+                tags: cacheTags === undefined ? undefined : [...cacheTags],
+              },
+            }
+          : {}),
         // Guard against a hung API: abort after 10s so a slow/unreachable
         // backend surfaces a fast error instead of blocking the page forever.
-        signal: options.signal ?? AbortSignal.timeout(10_000),
+        // Skipped for cached reads: a signal is tied to the request that made
+        // it, while a cached response has to outlive that request.
+        signal: cacheable ? undefined : (init.signal ?? AbortSignal.timeout(10_000)),
         headers: {
           'Content-Type': 'application/json',
-          'X-Request-Id': rid,
-          ...options.headers,
+          // Next keys its fetch cache on the request headers, so a per-request
+          // correlation id must not be sent on a shared cached read. Sending it
+          // gives every request its own cache entry: the cache never hits, it
+          // grows without bound, and the backend is still called every time.
+          ...(cacheable ? {} : { 'X-Request-Id': rid }),
+          ...init.headers,
         },
       });
 
@@ -160,13 +196,34 @@ async function fetchApi<T>(
 
 // ── Public API methods ──
 
-/** GET /v1/recall-campaigns/{slug} */
+/**
+ * How long a published campaign may be served from the Data Cache.
+ *
+ * Campaign content is public and changes rarely, so caching it is what keeps a
+ * traffic spike off the database. It is also safety content, though: a
+ * superseded lot list or hazard description must not linger, which is why this
+ * window is short rather than minutes-to-hours.
+ *
+ * Route segments rendering this data declare the same value as a literal in
+ * `export const revalidate` (Next requires a literal there, not an import) —
+ * change both together.
+ */
+export const CAMPAIGN_REVALIDATE_SECONDS = 60;
+
+/**
+ * GET /v1/recall-campaigns/{slug}
+ *
+ * The one read that is safe to cache: public, unauthenticated, and identical
+ * for every visitor. Every other method in this file either carries a consumer
+ * token or performs a write, and must stay uncached.
+ */
 export async function getCampaign(
   slug: string,
   locale = 'en-US',
 ): Promise<ApiResult<GetCampaignOk>> {
   return fetchApi<GetCampaignOk>(
     `/v1/recall-campaigns/${slug}?locale=${encodeURIComponent(locale)}`,
+    { revalidateSeconds: CAMPAIGN_REVALIDATE_SECONDS, cacheTags: [campaignTag(slug)] },
   );
 }
 
