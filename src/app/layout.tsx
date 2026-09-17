@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Providers } from '@/components/shared/providers';
 import { Header } from '@/components/shared/header';
 import { Footer } from '@/components/shared/footer';
+import { Analytics } from '@/components/shared/analytics';
 import './globals.css';
 export const metadata: Metadata = {
   title: {
@@ -31,6 +32,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
