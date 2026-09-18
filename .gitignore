@@ -40,5 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.vercel
-.env*
+# Last matching rule wins, so this exception must stay at the bottom: the
+# template holds placeholders only, so it is trackable (as in the backend repo)
+# while every real .env.* file stays ignored.
+!.env.example

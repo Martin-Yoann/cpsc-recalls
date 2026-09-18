@@ -37,7 +37,7 @@ const FAQS: FAQ[] = [
   {
     icon: Phone,
     question: "How do I contact support?",
-    answer: "Call 1-800-555-SAFE (Mon–Fri 9am–5pm ET) or email support@koi-recall.example. We respond within one business day.",
+    answer: "Call 1-800-555-SAFE (Mon–Fri 9am–5pm ET) or email support@koiimprtinc.com. We respond within one business day.",
   },
 ];
 
