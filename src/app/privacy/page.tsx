@@ -14,6 +14,12 @@ interface PrivacyPageProps {
 
 const SECTIONS: Array<{ title: string; paragraphs: string[] }> = [
   {
+    title: 'Who we are',
+    paragraphs: [
+      'KOI Importer Inc (“we”, “us”) operates this recall platform and handles the claim information described in this notice.',
+    ],
+  },
+  {
     title: 'Information we collect',
     paragraphs: [
       'To process a recall claim we collect your first and last name, email address, optional phone number, and delivery address. We also collect the product details you enter — lot code, date code, flavor, shape, purchase channel — and any receipt or product photographs you upload as claim evidence.',

@@ -83,7 +83,7 @@ export function Footer() {
       <div className="border-t border-white/10">
         <div className="container-content py-5 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-xs">
-            &copy; {new Date().getFullYear()} KOI Recall Platform. All rights reserved.
+            &copy; {new Date().getFullYear()} KOI Importer Inc. All rights reserved.
           </p>
           <p className="text-xs">
             Not affiliated with the U.S. Consumer Product Safety Commission.
