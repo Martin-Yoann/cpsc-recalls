@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 
+import { DisposalDeclaration } from "@/components/consumer/disposal-declaration";
 import { DisposalEvidenceUpload } from "@/components/consumer/disposal-evidence-upload";
 import { DisposalInstructions } from "@/components/consumer/disposal-instructions";
 import { Button } from "@/components/ui/button";
@@ -135,6 +136,17 @@ export function DisposalTaskLoader({ taskId, supportContact }: Props) {
           onChanged={() => setAttempt((previous) => previous + 1)}
         />
       )}
+      {/*
+        The declaration renders whenever the server offers either basis. Which one is
+        offered is the server answer rather than this component inference, and a
+        task with no basis renders nothing here.
+      */}
+      <DisposalDeclaration
+        taskId={taskId}
+        declarationTextVersion={state.task.declarationTextVersion}
+        allowedActions={state.task.allowedActions}
+        onDeclared={() => setAttempt((previous) => previous + 1)}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
+  ArrowRight,
   CheckCircle2,
   ChevronDown,
   ClipboardList,
@@ -686,6 +687,29 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             Next step: {submitted.nextStep}
           </p>
         </div>
+        {submitted.disposal && (
+          // The step was offered and the consumer moved past it. The link works while
+          // this browser session holds the token, which is what the note says — it
+          // deliberately does not promise an emailed link, because nothing sends one
+          // yet. The wording has to change when delivery does.
+          <div className="space-y-1 rounded border border-[#b3d8ff] bg-[#ecf5ff] p-3 text-sm text-[#303133] max-w-md mx-auto">
+            <p className="font-semibold">
+              A disposal step was opened for your product.
+            </p>
+            <p className="text-[#606266]">
+              You can return to it from this browser. Keep this page’s tab open
+              or bookmark the step before closing it.
+            </p>
+            <Link
+              href={submitted.disposal.resumePath}
+              className="inline-flex items-center gap-1.5 font-semibold text-[#409eff] underline"
+            >
+              Return to the disposal step
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </Link>
+          </div>
+        )}
+
         <div className="space-y-3">
           <div className="space-y-1 text-sm text-[#606266]">
             <p>

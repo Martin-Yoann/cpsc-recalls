@@ -1755,6 +1755,7 @@ export interface components {
             allowedActions: string[];
             authorizationStatus: components["schemas"]["DisposalAuthorizationStatus"];
             blockingReasons: string[];
+            declarationTextVersion: string | null;
             eligibilityStatus: components["schemas"]["DisposalEligibilityStatus"];
             evidenceReviewStatus: components["schemas"]["DisposalBatchReviewStatus"];
             /** Format: date-time */

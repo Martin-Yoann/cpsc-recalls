@@ -417,6 +417,32 @@ export async function submitDisposalEvidence(
   );
 }
 
+/**
+ * POST /v1/disposal-tasks/{taskId}/declaration — close a task.
+ *
+ * Exactly one basis is cited. The authorization branch is resolved by the server,
+ * so the client reports "completed as instructed" without naming a permission; the
+ * exception branch reports what already happened.
+ */
+export async function recordDisposalDeclaration(
+  taskId: string,
+  token: string,
+  body: {
+    declarationTextVersion: string;
+    exceptionType?:
+      | "already_disposed_before_authorization"
+      | "evidence_unavailable"
+      | "other";
+    exceptionNote?: string;
+  },
+): Promise<ApiResult<null>> {
+  return fetchApi<null>(`/v1/disposal-tasks/${taskId}/declaration`, {
+    method: "POST",
+    headers: { "X-Disposal-Token": token, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
 export async function listDraftDocuments(
   draftId: string,
   draftToken: string,
