@@ -12,6 +12,7 @@ import {
   allDocumentsVerified,
   claimFlowModule,
   CLAIM_FLOW_FORM_VERSION,
+  createDefaultForm,
   isPendingDocument,
   type ClaimConfirmation,
   type ClaimFlowDocumentReceipt,
@@ -48,6 +49,13 @@ const INCIDENT_EVENT_OPTIONS = [
   { value: 'other', label: 'Other' },
   { value: 'unknown', label: 'Unknown' },
 ] as const;
+
+/**
+ * The two event types that imply a person was hurt. Mirrors the backend's
+ * `hasInjury`, which is what makes `injurySeverity`, `medicalTreatment` and
+ * `injuryDescription` relevant at all.
+ */
+const INJURY_EVENT_TYPES: readonly string[] = ['injury', 'illness'];
 
 const DOCUMENT_CATEGORY_OPTIONS: Array<{ value: DocumentCategory; label: string }> = [
   { value: 'proof_of_purchase', label: 'Proof of purchase' },
@@ -91,44 +99,7 @@ function DocumentStatusChip({ status }: { status: ClaimFlowDocumentReceipt['stat
 }
 
 function buildDefaultForm(product: Product | undefined): ClaimFlowDraftState {
-  return {
-    locale: 'en-US',
-    consumer: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      addressLine1: '',
-      addressLine2: '',
-      city: '',
-      state: '',
-      postalCode: '',
-      countryCode: 'US',
-    },
-    product: {
-      campaignProductId: product?.id ?? '',
-      quantity: 1,
-      purchaseChannel: 'other',
-      purchaseDate: '',
-      orderNumber: '',
-      lotCode: '',
-      dateCode: '',
-      flavor: product?.flavors?.[0] ?? '',
-      shape: product?.shapes?.[0] ?? '',
-    },
-    incidentAnswer: 'no',
-    incident: {
-      eventDescription: '',
-      occurredDate: '',
-      occurredDateUnknown: false,
-      eventTypes: [],
-      injurySeverity: '',
-      medicalTreatment: '',
-      usedAsIntended: '',
-    },
-    privacyAccepted: false,
-    accuracyAccepted: false,
-  };
+  return createDefaultForm(product);
 }
 
 // ===== Element UI 风格的自定义 Select 组件 =====
@@ -246,6 +217,8 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
   const evidenceRequirements = campaign.evidenceRequirements ?? [];
   const privacyNoticeVersion = campaign.privacyNotice?.version ?? 'not-configured';
   const privacyNoticeHref = `/privacy?campaign=${encodeURIComponent(campaign.slug)}`;
+  const reportedInjury =
+    session?.form.incident.eventTypes.some((type) => INJURY_EVENT_TYPES.includes(type)) ?? false;
 
   useEffect(() => {
     if (session) return;
@@ -469,6 +442,17 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
       }
       if (form.incidentAnswer === 'yes' && !form.incident.eventTypes.length) {
         return 'Select at least one incident event type when the answer is yes.';
+      }
+      // Mirrors the contract's cross-field rule so the answer arrives as an
+      // inline message rather than a 422 after the whole form is submitted.
+      // The new fields stay optional here — that is what makes this release
+      // stage safe to ship ahead of the backend's strict-validation switch.
+      const namesTreatment =
+        form.incident.medicalTreatment !== '' &&
+        form.incident.medicalTreatment !== 'none' &&
+        form.incident.medicalTreatment !== 'unknown';
+      if (form.incident.medicalTreatmentReceived === 'no' && namesTreatment) {
+        return 'You answered that no medical treatment was received, but a treatment was selected above. Please correct one of them.';
       }
     }
     return null;
@@ -894,6 +878,72 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                 />
               </div>
             </div>
+
+            {/* ===== Structured detail (P0-4) ===== */}
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="unit-type" className="text-sm font-medium text-[#303133]">Which unit was involved?</Label>
+                <ElSelect
+                  id="unit-type"
+                  value={session.form.incident.unitType}
+                  onChange={(value) => updateForm((form) => ({ ...form, incident: { ...form.incident, unitType: value as ClaimFlowDraftState['incident']['unitType'] } }))}
+                  options={[
+                    { value: '', label: 'Select' },
+                    { value: 'original', label: 'The recalled unit' },
+                    { value: 'replacement', label: 'A replacement unit' },
+                    { value: 'unknown', label: 'Unknown' },
+                  ]}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="failure-mode" className="text-sm font-medium text-[#303133]">How did the product fail?</Label>
+                <ElSelect
+                  id="failure-mode"
+                  value={session.form.incident.failureMode}
+                  onChange={(value) => updateForm((form) => ({ ...form, incident: { ...form.incident, failureMode: value as ClaimFlowDraftState['incident']['failureMode'] } }))}
+                  options={[
+                    { value: '', label: 'Select' },
+                    { value: 'body_rupture', label: 'Body or casing broke' },
+                    { value: 'battery_exposure', label: 'Battery became exposed' },
+                    { value: 'choking_hazard', label: 'Small part came loose' },
+                    { value: 'leak', label: 'Leaked' },
+                    { value: 'overheating', label: 'Overheated' },
+                    { value: 'other', label: 'Other' },
+                    { value: 'unknown', label: 'Unknown' },
+                  ]}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="treatment-received" className="text-sm font-medium text-[#303133]">Was medical treatment received?</Label>
+                <ElSelect
+                  id="treatment-received"
+                  value={session.form.incident.medicalTreatmentReceived}
+                  onChange={(value) => updateForm((form) => ({ ...form, incident: { ...form.incident, medicalTreatmentReceived: value as ClaimFlowDraftState['incident']['medicalTreatmentReceived'] } }))}
+                  options={[
+                    { value: '', label: 'Select' },
+                    { value: 'yes', label: 'Yes' },
+                    { value: 'no', label: 'No' },
+                    { value: 'unknown', label: 'Unknown' },
+                  ]}
+                />
+              </div>
+            </div>
+
+            {/* Asked only when an injury or illness was reported: for a fire or a
+                near miss there is no injury to describe. */}
+            {reportedInjury && (
+              <div className="space-y-2">
+                <Label htmlFor="injury-description" className="text-sm font-medium text-[#303133]">Describe the injury</Label>
+                <Textarea
+                  id="injury-description"
+                  rows={3}
+                  value={session.form.incident.injuryDescription}
+                  onChange={(event) => updateForm((form) => ({ ...form, incident: { ...form.incident, injuryDescription: event.target.value } }))}
+                  placeholder="What injury occurred, and what part of the body was affected?"
+                  className="rounded border border-[#dcdfe6] px-3 py-2 text-sm text-[#303133] transition-colors placeholder:text-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20"
+                />
+              </div>
+            )}
           </>
         )}
       </div>

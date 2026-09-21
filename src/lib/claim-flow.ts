@@ -85,6 +85,22 @@ export interface ClaimFlowDraftState {
     injurySeverity: '' | 'none' | 'minor' | 'medical_attention' | 'hospitalized' | 'death' | 'unknown';
     medicalTreatment: '' | 'none' | 'first_aid' | 'outpatient' | 'emergency' | 'hospitalized' | 'unknown';
     usedAsIntended: '' | 'yes' | 'no' | 'unknown';
+    // Structured capture (P0-4), same rule: the literals are the OpenAPI enum
+    // values verbatim. Every one is optional at submit time while the backend's
+    // strict-validation switch is off, so an empty string simply means "not
+    // answered" and is dropped from the payload rather than sent as ''.
+    failureMode:
+      | ''
+      | 'body_rupture'
+      | 'battery_exposure'
+      | 'choking_hazard'
+      | 'leak'
+      | 'overheating'
+      | 'other'
+      | 'unknown';
+    injuryDescription: string;
+    medicalTreatmentReceived: '' | 'yes' | 'no' | 'unknown';
+    unitType: '' | 'original' | 'replacement' | 'unknown';
   };
   privacyAccepted: boolean;
   accuracyAccepted: boolean;
@@ -199,7 +215,13 @@ function makeIdempotencyKey() {
   return crypto.randomUUID();
 }
 
-function createDefaultForm(): ClaimFlowDraftState {
+/**
+ * The one blank draft state. Exported so the form component can seed it with a
+ * chosen product instead of keeping a second copy — the two copies had already
+ * drifted, and the drift only surfaced as a type error the next time a field
+ * was added.
+ */
+export function createDefaultForm(product?: { id: string; flavors?: string[]; shapes?: string[] }): ClaimFlowDraftState {
   return {
     locale: 'en-US',
     consumer: {
@@ -215,15 +237,15 @@ function createDefaultForm(): ClaimFlowDraftState {
       countryCode: 'US',
     },
     product: {
-      campaignProductId: '',
+      campaignProductId: product?.id ?? '',
       quantity: 1,
       purchaseChannel: 'other',
       purchaseDate: '',
       orderNumber: '',
       lotCode: '',
       dateCode: '',
-      flavor: '',
-      shape: '',
+      flavor: product?.flavors?.[0] ?? '',
+      shape: product?.shapes?.[0] ?? '',
     },
     incidentAnswer: 'no',
     incident: {
@@ -234,6 +256,10 @@ function createDefaultForm(): ClaimFlowDraftState {
       injurySeverity: '',
       medicalTreatment: '',
       usedAsIntended: '',
+      failureMode: '',
+      injuryDescription: '',
+      medicalTreatmentReceived: '',
+      unitType: '',
     },
     privacyAccepted: false,
     accuracyAccepted: false,
@@ -483,6 +509,10 @@ export class ClaimFlowModule {
           injurySeverity: session.form.incident.injurySeverity || undefined,
           medicalTreatment: session.form.incident.medicalTreatment || undefined,
           usedAsIntended: session.form.incident.usedAsIntended || undefined,
+          failureMode: session.form.incident.failureMode || undefined,
+          injuryDescription: session.form.incident.injuryDescription.trim() || undefined,
+          medicalTreatmentReceived: session.form.incident.medicalTreatmentReceived || undefined,
+          unitType: session.form.incident.unitType || undefined,
         };
 
     const deliveryAddress = {

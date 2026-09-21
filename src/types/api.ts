@@ -451,9 +451,9 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * [Deprecated] Legacy claim lookup returning the full claim object
+         * [Deprecated] Legacy claim lookup returning the whitelisted public status view
          * @deprecated
-         * @description Returns a PII-bearing claim summary and is scheduled for removal after the transition window. New integrations must use POST /v1/case-status-lookups instead.
+         * @description The response carries the §9.9 whitelist only — identical in shape to POST /v1/case-status-lookups. The phone query factor is a transition-period compatibility match and is never echoed back; the endpoint is scheduled for removal once Consumer Front migrates. New integrations must use POST /v1/case-status-lookups instead.
          */
         get: {
             parameters: {
@@ -468,13 +468,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Full legacy claim object (contains consumer PII). */
+                /** @description Whitelisted public view, same schema as POST /v1/case-status-lookups. No PII. */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["LegacyConsumerClaimLookupResponse"];
+                        "application/json": components["schemas"]["CaseStatusLookupResponse"];
                     };
                 };
                 /** @description Invalid request. */
@@ -565,6 +565,8 @@ export interface paths {
                 /** @description Published campaign content. */
                 200: {
                     headers: {
+                        /** @description Public, immutable-per-version content: short browser max-age, longer edge s-maxage, stale-while-revalidate. */
+                        "Cache-Control"?: string;
                         "Content-Language"?: string;
                         /** @description Published version entity tag. */
                         ETag?: string;
@@ -573,6 +575,16 @@ export interface paths {
                     content: {
                         "application/json": components["schemas"]["CampaignResponse"];
                     };
+                };
+                /** @description Not Modified — the request If-None-Match matched the current published-version ETag. No body; validators and cache directives are repeated so caches can keep serving. */
+                304: {
+                    headers: {
+                        "Cache-Control"?: string;
+                        /** @description Published version entity tag. */
+                        ETag?: string;
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
                 /** @description Invalid request. */
                 400: {
@@ -1147,54 +1159,23 @@ export interface components {
         IncidentDetailsInput: {
             eventTypes?: ("injury" | "illness" | "choking" | "ingestion" | "fire" | "overheating" | "property_damage" | "near_miss" | "other" | "unknown")[];
             /** @enum {string} */
+            failureMode?: "body_rupture" | "battery_exposure" | "choking_hazard" | "leak" | "overheating" | "other" | "unknown";
+            injuryDescription?: string;
+            /** @enum {string} */
             injurySeverity?: "none" | "minor" | "medical_attention" | "hospitalized" | "death" | "unknown";
             /** @enum {string} */
             medicalTreatment?: "none" | "first_aid" | "outpatient" | "emergency" | "hospitalized" | "unknown";
+            /** @enum {string} */
+            medicalTreatmentReceived?: "yes" | "no" | "unknown";
             narrative: string;
             occurredDate?: string;
             /** @default false */
             occurredDateUnknown: boolean;
             /** @enum {string} */
+            unitType?: "original" | "replacement" | "unknown";
+            /** @enum {string} */
             usedAsIntended?: "yes" | "no" | "unknown";
         };
-        LegacyConsumerClaim: {
-            /** Format: uuid */
-            campaignId: string;
-            campaignSlug: string;
-            campaignTitle: string;
-            caseRef: string;
-            claimNumber: string;
-            consumerEmail: string;
-            consumerName: string;
-            consumerPhone: string;
-            dateCode?: string;
-            evidenceCount: number;
-            flavor?: string;
-            /** Format: uuid */
-            id: string;
-            infoRequest?: string;
-            lotCode?: string;
-            productName: string;
-            refundAmount?: number;
-            remedyId: string;
-            remedyTitle: string;
-            remedyType: string;
-            resolutionDate?: string;
-            shape?: string;
-            status: components["schemas"]["LegacyConsumerClaimStatus"];
-            submittedAt: string;
-            updatedAt: string;
-        };
-        LegacyConsumerClaimLookupResponse: {
-            campaignTitle: string;
-            claim: components["schemas"]["LegacyConsumerClaim"];
-            productName: string;
-            refundAmount?: number;
-            remedyTitle: string;
-            remedyType: string;
-        };
-        /** @enum {string} */
-        LegacyConsumerClaimStatus: "submitted" | "under_review" | "action_required" | "verified" | "remedy_issued" | "resolved" | "rejected";
         ProblemDetails: {
             detail: string;
             errors?: {
