@@ -82,6 +82,29 @@ export const CLAIM_STATUS_LABELS: Record<string, string> = {
   rejected: 'Rejected',
 };
 
+/**
+ * Whether satisfying this remedy requires the consumer to give a mailing address.
+ *
+ * Previously this was inferred from "is it a refund?", which silently made every
+ * other remedy a shipment. Disposal instructions are the counter-example: nothing
+ * is posted, so a mailing address is not part of the remedy. Stating the rule
+ * directly means a new remedy code has to be classified rather than defaulting to
+ * "post something".
+ */
+export function remedyRequiresMailingAddress(type: string | undefined): boolean {
+  switch (type) {
+    case 'replacement':
+    case 'repair':
+    case 'voucher':
+      return true;
+    case 'refund':
+    case 'disposal_instruction':
+      return false;
+    default:
+      return false;
+  }
+}
+
 export const REMEDY_TYPE_LABELS: Record<string, string> = {
   refund: 'Refund',
   replacement: 'Replacement',

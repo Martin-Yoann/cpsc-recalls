@@ -72,7 +72,7 @@ function campaignViewToCampaign(view: CampaignView): Campaign {
     })),
     remedies: view.remedies.map((r) => ({
       id: r.code,
-      type: r.code === 'refund' ? RemedyType.REFUND : RemedyType.REPLACEMENT,
+      type: remedyTypeForCode(r.code),
       title: r.displayName,
       description: r.displayName,
       deadline: '',
@@ -81,6 +81,31 @@ function campaignViewToCampaign(view: CampaignView): Campaign {
       compensationAmount: undefined,
     })),
   };
+}
+
+/**
+ * Maps a campaign remedy code to the domain type.
+ *
+ * The previous form —  — silently
+ * classified every other code as a replacement, so a disposal campaign asked the
+ * consumer for a mailing address and read as if a shipment were coming. Known
+ * codes are named; anything unrecognised still falls back to REPLACEMENT, which
+ * is now a visible choice in one place rather than an accident of a ternary.
+ */
+function remedyTypeForCode(code: string): RemedyType {
+  switch (code) {
+    case 'refund':
+      return RemedyType.REFUND;
+    case 'repair':
+      return RemedyType.REPAIR;
+    case 'voucher':
+      return RemedyType.VOUCHER;
+    case 'disposal_instruction':
+      return RemedyType.DISPOSAL_INSTRUCTION;
+    case 'replacement':
+    default:
+      return RemedyType.REPLACEMENT;
+  }
 }
 
 // ================================================================

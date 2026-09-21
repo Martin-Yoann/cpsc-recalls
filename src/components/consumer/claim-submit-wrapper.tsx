@@ -21,7 +21,7 @@ import {
   type DocumentCategory,
 } from '@/lib/claim-flow';
 import type { ProblemDetails } from '@/lib/api-client';
-import { RemedyType } from '@/types';
+import { remedyRequiresMailingAddress } from '@/lib/constants';
 import type { Campaign, CampaignEvidenceRequirement, Product, Remedy } from '@/types';
 
 interface Props {
@@ -394,7 +394,9 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
     // Design §5.5 / P2-1: shipment-style remedies require the delivery
     // address; a refund may leave it out entirely. A partially typed refund
     // address must be completed or cleared — never submitted half-formed.
-    const isRefundRemedy = selectedRemedy?.type === RemedyType.REFUND;
+    // Ask whether this remedy needs an address rather than assuming every
+    // non-refund remedy is a shipment.
+    const addressNeeded = remedyRequiresMailingAddress(selectedRemedy?.type);
     const addressValues = [
       form.consumer.addressLine1,
       form.consumer.city,
@@ -403,10 +405,10 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
     ];
     const addressComplete = addressValues.every((field) => field.trim().length > 0);
     const addressStarted = addressValues.some((field) => field.trim().length > 0);
-    if (!isRefundRemedy && !addressComplete) {
+    if (addressNeeded && !addressComplete) {
       return 'Please complete your mailing address before submission.';
     }
-    if (isRefundRemedy && addressStarted && !addressComplete) {
+    if (!addressNeeded && addressStarted && !addressComplete) {
       return 'Please finish or clear the mailing address before submission.';
     }
     if ((form.consumer.countryCode.trim() || 'US').length !== 2) {
@@ -1051,7 +1053,8 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
 
       <div className="rounded border border-[#dcdfe6] p-4 text-sm text-[#606266]">
         <p className="font-medium text-[#303133]">
-          Mailing address{selectedRemedy?.type === RemedyType.REFUND ? ' (optional for refunds)' : ''}
+          Mailing address
+          {remedyRequiresMailingAddress(selectedRemedy?.type) ? '' : ' (not required for this remedy)'}
         </p>
         <p className="mt-1 text-xs text-[#909399]">Used for replacement or other remedies that need shipment details.</p>
       </div>
@@ -1110,7 +1113,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             const result = await claimFlowModule.submit(
               current,
               claimFlowModule.buildSubmitInput(current, privacyNoticeVersion, {
-                addressRequired: selectedRemedy?.type !== RemedyType.REFUND,
+                addressRequired: remedyRequiresMailingAddress(selectedRemedy?.type),
               }),
             );
             setIsSubmitting(false);
