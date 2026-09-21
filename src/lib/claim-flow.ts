@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { put } from '@vercel/blob/client';
+import { put } from "@vercel/blob/client";
 
 import {
   deleteDraftDocument,
@@ -13,19 +13,32 @@ import {
   type ProblemDetails,
   type UploadTokenOk,
   type UploadTokenRequest,
-} from '@/lib/api-client';
+} from "@/lib/api-client";
+import { saveDisposalToken } from "@/lib/disposal-access";
 
-const SESSION_KEY_PREFIX = 'koi_claim_flow:';
-export const CLAIM_FLOW_FORM_VERSION = 'consumer-claim-form-v1';
+const SESSION_KEY_PREFIX = "koi_claim_flow:";
+export const CLAIM_FLOW_FORM_VERSION = "consumer-claim-form-v1";
 
-export type ClaimFlowStep = 'verification' | 'consumer' | 'incident' | 'resolution' | 'review';
-export type DocumentCategory = UploadTokenRequest['category'];
-export type IncidentAnswer = ClaimSubmissionRequest['incidentAnswer'];
-export type IncidentDetailsInput = ClaimSubmissionRequest['incidentDetails'];
-export type ClaimProductInput = ClaimSubmissionRequest['products'][number];
-export type ClaimConsumerInput = ClaimSubmissionRequest['consumer'];
-export type ClaimConsentInput = ClaimSubmissionRequest['consents'][number];
-export type PurchaseChannel = ClaimProductInput['purchaseChannel'];
+export type ClaimFlowStep =
+  | "verification"
+  | "consumer"
+  | "incident"
+  | "resolution"
+  | "review"
+  /**
+   * Page 4. Post-submission only: a disposal task exists once the claim is
+   * submitted, because that is when the server can pin an instruction version to
+   * a case. The step is entered only when the submission returns a task, so the
+   * not-applicable branch skips it entirely rather than showing an empty page.
+   */
+  | "disposal";
+export type DocumentCategory = UploadTokenRequest["category"];
+export type IncidentAnswer = ClaimSubmissionRequest["incidentAnswer"];
+export type IncidentDetailsInput = ClaimSubmissionRequest["incidentDetails"];
+export type ClaimProductInput = ClaimSubmissionRequest["products"][number];
+export type ClaimConsumerInput = ClaimSubmissionRequest["consumer"];
+export type ClaimConsentInput = ClaimSubmissionRequest["consents"][number];
+export type PurchaseChannel = ClaimProductInput["purchaseChannel"];
 
 export interface ClaimFlowDocumentReceipt {
   documentId: string;
@@ -36,17 +49,29 @@ export interface ClaimFlowDocumentReceipt {
   fileName: string;
   mimeType: string;
   sizeBytes: number;
-  status: 'uploading' | 'verifying' | 'verified' | 'scan_pending' | 'rejected' | 'expired';
+  status:
+    | "uploading"
+    | "verifying"
+    | "verified"
+    | "scan_pending"
+    | "rejected"
+    | "expired";
 }
 
 /** Receipts whose server lifecycle has not reached a terminal state yet. */
 export function isPendingDocument(receipt: ClaimFlowDocumentReceipt): boolean {
-  return receipt.status === 'uploading' || receipt.status === 'verifying' || receipt.status === 'scan_pending';
+  return (
+    receipt.status === "uploading" ||
+    receipt.status === "verifying" ||
+    receipt.status === "scan_pending"
+  );
 }
 
 /** Only verified documents may enter Claim Submission (design §5.4 / §16). */
-export function allDocumentsVerified(documents: ClaimFlowDocumentReceipt[]): boolean {
-  return documents.every((document) => document.status === 'verified');
+export function allDocumentsVerified(
+  documents: ClaimFlowDocumentReceipt[],
+): boolean {
+  return documents.every((document) => document.status === "verified");
 }
 
 export interface ClaimFlowDraftState {
@@ -82,25 +107,39 @@ export interface ClaimFlowDraftState {
     eventTypes: string[];
     // Values are exactly the OpenAPI enum values (design §5.6) — no
     // frontend-only severity model and no remapping layer at submit time.
-    injurySeverity: '' | 'none' | 'minor' | 'medical_attention' | 'hospitalized' | 'death' | 'unknown';
-    medicalTreatment: '' | 'none' | 'first_aid' | 'outpatient' | 'emergency' | 'hospitalized' | 'unknown';
-    usedAsIntended: '' | 'yes' | 'no' | 'unknown';
+    injurySeverity:
+      | ""
+      | "none"
+      | "minor"
+      | "medical_attention"
+      | "hospitalized"
+      | "death"
+      | "unknown";
+    medicalTreatment:
+      | ""
+      | "none"
+      | "first_aid"
+      | "outpatient"
+      | "emergency"
+      | "hospitalized"
+      | "unknown";
+    usedAsIntended: "" | "yes" | "no" | "unknown";
     // Structured capture (P0-4), same rule: the literals are the OpenAPI enum
     // values verbatim. Every one is optional at submit time while the backend's
     // strict-validation switch is off, so an empty string simply means "not
     // answered" and is dropped from the payload rather than sent as ''.
     failureMode:
-      | ''
-      | 'body_rupture'
-      | 'battery_exposure'
-      | 'choking_hazard'
-      | 'leak'
-      | 'overheating'
-      | 'other'
-      | 'unknown';
+      | ""
+      | "body_rupture"
+      | "battery_exposure"
+      | "choking_hazard"
+      | "leak"
+      | "overheating"
+      | "other"
+      | "unknown";
     injuryDescription: string;
-    medicalTreatmentReceived: '' | 'yes' | 'no' | 'unknown';
-    unitType: '' | 'original' | 'replacement' | 'unknown';
+    medicalTreatmentReceived: "" | "yes" | "no" | "unknown";
+    unitType: "" | "original" | "replacement" | "unknown";
   };
   privacyAccepted: boolean;
   accuracyAccepted: boolean;
@@ -134,7 +173,10 @@ export interface ClaimFlowSessionSnapshot {
   currentStep: ClaimFlowStep;
   remedyCode?: string;
   documents: Array<
-    Pick<ClaimFlowDocumentReceipt, 'documentId' | 'category' | 'fileName' | 'status'> & {
+    Pick<
+      ClaimFlowDocumentReceipt,
+      "documentId" | "category" | "fileName" | "status"
+    > & {
       expiresAt?: string;
     }
   >;
@@ -145,8 +187,14 @@ export interface ClaimFlowSessionSnapshot {
     privacyAccepted: boolean;
     accuracyAccepted: boolean;
     product: Pick<
-      ClaimFlowDraftState['product'],
-      'campaignProductId' | 'quantity' | 'purchaseChannel' | 'lotCode' | 'dateCode' | 'flavor' | 'shape'
+      ClaimFlowDraftState["product"],
+      | "campaignProductId"
+      | "quantity"
+      | "purchaseChannel"
+      | "lotCode"
+      | "dateCode"
+      | "flavor"
+      | "shape"
     >;
   };
 }
@@ -199,13 +247,19 @@ export interface ClaimFlowSubmitInput {
 export interface ClaimConfirmation {
   caseReference: string;
   submittedAt: string;
-  emailStatus: ClaimSubmissionOk['emailStatus'];
+  emailStatus: ClaimSubmissionOk["emailStatus"];
   nextStep: string;
+  /**
+   * Present only when the server opened a disposal task — which requires an
+   * approved instruction version backed by an authorizing approval on the pinned
+   * campaign version. Absent is the normal case and means the consumer is never
+   * offered a disposal step.
+   */
+  disposal?: { taskId: string; token: string; resumePath: string };
 }
 
 export type ClaimFlowResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: ProblemDetails; status: number };
+  { ok: true; data: T } | { ok: false; error: ProblemDetails; status: number };
 
 function sessionStorageKey(campaignSlug: string) {
   return `${SESSION_KEY_PREFIX}${campaignSlug}`;
@@ -221,45 +275,49 @@ function makeIdempotencyKey() {
  * drifted, and the drift only surfaced as a type error the next time a field
  * was added.
  */
-export function createDefaultForm(product?: { id: string; flavors?: string[]; shapes?: string[] }): ClaimFlowDraftState {
+export function createDefaultForm(product?: {
+  id: string;
+  flavors?: string[];
+  shapes?: string[];
+}): ClaimFlowDraftState {
   return {
-    locale: 'en-US',
+    locale: "en-US",
     consumer: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      addressLine1: '',
-      addressLine2: '',
-      city: '',
-      state: '',
-      postalCode: '',
-      countryCode: 'US',
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      state: "",
+      postalCode: "",
+      countryCode: "US",
     },
     product: {
-      campaignProductId: product?.id ?? '',
+      campaignProductId: product?.id ?? "",
       quantity: 1,
-      purchaseChannel: 'other',
-      purchaseDate: '',
-      orderNumber: '',
-      lotCode: '',
-      dateCode: '',
-      flavor: product?.flavors?.[0] ?? '',
-      shape: product?.shapes?.[0] ?? '',
+      purchaseChannel: "other",
+      purchaseDate: "",
+      orderNumber: "",
+      lotCode: "",
+      dateCode: "",
+      flavor: product?.flavors?.[0] ?? "",
+      shape: product?.shapes?.[0] ?? "",
     },
-    incidentAnswer: 'no',
+    incidentAnswer: "no",
     incident: {
-      eventDescription: '',
-      occurredDate: '',
+      eventDescription: "",
+      occurredDate: "",
       occurredDateUnknown: false,
       eventTypes: [],
-      injurySeverity: '',
-      medicalTreatment: '',
-      usedAsIntended: '',
-      failureMode: '',
-      injuryDescription: '',
-      medicalTreatmentReceived: '',
-      unitType: '',
+      injurySeverity: "",
+      medicalTreatment: "",
+      usedAsIntended: "",
+      failureMode: "",
+      injuryDescription: "",
+      medicalTreatmentReceived: "",
+      unitType: "",
     },
     privacyAccepted: false,
     accuracyAccepted: false,
@@ -277,14 +335,14 @@ function toSession(
     draftToken: draft.draftToken,
     expiresAt: draft.expiresAt,
     idempotencyKey: makeIdempotencyKey(),
-    currentStep: 'verification',
+    currentStep: "verification",
     documents: [],
     form: createDefaultForm(),
   };
 }
 
 function readSession(campaignSlug: string): ClaimFlowSession | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
   const raw = sessionStorage.getItem(sessionStorageKey(campaignSlug));
   if (!raw) return null;
 
@@ -296,19 +354,19 @@ function readSession(campaignSlug: string): ClaimFlowSession | null {
     return {
       sessionKey: sessionStorageKey(campaignSlug),
       campaignSlug,
-      draftId: parsed.draftId ?? '',
-      draftToken: parsed.draftToken ?? '',
-      expiresAt: parsed.expiresAt ?? '',
+      draftId: parsed.draftId ?? "",
+      draftToken: parsed.draftToken ?? "",
+      expiresAt: parsed.expiresAt ?? "",
       idempotencyKey: parsed.idempotencyKey ?? makeIdempotencyKey(),
-      currentStep: parsed.currentStep ?? 'verification',
+      currentStep: parsed.currentStep ?? "verification",
       remedyCode: parsed.remedyCode,
       documents: (parsed.documents ?? []).map((document) => ({
-        pathname: '',
-        clientToken: '',
-        mimeType: '',
+        pathname: "",
+        clientToken: "",
+        mimeType: "",
         sizeBytes: 0,
         ...document,
-        expiresAt: document.expiresAt ?? parsed.expiresAt ?? '',
+        expiresAt: document.expiresAt ?? parsed.expiresAt ?? "",
       })),
       form: {
         ...defaults,
@@ -334,17 +392,22 @@ function readSession(campaignSlug: string): ClaimFlowSession | null {
 }
 
 function writeSession(session: ClaimFlowSession) {
-  if (typeof window === 'undefined') return;
-  sessionStorage.setItem(session.sessionKey, JSON.stringify(toSnapshot(session)));
+  if (typeof window === "undefined") return;
+  sessionStorage.setItem(
+    session.sessionKey,
+    JSON.stringify(toSnapshot(session)),
+  );
 }
 
 function removeSession(campaignSlug: string) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   sessionStorage.removeItem(sessionStorageKey(campaignSlug));
 }
 
 export class ClaimFlowModule {
-  async start(campaignSlug: string): Promise<ClaimFlowResult<ClaimFlowSession>> {
+  async start(
+    campaignSlug: string,
+  ): Promise<ClaimFlowResult<ClaimFlowSession>> {
     const existing = readSession(campaignSlug);
     if (existing) return { ok: true, data: existing };
 
@@ -365,7 +428,10 @@ export class ClaimFlowModule {
     return session;
   }
 
-  updateForm(session: ClaimFlowSession, nextForm: ClaimFlowDraftState): ClaimFlowSession {
+  updateForm(
+    session: ClaimFlowSession,
+    nextForm: ClaimFlowDraftState,
+  ): ClaimFlowSession {
     return this.save({ ...session, form: nextForm });
   }
 
@@ -377,7 +443,12 @@ export class ClaimFlowModule {
     session: ClaimFlowSession,
     file: File,
     category: DocumentCategory,
-  ): Promise<ClaimFlowResult<{ session: ClaimFlowSession; receipt: ClaimFlowDocumentReceipt }>> {
+  ): Promise<
+    ClaimFlowResult<{
+      session: ClaimFlowSession;
+      receipt: ClaimFlowDocumentReceipt;
+    }>
+  > {
     const body: UploadTokenRequest = {
       category,
       fileName: file.name,
@@ -385,12 +456,16 @@ export class ClaimFlowModule {
       sizeBytes: file.size,
     };
 
-    const token = await getUploadToken(session.draftId, session.draftToken, body);
+    const token = await getUploadToken(
+      session.draftId,
+      session.draftToken,
+      body,
+    );
     if (!token.ok) return token;
 
     try {
       await put(token.data.pathname, file, {
-        access: 'private',
+        access: "private",
         token: token.data.clientToken,
         contentType: file.type,
       });
@@ -399,10 +474,13 @@ export class ClaimFlowModule {
         ok: false,
         status: 0,
         error: {
-          type: 'about:blank',
-          title: 'Upload Error',
+          type: "about:blank",
+          title: "Upload Error",
           status: 0,
-          detail: error instanceof Error ? error.message : 'Could not upload the selected file.',
+          detail:
+            error instanceof Error
+              ? error.message
+              : "Could not upload the selected file.",
         },
       };
     }
@@ -411,9 +489,12 @@ export class ClaimFlowModule {
     // side now decides between verified / rejected / expired.
     const receipt: ClaimFlowDocumentReceipt = {
       ...this.toDocumentReceipt(file, category, token.data),
-      status: 'verifying',
+      status: "verifying",
     };
-    const nextSession = { ...session, documents: [...session.documents, receipt] };
+    const nextSession = {
+      ...session,
+      documents: [...session.documents, receipt],
+    };
     writeSession(nextSession);
     return { ok: true, data: { session: nextSession, receipt } };
   }
@@ -428,13 +509,19 @@ export class ClaimFlowModule {
     session: ClaimFlowSession,
     documentId: string,
   ): Promise<ClaimFlowResult<ClaimFlowSession>> {
-    const result = await deleteDraftDocument(session.draftId, session.draftToken, documentId);
+    const result = await deleteDraftDocument(
+      session.draftId,
+      session.draftToken,
+      documentId,
+    );
     const gone = result.ok || (!result.ok && result.status === 404);
     if (!gone) return { ok: false, error: result.error, status: result.status };
 
     const nextSession = {
       ...session,
-      documents: session.documents.filter((document) => document.documentId !== documentId),
+      documents: session.documents.filter(
+        (document) => document.documentId !== documentId,
+      ),
     };
     writeSession(nextSession);
     return { ok: true, data: nextSession };
@@ -445,31 +532,41 @@ export class ClaimFlowModule {
    * local receipts. Documents created elsewhere against the same draft are
    * adopted so evidence requirement checks stay aligned with the server list.
    */
-  async refreshDocuments(session: ClaimFlowSession): Promise<ClaimFlowResult<ClaimFlowSession>> {
-    const result = await listDraftDocuments(session.draftId, session.draftToken);
+  async refreshDocuments(
+    session: ClaimFlowSession,
+  ): Promise<ClaimFlowResult<ClaimFlowSession>> {
+    const result = await listDraftDocuments(
+      session.draftId,
+      session.draftToken,
+    );
     if (!result.ok) return result;
 
-    const serverById = new Map(result.data.documents.map((document) => [document.documentId, document]));
-    const merged: ClaimFlowDocumentReceipt[] = session.documents.map((receipt) => {
-      const server = serverById.get(receipt.documentId);
-      if (!server) return receipt;
-      return {
-        ...receipt,
-        fileName: server.fileName || receipt.fileName,
-        status: server.status,
-      };
-    });
+    const serverById = new Map(
+      result.data.documents.map((document) => [document.documentId, document]),
+    );
+    const merged: ClaimFlowDocumentReceipt[] = session.documents.map(
+      (receipt) => {
+        const server = serverById.get(receipt.documentId);
+        if (!server) return receipt;
+        return {
+          ...receipt,
+          fileName: server.fileName || receipt.fileName,
+          status: server.status,
+        };
+      },
+    );
 
     for (const server of result.data.documents) {
-      if (merged.some((receipt) => receipt.documentId === server.documentId)) continue;
+      if (merged.some((receipt) => receipt.documentId === server.documentId))
+        continue;
       merged.push({
         documentId: server.documentId,
-        pathname: '',
-        clientToken: '',
+        pathname: "",
+        clientToken: "",
         expiresAt: session.expiresAt,
         category: server.category,
         fileName: server.fileName,
-        mimeType: '',
+        mimeType: "",
         sizeBytes: 0,
         status: server.status,
       });
@@ -479,7 +576,11 @@ export class ClaimFlowModule {
       merged.length !== session.documents.length ||
       merged.some((document, index) => {
         const before = session.documents[index];
-        return !before || before.status !== document.status || before.fileName !== document.fileName;
+        return (
+          !before ||
+          before.status !== document.status ||
+          before.fileName !== document.fileName
+        );
       });
     const nextSession = { ...session, documents: merged };
     if (changed) writeSession(nextSession);
@@ -497,23 +598,28 @@ export class ClaimFlowModule {
     options?: { addressRequired?: boolean },
   ): ClaimFlowSubmitInput {
     // UI values ARE the OpenAPI enum values — no conversion layer (design §5.6).
-    const incidentDetails: IncidentDetailsInput = session.form.incidentAnswer === 'no'
-      ? undefined
-      : {
-          narrative: session.form.incident.eventDescription.trim(),
-          occurredDate: session.form.incident.occurredDate || undefined,
-          occurredDateUnknown: session.form.incident.occurredDateUnknown,
-          eventTypes: session.form.incident.eventTypes.length
-            ? (session.form.incident.eventTypes as NonNullable<IncidentDetailsInput>['eventTypes'])
-            : undefined,
-          injurySeverity: session.form.incident.injurySeverity || undefined,
-          medicalTreatment: session.form.incident.medicalTreatment || undefined,
-          usedAsIntended: session.form.incident.usedAsIntended || undefined,
-          failureMode: session.form.incident.failureMode || undefined,
-          injuryDescription: session.form.incident.injuryDescription.trim() || undefined,
-          medicalTreatmentReceived: session.form.incident.medicalTreatmentReceived || undefined,
-          unitType: session.form.incident.unitType || undefined,
-        };
+    const incidentDetails: IncidentDetailsInput =
+      session.form.incidentAnswer === "no"
+        ? undefined
+        : {
+            narrative: session.form.incident.eventDescription.trim(),
+            occurredDate: session.form.incident.occurredDate || undefined,
+            occurredDateUnknown: session.form.incident.occurredDateUnknown,
+            eventTypes: session.form.incident.eventTypes.length
+              ? (session.form.incident
+                  .eventTypes as NonNullable<IncidentDetailsInput>["eventTypes"])
+              : undefined,
+            injurySeverity: session.form.incident.injurySeverity || undefined,
+            medicalTreatment:
+              session.form.incident.medicalTreatment || undefined,
+            usedAsIntended: session.form.incident.usedAsIntended || undefined,
+            failureMode: session.form.incident.failureMode || undefined,
+            injuryDescription:
+              session.form.incident.injuryDescription.trim() || undefined,
+            medicalTreatmentReceived:
+              session.form.incident.medicalTreatmentReceived || undefined,
+            unitType: session.form.incident.unitType || undefined,
+          };
 
     const deliveryAddress = {
       line1: session.form.consumer.addressLine1.trim(),
@@ -521,7 +627,9 @@ export class ClaimFlowModule {
       city: session.form.consumer.city.trim(),
       state: session.form.consumer.state.trim(),
       postalCode: session.form.consumer.postalCode.trim(),
-      countryCode: (session.form.consumer.countryCode.trim() || 'US').toUpperCase(),
+      countryCode: (
+        session.form.consumer.countryCode.trim() || "US"
+      ).toUpperCase(),
     };
     const hasAddressInput =
       Boolean(deliveryAddress.line1) ||
@@ -531,7 +639,7 @@ export class ClaimFlowModule {
 
     return {
       locale: session.form.locale,
-      remedyCode: session.remedyCode ?? '',
+      remedyCode: session.remedyCode ?? "",
       documentIds: session.documents.map((document) => document.documentId),
       incidentAnswer: session.form.incidentAnswer,
       incidentDetails,
@@ -540,7 +648,9 @@ export class ClaimFlowModule {
         lastName: session.form.consumer.lastName.trim(),
         email: session.form.consumer.email.trim(),
         currentDeliveryAddress:
-          options?.addressRequired || hasAddressInput ? deliveryAddress : undefined,
+          options?.addressRequired || hasAddressInput
+            ? deliveryAddress
+            : undefined,
         phone: session.form.consumer.phone.trim() || undefined,
       },
       products: [
@@ -548,7 +658,7 @@ export class ClaimFlowModule {
           campaignProductId: session.form.product.campaignProductId,
           quantity: session.form.product.quantity,
           purchaseChannel: session.form.product.purchaseChannel,
-          identificationMode: 'unknown',
+          identificationMode: "unknown",
           purchaseDate: session.form.product.purchaseDate || undefined,
           orderNumber: session.form.product.orderNumber || undefined,
           lotCode: session.form.product.lotCode,
@@ -559,12 +669,12 @@ export class ClaimFlowModule {
       ],
       consents: [
         {
-          type: 'privacy_notice',
+          type: "privacy_notice",
           textVersion: privacyNoticeVersion,
           accepted: true,
         },
         {
-          type: 'information_accuracy',
+          type: "information_accuracy",
           textVersion: CLAIM_FLOW_FORM_VERSION,
           accepted: true,
         },
@@ -579,7 +689,7 @@ export class ClaimFlowModule {
     const body: ClaimSubmissionRequest = {
       draftId: session.draftId,
       draftToken: session.draftToken,
-      locale: 'en-US',
+      locale: "en-US",
       consumer: input.consumer,
       products: input.products,
       remedyCode: input.remedyCode,
@@ -595,6 +705,16 @@ export class ClaimFlowModule {
 
     if (!response.ok) return response;
 
+    // The token is the visitor's only way back to a review that may take hours,
+    // so it is stored before anything else can fail. The confirmation screen and
+    // the email link both carry it; storage is what makes the in-tab path work.
+    if (response.data.disposal) {
+      saveDisposalToken(
+        response.data.disposal.taskId,
+        response.data.disposal.token,
+      );
+    }
+
     removeSession(session.campaignSlug);
     return {
       ok: true,
@@ -603,6 +723,15 @@ export class ClaimFlowModule {
         submittedAt: response.data.submittedAt,
         emailStatus: response.data.emailStatus,
         nextStep: response.data.nextStep,
+        ...(response.data.disposal
+          ? {
+              disposal: {
+                taskId: response.data.disposal.taskId,
+                token: response.data.disposal.token,
+                resumePath: response.data.disposal.resumePath,
+              },
+            }
+          : {}),
       },
     };
   }
@@ -621,7 +750,7 @@ export class ClaimFlowModule {
       fileName: file.name,
       mimeType: file.type,
       sizeBytes: file.size,
-      status: 'uploading',
+      status: "uploading",
     };
   }
 }

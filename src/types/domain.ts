@@ -5,58 +5,71 @@
 // === Enums ===
 
 export enum RiskLevel {
-  LOW = 'low',
-  MODERATE = 'moderate',
-  HIGH = 'high',
-  CRITICAL = 'critical',
+  LOW = "low",
+  MODERATE = "moderate",
+  HIGH = "high",
+  CRITICAL = "critical",
 }
 
 export enum RecallStatus {
-  ACTIVE = 'active',
-  CLOSED = 'closed',
-  PENDING = 'pending',
-  EXPANDED = 'expanded',
+  ACTIVE = "active",
+  CLOSED = "closed",
+  PENDING = "pending",
+  EXPANDED = "expanded",
 }
 
 export enum ClaimStatus {
-  DRAFT = 'draft',
-  SUBMITTED = 'submitted',
-  UNDER_REVIEW = 'under_review',
+  DRAFT = "draft",
+  SUBMITTED = "submitted",
+  UNDER_REVIEW = "under_review",
   /** Backend need_info — the review team asked the consumer for more input. */
-  ACTION_REQUIRED = 'action_required',
-  VERIFIED = 'verified',
-  REMEDY_ISSUED = 'remedy_issued',
-  RESOLVED = 'resolved',
-  REJECTED = 'rejected',
+  ACTION_REQUIRED = "action_required",
+  VERIFIED = "verified",
+  REMEDY_ISSUED = "remedy_issued",
+  RESOLVED = "resolved",
+  REJECTED = "rejected",
 }
 
 export enum RemedyType {
-  REFUND = 'refund',
-  REPLACEMENT = 'replacement',
-  REPAIR = 'repair',
-  DISPOSAL_INSTRUCTION = 'disposal_instruction',
-  VOUCHER = 'voucher',
+  REFUND = "refund",
+  REPLACEMENT = "replacement",
+  REPAIR = "repair",
+  DISPOSAL_INSTRUCTION = "disposal_instruction",
+  VOUCHER = "voucher",
 }
 
 export enum EvidenceType {
-  PROOF_OF_PURCHASE = 'proof_of_purchase',
-  PRODUCT_PHOTO = 'product_photo',
-  SERIAL_NUMBER = 'serial_number',
-  DAMAGE_PHOTO = 'damage_photo',
-  OTHER = 'other',
+  PROOF_OF_PURCHASE = "proof_of_purchase",
+  PRODUCT_PHOTO = "product_photo",
+  SERIAL_NUMBER = "serial_number",
+  DAMAGE_PHOTO = "damage_photo",
+  OTHER = "other",
 }
 
 export enum IncidentSeverity {
-  MINOR = 'minor',
-  MODERATE = 'moderate',
-  SERIOUS = 'serious',
-  FATAL = 'fatal',
+  MINOR = "minor",
+  MODERATE = "moderate",
+  SERIOUS = "serious",
+  FATAL = "fatal",
 }
+
+/**
+ * Evidence categories as the API defines them. Deliberately the complete set
+ * rather than a hand-narrowed one: a campaign may legitimately declare a
+ * `disposal_evidence` requirement, and the web app must be able to receive it
+ * without the type pretending it cannot happen.
+ */
+export type EvidenceCategory =
+  | "product_photo"
+  | "proof_of_purchase"
+  | "incident_evidence"
+  | "disposal_evidence";
 
 // === Core Domain Interfaces ===
 
 export interface CampaignEvidenceRequirement {
-  category: 'product_photo' | 'proof_of_purchase' | 'incident_evidence';
+  /** The full API union, including categories not collected at claim time. */
+  category: EvidenceCategory;
   required: boolean;
   minimumFiles: number;
   maximumFiles: number;
@@ -166,14 +179,14 @@ export interface AuditEntry {
   actor: string;
   timestamp: string;
   details?: string;
-  bladeStage: 'safety' | 'verification' | 'resolution';
+  bladeStage: "safety" | "verification" | "resolution";
 }
 
 export interface Communication {
   id: string;
   claimId: string;
-  direction: 'inbound' | 'outbound';
-  channel: 'email' | 'sms' | 'portal';
+  direction: "inbound" | "outbound";
+  channel: "email" | "sms" | "portal";
   subject: string;
   body: string;
   sentAt: string;

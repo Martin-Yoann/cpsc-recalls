@@ -4,36 +4,64 @@
 // Connected to Neon-backed API via NEXT_PUBLIC_API_URL
 // ============================================================
 
-import type { paths, components } from '@/types/api';
+import type { paths, components } from "@/types/api";
 
-import { campaignTag } from '@/lib/cache-tags';
+import { campaignTag } from "@/lib/cache-tags";
 
 // ── Convenience type aliases from generated paths ──
 
-export type GetCampaignOk = paths['/v1/recall-campaigns/{slug}']['get']['responses'][200]['content']['application/json'];
-export type CreateClaimDraftOk = paths['/v1/recall-campaigns/{slug}/claim-drafts']['post']['responses'][201]['content']['application/json'];
-export type ClaimSubmissionRequest = paths['/v1/recall-campaigns/{slug}/claims']['post']['requestBody']['content']['application/json'];
-export type ClaimSubmissionOk = paths['/v1/recall-campaigns/{slug}/claims']['post']['responses'][201]['content']['application/json'];
-export type UploadTokenRequest = components['schemas']['UploadTokenRequest'];
-export type UploadTokenOk = components['schemas']['UploadTokenResponse'];
-export type CaseStatusLookupRequest = components['schemas']['CaseStatusLookupRequest'];
-export type CaseStatusLookupOk = paths['/v1/case-status-lookups']['post']['responses'][200]['content']['application/json'];
-export type DraftDocument = components['schemas']['DraftDocument'];
-export type DraftDocumentStatus = components['schemas']['DraftDocumentStatus'];
-export type DraftDocumentListOk = paths['/v1/claim-drafts/{draftId}/documents']['get']['responses'][200]['content']['application/json'];
+export type GetCampaignOk =
+  paths["/v1/recall-campaigns/{slug}"]["get"]["responses"][200]["content"]["application/json"];
+export type CreateClaimDraftOk =
+  paths["/v1/recall-campaigns/{slug}/claim-drafts"]["post"]["responses"][201]["content"]["application/json"];
+export type ClaimSubmissionRequest =
+  paths["/v1/recall-campaigns/{slug}/claims"]["post"]["requestBody"]["content"]["application/json"];
+export type ClaimSubmissionOk =
+  paths["/v1/recall-campaigns/{slug}/claims"]["post"]["responses"][201]["content"]["application/json"];
+export type UploadTokenRequest = components["schemas"]["UploadTokenRequest"];
+export type UploadTokenOk = components["schemas"]["UploadTokenResponse"];
+export type CaseStatusLookupRequest =
+  components["schemas"]["CaseStatusLookupRequest"];
+export type CaseStatusLookupOk =
+  paths["/v1/case-status-lookups"]["post"]["responses"][200]["content"]["application/json"];
+export type DraftDocument = components["schemas"]["DraftDocument"];
+export type DraftDocumentStatus = components["schemas"]["DraftDocumentStatus"];
+export type DraftDocumentListOk =
+  paths["/v1/claim-drafts/{draftId}/documents"]["get"]["responses"][200]["content"]["application/json"];
+export type DisposalTask =
+  paths["/v1/disposal-tasks/{taskId}"]["get"]["responses"][200]["content"]["application/json"];
+export type DisposalInstruction =
+  components["schemas"]["DisposalInstructionView"];
+export type DisposalEvidenceDocument =
+  paths["/v1/disposal-tasks/{taskId}/documents"]["get"]["responses"][200]["content"]["application/json"]["documents"][number];
+export type DisposalEvidenceBatch =
+  paths["/v1/disposal-tasks/{taskId}/evidence"]["post"]["responses"][201]["content"]["application/json"];
 
 // ── Product check (mode-based contract — inline; generated types are stale) ──
 export type ProductIdentifierInput = {
-  type: 'sku' | 'unit_upc' | 'gtin14' | 'model' | 'style' | 'lot_code' | 'date_code';
+  type:
+    | "sku"
+    | "unit_upc"
+    | "gtin14"
+    | "model"
+    | "style"
+    | "lot_code"
+    | "date_code";
   value: string;
 };
 
 export type ProductCheckBody =
-  | { mode: 'product_identifiers'; identifiers: ProductIdentifierInput[] }
-  | { mode: 'legacy'; shape?: string; flavor?: string; lotCode?: string; dateCode?: string };
+  | { mode: "product_identifiers"; identifiers: ProductIdentifierInput[] }
+  | {
+      mode: "legacy";
+      shape?: string;
+      flavor?: string;
+      lotCode?: string;
+      dateCode?: string;
+    };
 
 export type ProductCheckOk = {
-  result: 'potential_match' | 'not_matched' | 'manual_review';
+  result: "potential_match" | "not_matched" | "manual_review";
   reasonCodes: string[];
   matchedVariantIds: string[];
   identificationMode: string;
@@ -42,8 +70,8 @@ export type ProductCheckOk = {
   disclaimer: string;
 };
 
-export type CampaignView = GetCampaignOk['campaign'];
-export type ProblemDetails = components['schemas']['ProblemDetails'];
+export type CampaignView = GetCampaignOk["campaign"];
+export type ProblemDetails = components["schemas"]["ProblemDetails"];
 export type ConsumerClaim = {
   id: string;
   claimNumber: string;
@@ -63,7 +91,14 @@ export type ConsumerClaim = {
   remedyTitle: string;
   remedyType: string;
   refundAmount?: number;
-  status: 'submitted' | 'under_review' | 'action_required' | 'verified' | 'remedy_issued' | 'resolved' | 'rejected';
+  status:
+    | "submitted"
+    | "under_review"
+    | "action_required"
+    | "verified"
+    | "remedy_issued"
+    | "resolved"
+    | "rejected";
   /** What the review team asked the consumer to provide (set when status is action_required). */
   infoRequest?: string;
   evidenceCount: number;
@@ -74,9 +109,11 @@ export type ConsumerClaim = {
 
 // ── Runtime ──
 
-const ONLINE_API_BASE = 'https://koi-recall-backend.vercel.app';
+const ONLINE_API_BASE = "https://koi-recall-backend.vercel.app";
 
-const configuredApi = (process.env.NEXT_PUBLIC_API_URL || '').trim().replace(/\/+$/, '');
+const configuredApi = (process.env.NEXT_PUBLIC_API_URL || "")
+  .trim()
+  .replace(/\/+$/, "");
 
 // Default to the deployed API. Localhost is opt-in via NEXT_PUBLIC_API_URL so
 // production-like verification does not silently start with an unavailable dev API.
@@ -84,15 +121,16 @@ const PRIMARY_API_BASE = configuredApi || ONLINE_API_BASE;
 
 // When an explicit localhost backend is selected, transparently fall back to the
 // deployed API if the local server is unreachable.
-const isLocalPrimary = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(PRIMARY_API_BASE);
+const isLocalPrimary = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(
+  PRIMARY_API_BASE,
+);
 const API_BASES: string[] =
   isLocalPrimary && PRIMARY_API_BASE !== ONLINE_API_BASE
     ? [PRIMARY_API_BASE, ONLINE_API_BASE]
     : [PRIMARY_API_BASE];
 
 type ApiResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: ProblemDetails; status: number };
+  { ok: true; data: T } | { ok: false; error: ProblemDetails; status: number };
 
 /**
  * A read that is safe to share between visitors (public, unauthenticated GET).
@@ -111,7 +149,7 @@ interface FetchOptions extends RequestInit {
 }
 
 function requestId(): string {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return crypto.randomUUID();
   }
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -135,7 +173,7 @@ async function fetchApi<T>(
         // read uncached even with a revalidate set.
         ...(cacheable
           ? {
-              cache: 'force-cache' as const,
+              cache: "force-cache" as const,
               next: {
                 revalidate: revalidateSeconds,
                 tags: cacheTags === undefined ? undefined : [...cacheTags],
@@ -146,14 +184,16 @@ async function fetchApi<T>(
         // backend surfaces a fast error instead of blocking the page forever.
         // Skipped for cached reads: a signal is tied to the request that made
         // it, while a cached response has to outlive that request.
-        signal: cacheable ? undefined : (init.signal ?? AbortSignal.timeout(10_000)),
+        signal: cacheable
+          ? undefined
+          : (init.signal ?? AbortSignal.timeout(10_000)),
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           // Next keys its fetch cache on the request headers, so a per-request
           // correlation id must not be sent on a shared cached read. Sending it
           // gives every request its own cache entry: the cache never hits, it
           // grows without bound, and the backend is still called every time.
-          ...(cacheable ? {} : { 'X-Request-Id': rid }),
+          ...(cacheable ? {} : { "X-Request-Id": rid }),
           ...init.headers,
         },
       });
@@ -169,10 +209,10 @@ async function fetchApi<T>(
       const problem: ProblemDetails = body?.type
         ? (body as ProblemDetails)
         : {
-            type: 'about:blank',
+            type: "about:blank",
             title: res.statusText,
             status: res.status,
-            detail: body?.detail ?? 'Unexpected error',
+            detail: body?.detail ?? "Unexpected error",
             requestId: rid,
           };
       return { ok: false, error: problem, status: res.status };
@@ -184,10 +224,10 @@ async function fetchApi<T>(
   return {
     ok: false,
     error: {
-      type: 'about:blank',
-      title: 'Network Error',
+      type: "about:blank",
+      title: "Network Error",
       status: 0,
-      detail: 'Could not reach the API server.',
+      detail: "Could not reach the API server.",
       requestId: rid,
     },
     status: 0,
@@ -219,11 +259,14 @@ export const CAMPAIGN_REVALIDATE_SECONDS = 60;
  */
 export async function getCampaign(
   slug: string,
-  locale = 'en-US',
+  locale = "en-US",
 ): Promise<ApiResult<GetCampaignOk>> {
   return fetchApi<GetCampaignOk>(
     `/v1/recall-campaigns/${slug}?locale=${encodeURIComponent(locale)}`,
-    { revalidateSeconds: CAMPAIGN_REVALIDATE_SECONDS, cacheTags: [campaignTag(slug)] },
+    {
+      revalidateSeconds: CAMPAIGN_REVALIDATE_SECONDS,
+      cacheTags: [campaignTag(slug)],
+    },
   );
 }
 
@@ -234,7 +277,7 @@ export async function checkProduct(
 ): Promise<ApiResult<ProductCheckOk>> {
   return fetchApi<ProductCheckOk>(
     `/v1/recall-campaigns/${slug}/product-checks`,
-    { method: 'POST', body: JSON.stringify(body) },
+    { method: "POST", body: JSON.stringify(body) },
   );
 }
 
@@ -251,20 +294,19 @@ export async function submitClaim(
   body: ClaimSubmissionRequest,
   options?: { idempotencyKey?: string },
 ): Promise<ApiResult<ClaimSubmissionOk>> {
-  return fetchApi<ClaimSubmissionOk>(
-    `/v1/recall-campaigns/${slug}/claims`,
-    {
-      method: 'POST',
-      body: JSON.stringify(body),
-      headers: options?.idempotencyKey
-        ? { 'Idempotency-Key': options.idempotencyKey }
-        : undefined,
-    },
-  );
+  return fetchApi<ClaimSubmissionOk>(`/v1/recall-campaigns/${slug}/claims`, {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: options?.idempotencyKey
+      ? { "Idempotency-Key": options.idempotencyKey }
+      : undefined,
+  });
 }
 
-export async function listConsumerClaims(token: string): Promise<ApiResult<{ claims: ConsumerClaim[] }>> {
-  return fetchApi<{ claims: ConsumerClaim[] }>('/v1/consumer-auth/claims', {
+export async function listConsumerClaims(
+  token: string,
+): Promise<ApiResult<{ claims: ConsumerClaim[] }>> {
+  return fetchApi<{ claims: ConsumerClaim[] }>("/v1/consumer-auth/claims", {
     headers: { Authorization: `Bearer ${token}` },
   });
 }
@@ -273,9 +315,12 @@ export async function getConsumerClaim(
   claimNumber: string,
   token: string,
 ): Promise<ApiResult<{ claim: ConsumerClaim }>> {
-  return fetchApi<{ claim: ConsumerClaim }>(`/v1/consumer-auth/claims/${encodeURIComponent(claimNumber)}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  return fetchApi<{ claim: ConsumerClaim }>(
+    `/v1/consumer-auth/claims/${encodeURIComponent(claimNumber)}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
 }
 
 // ── Case status lookup (public, PII-free contract) ──
@@ -288,20 +333,97 @@ export async function getConsumerClaim(
 export async function caseStatusLookup(
   body: CaseStatusLookupRequest,
 ): Promise<ApiResult<CaseStatusLookupOk>> {
-  return fetchApi<CaseStatusLookupOk>('/v1/case-status-lookups', {
-    method: 'POST',
+  return fetchApi<CaseStatusLookupOk>("/v1/case-status-lookups", {
+    method: "POST",
     body: JSON.stringify(body),
   });
 }
 
 /** GET /v1/claim-drafts/{draftId}/documents — six-state upload lifecycle */
+/**
+ * GET /v1/disposal-tasks/{taskId} — the visitor's own disposal task.
+ *
+ * Deliberately uncached: the request carries a bearer credential and the response
+ * is per-visitor. Nothing here decides whether disposal is permitted — the
+ * payload's `allowedActions` and `blockingReasons` are the server's answer, and
+ * `instruction` is null when approved content is not available to show.
+ */
+export async function getDisposalTask(
+  taskId: string,
+  token: string,
+): Promise<ApiResult<DisposalTask>> {
+  return fetchApi<DisposalTask>(`/v1/disposal-tasks/${taskId}`, {
+    headers: { "X-Disposal-Token": token },
+  });
+}
+
+/**
+ * POST /v1/disposal-tasks/{taskId}/upload-tokens — an upload target for one
+ * evidence photo.
+ *
+ * Task-scoped rather than draft-scoped on purpose: the draft route requires an
+ * active draft, and submitting the claim is exactly what made this draft
+ * inactive. Authorising here does not permit anything — a verified photo is not
+ * an accepted one.
+ */
+export async function authorizeDisposalUpload(
+  taskId: string,
+  token: string,
+  body: UploadTokenRequest,
+): Promise<ApiResult<UploadTokenOk>> {
+  return fetchApi<UploadTokenOk>(`/v1/disposal-tasks/${taskId}/upload-tokens`, {
+    method: "POST",
+    headers: { "X-Disposal-Token": token, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+/** GET /v1/disposal-tasks/{taskId}/documents — technical status only. */
+export async function listDisposalDocuments(
+  taskId: string,
+  token: string,
+): Promise<ApiResult<{ documents: DisposalEvidenceDocument[] }>> {
+  return fetchApi<{ documents: DisposalEvidenceDocument[] }>(
+    `/v1/disposal-tasks/${taskId}/documents`,
+    { headers: { "X-Disposal-Token": token } },
+  );
+}
+
+/**
+ * POST /v1/disposal-tasks/{taskId}/evidence — hand a batch to a person.
+ *
+ * The idempotency key makes a retry safe: a replay returns the batch that was
+ * already created rather than opening a second review of the same photos.
+ */
+export async function submitDisposalEvidence(
+  taskId: string,
+  token: string,
+  documentIds: string[],
+  idempotencyKey: string,
+): Promise<ApiResult<DisposalEvidenceBatch>> {
+  return fetchApi<DisposalEvidenceBatch>(
+    `/v1/disposal-tasks/${taskId}/evidence`,
+    {
+      method: "POST",
+      headers: {
+        "X-Disposal-Token": token,
+        "Content-Type": "application/json",
+        "Idempotency-Key": idempotencyKey,
+      },
+      body: JSON.stringify({
+        documents: documentIds.map((documentId) => ({ documentId })),
+      }),
+    },
+  );
+}
+
 export async function listDraftDocuments(
   draftId: string,
   draftToken: string,
 ): Promise<ApiResult<DraftDocumentListOk>> {
   return fetchApi<DraftDocumentListOk>(
     `/v1/claim-drafts/${draftId}/documents`,
-    { headers: { 'X-Draft-Token': draftToken } },
+    { headers: { "X-Draft-Token": draftToken } },
   );
 }
 
@@ -314,12 +436,11 @@ export async function deleteDraftDocument(
   return fetchApi<void>(
     `/v1/claim-drafts/${draftId}/documents/${encodeURIComponent(documentId)}`,
     {
-      method: 'DELETE',
-      headers: { 'X-Draft-Token': draftToken },
+      method: "DELETE",
+      headers: { "X-Draft-Token": draftToken },
     },
   );
 }
-
 
 /** POST /v1/recall-campaigns/{slug}/claim-drafts — Create anonymous claim draft */
 export async function submitClaimDraft(
@@ -327,7 +448,7 @@ export async function submitClaimDraft(
 ): Promise<ApiResult<CreateClaimDraftOk>> {
   return fetchApi<CreateClaimDraftOk>(
     `/v1/recall-campaigns/${slug}/claim-drafts`,
-    { method: 'POST' },
+    { method: "POST" },
   );
 }
 
@@ -337,12 +458,9 @@ export async function getUploadToken(
   draftToken: string,
   body: UploadTokenRequest,
 ): Promise<ApiResult<UploadTokenOk>> {
-  return fetchApi<UploadTokenOk>(
-    `/v1/claim-drafts/${draftId}/upload-tokens`,
-    {
-      method: 'POST',
-      body: JSON.stringify(body),
-      headers: { 'X-Draft-Token': draftToken },
-    },
-  );
+  return fetchApi<UploadTokenOk>(`/v1/claim-drafts/${draftId}/upload-tokens`, {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: { "X-Draft-Token": draftToken },
+  });
 }
