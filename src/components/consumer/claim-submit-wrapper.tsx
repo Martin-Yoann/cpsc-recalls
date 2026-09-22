@@ -697,8 +697,8 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
               A disposal step was opened for your product.
             </p>
             <p className="text-[#606266]">
-              You can return to it from this browser. Keep this page’s tab open
-              or bookmark the step before closing it.
+              Return with the link below, or from the one in the email we sent
+              about this claim. Either takes you back to this step.
             </p>
             <Link
               href={submitted.disposal.resumePath}
