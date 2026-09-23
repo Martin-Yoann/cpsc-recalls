@@ -5,17 +5,21 @@
 // the token is revalidated against GET /me on app boot.
 // ============================================================
 
-import type { User, RegisterData } from '@/types/auth';
+import type { User, RegisterData } from "@/types/auth";
 
-const STORAGE_KEY = 'koi_auth_user';
+const STORAGE_KEY = "koi_auth_user";
 
-const ONLINE_API_BASE = 'https://koi-recall-backend.vercel.app';
+const ONLINE_API_BASE = "https://koi-recall-backend.vercel.app";
 
-const configuredApi = (process.env.NEXT_PUBLIC_API_URL || '').trim().replace(/\/+$/, '');
+const configuredApi = (process.env.NEXT_PUBLIC_API_URL || "")
+  .trim()
+  .replace(/\/+$/, "");
 // Keep authentication on the same production-safe default as the business API.
 // A local backend is still available by explicitly setting NEXT_PUBLIC_API_URL.
 const PRIMARY_API_BASE = configuredApi || ONLINE_API_BASE;
-const isLocalPrimary = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(PRIMARY_API_BASE);
+const isLocalPrimary = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(
+  PRIMARY_API_BASE,
+);
 // Same transparent fallback as api-client.ts: local first, then online when the
 // local backend isn't running (client-side auth calls hit this too).
 const API_BASES: string[] =
@@ -43,7 +47,7 @@ interface AuthSessionResponse {
 // ── LocalStorage persistence ──
 
 export function getStoredUser(): User | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? (JSON.parse(raw) as User) : null;
@@ -66,7 +70,7 @@ function getToken(): string | null {
 
 // ── Mapping ──
 
-function mapUser(session: AuthSessionResponse, phone = ''): User {
+function mapUser(session: AuthSessionResponse, phone = ""): User {
   return {
     id: session.user.consumerUserId,
     email: session.user.email,
@@ -81,10 +85,19 @@ function mapUser(session: AuthSessionResponse, phone = ''): User {
 
 // ── API helpers ──
 
-type AuthResult<T> = { ok: true; data: T } | { ok: false; status: number; detail: string };
+type AuthResult<T> =
+  { ok: true; data: T } | { ok: false; status: number; detail: string };
 
-async function authFetch<T>(path: string, init: RequestInit): Promise<AuthResult<T>> {
-  for (const base of API_BASES) {
+async function authFetch<T>(
+  path: string,
+  init: RequestInit,
+): Promise<AuthResult<T>> {
+  // Only a read may be retried against another environment; a write repeated
+  // elsewhere is a second write, not a retry.
+  const method = (init.method ?? "GET").toUpperCase();
+  const bases =
+    method === "GET" || method === "HEAD" ? API_BASES : [PRIMARY_API_BASE];
+  for (const base of bases) {
     try {
       const res = await fetch(`${base}${path}`, {
         ...init,
@@ -92,29 +105,48 @@ async function authFetch<T>(path: string, init: RequestInit): Promise<AuthResult
       });
       if (res.ok) return { ok: true, data: (await res.json()) as T };
       const errBody = await res.json().catch(() => null);
-      return { ok: false, status: res.status, detail: errBody?.detail ?? `Request failed (${res.status})` };
+      return {
+        ok: false,
+        status: res.status,
+        detail: errBody?.detail ?? `Request failed (${res.status})`,
+      };
     } catch {
       // Network error (e.g. local backend not running) — try the next base.
     }
   }
-  return { ok: false, status: 0, detail: 'Cannot reach the server. Is the backend running?' };
+  return {
+    ok: false,
+    status: 0,
+    detail: "Cannot reach the server. Is the backend running?",
+  };
 }
 
-async function postJson<T>(path: string, body: unknown, token?: string): Promise<AuthResult<T>> {
+async function postJson<T>(
+  path: string,
+  body: unknown,
+  token?: string,
+): Promise<AuthResult<T>> {
   return authFetch<T>(path, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify(body),
   });
 }
 
-async function patchJson<T>(path: string, body: unknown, token: string): Promise<AuthResult<T>> {
+async function patchJson<T>(
+  path: string,
+  body: unknown,
+  token: string,
+): Promise<AuthResult<T>> {
   return authFetch<T>(path, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(body),
   });
 }
@@ -129,8 +161,14 @@ async function getJson<T>(path: string, token: string): Promise<AuthResult<T>> {
 
 export type AuthActionResult = { user: User } | { user: null; error: string };
 
-export async function login(email: string, password: string): Promise<AuthActionResult> {
-  const result = await postJson<AuthSessionResponse>('/v1/consumer-auth/login', { email, password });
+export async function login(
+  email: string,
+  password: string,
+): Promise<AuthActionResult> {
+  const result = await postJson<AuthSessionResponse>(
+    "/v1/consumer-auth/login",
+    { email, password },
+  );
   if (!result.ok) return { user: null, error: result.detail };
   const user = mapUser(result.data);
   storeUser(user);
@@ -138,11 +176,14 @@ export async function login(email: string, password: string): Promise<AuthAction
 }
 
 export async function register(data: RegisterData): Promise<AuthActionResult> {
-  const result = await postJson<AuthSessionResponse>('/v1/consumer-auth/register', {
-    email: data.email,
-    password: data.password,
-    displayName: data.name,
-  });
+  const result = await postJson<AuthSessionResponse>(
+    "/v1/consumer-auth/register",
+    {
+      email: data.email,
+      password: data.password,
+      displayName: data.name,
+    },
+  );
   if (!result.ok) return { user: null, error: result.detail };
   const user = mapUser(result.data, data.phone);
   storeUser(user);
@@ -152,7 +193,7 @@ export async function register(data: RegisterData): Promise<AuthActionResult> {
 export async function logout(): Promise<void> {
   const token = getToken();
   if (token) {
-    await postJson('/v1/consumer-auth/logout', {}, token).catch(() => {});
+    await postJson("/v1/consumer-auth/logout", {}, token).catch(() => {});
   }
   removeStoredUser();
 }
@@ -174,7 +215,10 @@ export async function refreshSession(): Promise<User | null> {
       return null;
     }
   }
-  const result = await getJson<{ user: ConsumerPublic }>('/v1/consumer-auth/me', stored.token);
+  const result = await getJson<{ user: ConsumerPublic }>(
+    "/v1/consumer-auth/me",
+    stored.token,
+  );
   if (!result.ok) {
     if (result.status === 401 || result.status === 403) removeStoredUser();
     return getStoredUser();
@@ -198,7 +242,11 @@ export async function updateProfile(updates: {
 }): Promise<User | null> {
   const stored = getStoredUser();
   if (!stored?.token) return null;
-  const result = await patchJson<{ user: ConsumerPublic }>('/v1/consumer-auth/me', updates, stored.token);
+  const result = await patchJson<{ user: ConsumerPublic }>(
+    "/v1/consumer-auth/me",
+    updates,
+    stored.token,
+  );
   if (!result.ok) return null;
   const refreshed: User = {
     ...stored,
@@ -221,5 +269,9 @@ export function validatePassword(password: string): boolean {
 }
 
 export function validatePhone(phone: string): boolean {
-  return phone.length === 0 || /^1[3-9]\d{9}$/.test(phone) || /^\+?[0-9\s\-()]{7,20}$/.test(phone);
+  return (
+    phone.length === 0 ||
+    /^1[3-9]\d{9}$/.test(phone) ||
+    /^\+?[0-9\s\-()]{7,20}$/.test(phone)
+  );
 }

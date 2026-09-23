@@ -163,7 +163,14 @@ async function fetchApi<T>(
   const rid = requestId();
   const cacheable = revalidateSeconds !== undefined;
 
-  for (const base of API_BASES) {
+  // Falling back to another environment is a read-only convenience: retrying a
+  // write against a different backend is not a retry, it is a second write
+  // somewhere else. A network error must surface on the base the caller chose.
+  const method = (init.method ?? "GET").toUpperCase();
+  const bases =
+    method === "GET" || method === "HEAD" ? API_BASES : [PRIMARY_API_BASE];
+
+  for (const base of bases) {
     const url = `${base}${path}`;
 
     try {
