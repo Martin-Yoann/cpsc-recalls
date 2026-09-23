@@ -1,7 +1,6 @@
 "use client";
 
-import { put } from "@vercel/blob/client";
-
+import { uploadPrivateObject } from "@/lib/blob-upload";
 import {
   authorizeDisposalUpload,
   listDisposalDocuments,
@@ -67,9 +66,10 @@ export async function uploadDisposalEvidence(
   if (!token.ok) return token;
 
   try {
-    await put(token.data.pathname, file, {
-      access: "private",
-      token: token.data.clientToken,
+    await uploadPrivateObject({
+      pathname: token.data.pathname,
+      file,
+      clientToken: token.data.clientToken,
       contentType: file.type,
     });
   } catch (error) {

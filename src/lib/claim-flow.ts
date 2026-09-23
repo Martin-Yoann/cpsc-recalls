@@ -1,7 +1,5 @@
 "use client";
 
-import { put } from "@vercel/blob/client";
-
 import {
   deleteDraftDocument,
   getUploadToken,
@@ -15,6 +13,7 @@ import {
   type UploadTokenRequest,
 } from "@/lib/api-client";
 import { saveDisposalToken } from "@/lib/disposal-access";
+import { uploadPrivateObject } from "@/lib/blob-upload";
 
 const SESSION_KEY_PREFIX = "koi_claim_flow:";
 export const CLAIM_FLOW_FORM_VERSION = "consumer-claim-form-v1";
@@ -464,9 +463,10 @@ export class ClaimFlowModule {
     if (!token.ok) return token;
 
     try {
-      await put(token.data.pathname, file, {
-        access: "private",
-        token: token.data.clientToken,
+      await uploadPrivateObject({
+        pathname: token.data.pathname,
+        file,
+        clientToken: token.data.clientToken,
         contentType: file.type,
       });
     } catch (error) {
