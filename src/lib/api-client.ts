@@ -167,8 +167,13 @@ async function fetchApi<T>(
   // write against a different backend is not a retry, it is a second write
   // somewhere else. A network error must surface on the base the caller chose.
   const method = (init.method ?? "GET").toUpperCase();
-  const bases =
-    method === "GET" || method === "HEAD" ? API_BASES : [PRIMARY_API_BASE];
+  const isRead = method === "GET" || method === "HEAD";
+  const bases = isRead ? API_BASES : [PRIMARY_API_BASE];
+  // A submission is many round trips against a remote database and can legitimately
+  // take far longer than a read. A read's 10s budget is right for a read; applied to
+  // a write it aborts a submission the server is still completing, which the caller
+  // then reports as a failure while the write lands anyway.
+  const timeoutMs = isRead ? 10_000 : 60_000;
 
   for (const base of bases) {
     const url = `${base}${path}`;
@@ -193,7 +198,7 @@ async function fetchApi<T>(
         // it, while a cached response has to outlive that request.
         signal: cacheable
           ? undefined
-          : (init.signal ?? AbortSignal.timeout(10_000)),
+          : (init.signal ?? AbortSignal.timeout(timeoutMs)),
         headers: {
           "Content-Type": "application/json",
           // Next keys its fetch cache on the request headers, so a per-request

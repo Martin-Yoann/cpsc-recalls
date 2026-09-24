@@ -95,13 +95,16 @@ async function authFetch<T>(
   // Only a read may be retried against another environment; a write repeated
   // elsewhere is a second write, not a retry.
   const method = (init.method ?? "GET").toUpperCase();
-  const bases =
-    method === "GET" || method === "HEAD" ? API_BASES : [PRIMARY_API_BASE];
+  const isRead = method === "GET" || method === "HEAD";
+  const bases = isRead ? API_BASES : [PRIMARY_API_BASE];
+  // Writes get the longer budget: a sign-in or a profile change is a write, and
+  // aborting one mid-flight reports a failure for work the server completed.
+  const timeoutMs = isRead ? 10_000 : 60_000;
   for (const base of bases) {
     try {
       const res = await fetch(`${base}${path}`, {
         ...init,
-        signal: init.signal ?? AbortSignal.timeout(10_000),
+        signal: init.signal ?? AbortSignal.timeout(timeoutMs),
       });
       if (res.ok) return { ok: true, data: (await res.json()) as T };
       const errBody = await res.json().catch(() => null);
