@@ -124,18 +124,18 @@ export function DisposalTaskLoader({ taskId, supportContact }: Props) {
     <div className="space-y-8">
       <DisposalInstructions task={state.task} supportContact={supportContact} />
       {/*
-        Photos are collected only once the product is confirmed part of the recall.
-        Before that there is nothing for a consumer to act on, and asking for evidence
-        of a step they may never be offered would be premature.
+        The section decides from the server's actions whether there is anything to offer,
+        and hides itself when there is not. The eligibility check that used to gate this
+        mount was a second encoding of a rule the server already answers — and the two
+        disagreed: a task whose eligibility was still pending was shown steps the policy
+        would have refused to act on.
       */}
-      {state.task.eligibilityStatus === "confirmed_eligible" && (
-        <DisposalEvidenceUpload
-          taskId={taskId}
-          reviewStatus={state.task.evidenceReviewStatus}
-          allowedActions={state.task.allowedActions}
-          onChanged={() => setAttempt((previous) => previous + 1)}
-        />
-      )}
+      <DisposalEvidenceUpload
+        taskId={taskId}
+        reviewStatus={state.task.evidenceReviewStatus}
+        allowedActions={state.task.allowedActions}
+        onChanged={() => setAttempt((previous) => previous + 1)}
+      />
       {/*
         The declaration renders whenever the server offers either basis. Which one is
         offered is the server answer rather than this component inference, and a

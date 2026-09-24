@@ -158,6 +158,11 @@ export function DisposalEvidenceUpload({
 
   const ready = disposeEvidenceReadyToSubmit(documents);
 
+  // Nothing to offer and nothing to report: the section hides itself rather than
+  // rendering a heading over an empty list. Mirrors DisposalDeclaration, so the two
+  // sections decide alike — and what they decide from is the server's actions.
+  if (!mayUpload && documents.length === 0) return null;
+
   return (
     <section
       aria-labelledby="disposal-evidence"
@@ -255,7 +260,7 @@ export function DisposalEvidenceUpload({
               <Upload className="h-4 w-4" aria-hidden="true" />
               Add photos
             </Button>
-            {documents.length > 0 && (
+            {mayUpload && documents.length > 0 && (
               <Button
                 type="button"
                 disabled={isUploading || !ready}
