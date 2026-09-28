@@ -54,7 +54,12 @@ export interface ClaimFlowDocumentReceipt {
     | "verified"
     | "scan_pending"
     | "rejected"
-    | "expired";
+    | "expired"
+    // The attempt itself did not complete: the browser never got the bytes to the store.
+    // Distinct from `rejected`, which is the platform having looked at them and said no.
+    | "failed";
+  /** Why the attempt failed, when it did. Shown to the consumer. */
+  failureReason?: string;
 }
 
 /** Receipts whose server lifecycle has not reached a terminal state yet. */
@@ -470,27 +475,36 @@ export class ClaimFlowModule {
         contentType: file.type,
       });
     } catch (error) {
-      return {
-        ok: false,
-        status: 0,
-        error: {
-          type: "about:blank",
-          title: "Upload Error",
-          status: 0,
-          detail:
-            error instanceof Error
-              ? error.message
-              : "Could not upload the selected file.",
-        },
+      // The attempt is recorded as over-and-failed rather than left at `uploading`, which
+      // nothing ever advances: the card read "Uploading" for good, and the submit guard
+      // advised waiting for a verification that could never arrive. Removing the row did
+      // work, so the consumer could recover — but the interface pointed at waiting.
+      const receipt: ClaimFlowDocumentReceipt = {
+        ...this.toDocumentReceipt(file, category, token.data, "failed"),
+        failureReason:
+          error instanceof Error
+            ? error.message
+            : "Could not upload the selected file.",
       };
+      const nextSession = {
+        ...session,
+        documents: [...session.documents, receipt],
+      };
+      writeSession(nextSession);
+      // `ok` because the attempt resolved: its outcome is the receipt's status, which the
+      // consumer can act on. A failure to obtain a token stays an error above, because
+      // there is no receipt to record.
+      return { ok: true, data: { session: nextSession, receipt } };
     }
 
     // Bytes are stored by the time `put` resolves; reconciliation on the API
     // side now decides between verified / rejected / expired.
-    const receipt: ClaimFlowDocumentReceipt = {
-      ...this.toDocumentReceipt(file, category, token.data),
-      status: "verifying",
-    };
+    const receipt: ClaimFlowDocumentReceipt = this.toDocumentReceipt(
+      file,
+      category,
+      token.data,
+      "verifying",
+    );
     const nextSession = {
       ...session,
       documents: [...session.documents, receipt],
@@ -736,10 +750,16 @@ export class ClaimFlowModule {
     };
   }
 
+  /**
+   * The status is a parameter rather than a default of `uploading`: a receipt that reaches
+   * storage without anyone advancing it is a card that lies about being in progress, which
+   * is exactly what happened when this defaulted.
+   */
   private toDocumentReceipt(
     file: { name: string; type: string; size: number },
     category: DocumentCategory,
     token: UploadTokenOk,
+    status: ClaimFlowDocumentReceipt["status"],
   ): ClaimFlowDocumentReceipt {
     return {
       documentId: token.documentId,
@@ -750,7 +770,7 @@ export class ClaimFlowModule {
       fileName: file.name,
       mimeType: file.type,
       sizeBytes: file.size,
-      status: "uploading",
+      status,
     };
   }
 }

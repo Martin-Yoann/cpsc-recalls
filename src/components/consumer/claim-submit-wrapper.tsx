@@ -138,6 +138,10 @@ const DOCUMENT_STATUS_META: Record<
     label: "Expired",
     className: "bg-[#fef0f0] text-[#f56c6c] border-[#fbc4c4]",
   },
+  failed: {
+    label: "Upload failed",
+    className: "bg-[#fef0f0] text-[#f56c6c] border-[#fbc4c4]",
+  },
 };
 
 function DocumentStatusChip({
@@ -145,7 +149,9 @@ function DocumentStatusChip({
 }: {
   status: ClaimFlowDocumentReceipt["status"];
 }) {
-  const meta = DOCUMENT_STATUS_META[status] ?? DOCUMENT_STATUS_META.uploading;
+  // The fallback is the failure treatment, not the in-progress one: an unrecognised status
+  // must not read as "still working on it", which is the promise nobody can keep.
+  const meta = DOCUMENT_STATUS_META[status] ?? DOCUMENT_STATUS_META.failed!;
   return (
     <span
       className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] font-medium ${meta.className}`}
@@ -540,6 +546,10 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
           return "A file was rejected during verification. Please remove it and upload a different one.";
         case "expired":
           return "An upload expired before it could be verified. Please remove that file and upload it again.";
+        case "failed":
+          // Waiting cannot help here, so the message says what does — and names the file,
+          // which is the only thing that tells the consumer which row to remove.
+          return `${blocker.fileName} could not be uploaded${blocker.failureReason ? `: ${blocker.failureReason}` : ""}. Remove it and upload it again.`;
         default:
           return "All evidence files must be verified before submitting.";
       }
