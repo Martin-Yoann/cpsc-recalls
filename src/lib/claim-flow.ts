@@ -179,7 +179,10 @@ export interface ClaimFlowSessionSnapshot {
   documents: Array<
     Pick<
       ClaimFlowDocumentReceipt,
-      "documentId" | "category" | "fileName" | "status"
+      // `failureReason` is here because the snapshot is an explicit projection: a field
+      // the receipt carries but this list omits is silently dropped on the way to storage,
+      // which is how a failed upload lost the reason it failed.
+      "documentId" | "category" | "fileName" | "status" | "failureReason"
     > & {
       expiresAt?: string;
     }
@@ -216,6 +219,7 @@ function toSnapshot(session: ClaimFlowSession): ClaimFlowSessionSnapshot {
       category: document.category,
       fileName: document.fileName,
       status: document.status,
+      failureReason: document.failureReason,
       expiresAt: document.expiresAt,
     })),
     form: {
