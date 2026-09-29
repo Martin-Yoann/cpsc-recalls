@@ -402,6 +402,22 @@ export async function listDisposalDocuments(
 }
 
 /**
+ * DELETE /v1/disposal-tasks/{taskId}/documents/{documentId} — clear one photo
+ * that can never be submitted, so a dead upload does not block every later
+ * batch. Refused by the API once the photo has entered a review.
+ */
+export async function deleteDisposalDocument(
+  taskId: string,
+  token: string,
+  documentId: string,
+): Promise<ApiResult<null>> {
+  return fetchApi<null>(
+    `/v1/disposal-tasks/${taskId}/documents/${documentId}`,
+    { method: "DELETE", headers: { "X-Disposal-Token": token } },
+  );
+}
+
+/**
  * POST /v1/disposal-tasks/{taskId}/evidence — hand a batch to a person.
  *
  * The idempotency key makes a retry safe: a replay returns the batch that was

@@ -7,6 +7,7 @@ import {
   Loader2,
   RefreshCw,
   Upload,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,9 @@ import type { DisposalEvidenceDocument, DisposalTask } from "@/lib/api-client";
 import {
   disposeEvidenceReadyToSubmit,
   isDisposalDocumentPending,
+  isDisposalDocumentRemovable,
   refreshDisposalEvidence,
+  removeDisposalEvidence,
   sendDisposalEvidenceForReview,
   uploadDisposalEvidence,
 } from "@/lib/disposal-evidence";
@@ -95,6 +98,7 @@ export function DisposalEvidenceUpload({
   const [documents, setDocuments] = useState<DisposalEvidenceDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -175,6 +179,26 @@ export function DisposalEvidenceUpload({
     onChanged();
   };
 
+  // The way past a photo that can never be sent: clearing it is what lets the
+  // remaining photos — or a retaken replacement — go to review. Only offered in
+  // the same states the API allows removal, so the button never promises
+  // something the server will refuse.
+  const onRemove = async (documentId: string) => {
+    const token = resolveDisposalToken(taskId);
+    if (!token) return;
+    setRemovingId(documentId);
+    setMessage(null);
+    setProblem(null);
+    const result = await removeDisposalEvidence(taskId, token, documentId);
+    setRemovingId(null);
+    if (!result.ok) {
+      setProblem(result.error.detail);
+      return;
+    }
+    setDocuments(await load());
+    onChanged();
+  };
+
   const ready = disposeEvidenceReadyToSubmit(documents);
 
   // Nothing to offer and nothing to report: the section hides itself rather than
@@ -231,6 +255,20 @@ export function DisposalEvidenceUpload({
                       {REASON_LABELS[document.statusReason] ??
                         "This file was not accepted."}
                     </span>
+                  )}
+                  {mayUpload && isDisposalDocumentRemovable(document) && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={removingId !== null || isUploading}
+                      onClick={() => void onRemove(document.documentId)}
+                    >
+                      <X className="h-4 w-4" aria-hidden="true" />
+                      {removingId === document.documentId
+                        ? "Removing…"
+                        : "Remove"}
+                    </Button>
                   )}
                 </li>
               ))}
@@ -292,8 +330,8 @@ export function DisposalEvidenceUpload({
           </div>
           {documents.length > 0 && !ready && !hasPending && (
             <p className="text-xs text-[#e6a23c]">
-              Only photos that passed our checks can be sent for review. Remove
-              any that were rejected and add them again.
+              Only photos that passed our checks can be sent for review. Use
+              Remove on any that were rejected, then add them again.
             </p>
           )}
         </div>
@@ -320,7 +358,11 @@ export function DisposalEvidenceUpload({
           size="sm"
           disabled={isUploading}
           onClick={() => {
+            // The document list is this component's own state, but the review
+            // banners above come from the task: "Refresh" refreshes both, or a
+            // consumer who just got their photos accepted sees nothing change.
             void load().then(setDocuments);
+            onChanged();
           }}
         >
           <RefreshCw className="h-4 w-4" aria-hidden="true" />
