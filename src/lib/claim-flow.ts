@@ -141,6 +141,10 @@ export interface ClaimFlowDraftState {
       | "overheating"
       | "other"
       | "unknown";
+    // What `other` means, in the consumer's words. Sensitive like the injury
+    // description: kept in React state only, never written to the session
+    // snapshot, and dropped from the payload when empty.
+    failureModeOtherDescription: string;
     injuryDescription: string;
     medicalTreatmentReceived: "" | "yes" | "no" | "unknown";
     unitType: "" | "original" | "replacement" | "unknown";
@@ -323,6 +327,7 @@ export function createDefaultForm(product?: {
       medicalTreatment: "",
       usedAsIntended: "",
       failureMode: "",
+      failureModeOtherDescription: "",
       injuryDescription: "",
       medicalTreatmentReceived: "",
       unitType: "",
@@ -632,6 +637,8 @@ export class ClaimFlowModule {
               session.form.incident.medicalTreatment || undefined,
             usedAsIntended: session.form.incident.usedAsIntended || undefined,
             failureMode: session.form.incident.failureMode || undefined,
+            failureModeOtherDescription:
+              session.form.incident.failureModeOtherDescription.trim() || undefined,
             injuryDescription:
               session.form.incident.injuryDescription.trim() || undefined,
             medicalTreatmentReceived:

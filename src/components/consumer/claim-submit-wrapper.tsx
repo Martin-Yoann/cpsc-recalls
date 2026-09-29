@@ -572,6 +572,24 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
       if (form.incident.medicalTreatmentReceived === "no" && namesTreatment) {
         return "You answered that no medical treatment was received, but a treatment was selected above. Please correct one of them.";
       }
+      // The mirror half: "treatment was received" owes a type that is not
+      // "none". "Unknown" stays allowed — treated but unsure what kind is an
+      // honest answer. Same rule the backend enforces once its strict switch
+      // is on; the client applies it now so the fix is one field away.
+      if (
+        form.incident.medicalTreatmentReceived === "yes" &&
+        (form.incident.medicalTreatment === "" ||
+          form.incident.medicalTreatment === "none")
+      ) {
+        return "You answered that medical treatment was received, but no treatment type is selected. Select the type of treatment received.";
+      }
+      // `other` without a description is a category with nothing in it.
+      if (
+        form.incident.failureMode === "other" &&
+        !form.incident.failureModeOtherDescription.trim()
+      ) {
+        return "You selected Other for how the product failed. Please describe what happened.";
+      }
     }
     return null;
   };
@@ -1440,6 +1458,14 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                         ...form.incident,
                         failureMode:
                           value as ClaimFlowDraftState["incident"]["failureMode"],
+                        // The description belongs to `other` and only to
+                        // `other` — the API rejects the pair otherwise — so
+                        // leaving `other` drops the stale text instead of
+                        // submitting a contradiction.
+                        failureModeOtherDescription:
+                          value === "other"
+                            ? form.incident.failureModeOtherDescription
+                            : "",
                       },
                     }))
                   }
@@ -1458,6 +1484,36 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                   ]}
                 />
               </div>
+              {/* `other` names an unlisted failure mode, so the answer is the
+                  description itself: without it "Other" carries no reportable
+                  fact. Mirrors the backend's strict-stage rule client-side so
+                  the consumer hears it inline, not as a 422. */}
+              {session.form.incident.failureMode === "other" && (
+                <div className="space-y-2 md:col-span-2">
+                  <Label
+                    htmlFor="failure-mode-other"
+                    className="text-sm font-medium text-[#303133]"
+                  >
+                    Describe how the product failed
+                  </Label>
+                  <Textarea
+                    id="failure-mode-other"
+                    rows={3}
+                    value={session.form.incident.failureModeOtherDescription}
+                    onChange={(event) =>
+                      updateForm((form) => ({
+                        ...form,
+                        incident: {
+                          ...form.incident,
+                          failureModeOtherDescription: event.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="What happened when the product failed?"
+                    className="rounded border border-[#dcdfe6] px-3 py-2 text-sm text-[#303133] transition-colors placeholder:text-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20"
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label
                   htmlFor="treatment-received"

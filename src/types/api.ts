@@ -1811,6 +1811,7 @@ export interface components {
             eventTypes?: ("injury" | "illness" | "choking" | "ingestion" | "fire" | "overheating" | "property_damage" | "near_miss" | "other" | "unknown")[];
             /** @enum {string} */
             failureMode?: "body_rupture" | "battery_exposure" | "choking_hazard" | "leak" | "overheating" | "other" | "unknown";
+            failureModeOtherDescription?: string;
             injuryDescription?: string;
             /** @enum {string} */
             injurySeverity?: "none" | "minor" | "medical_attention" | "hospitalized" | "death" | "unknown";
