@@ -698,10 +698,8 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
           </p>
         </div>
         {submitted.disposal && (
-          // The step was offered and the consumer moved past it. The link works while
-          // this browser session holds the token, which is what the note says — it
-          // deliberately does not promise an emailed link, because nothing sends one
-          // yet. The wording has to change when delivery does.
+          // The confirmation email includes this task's resume link when the
+          // submission opened a disposal step.
           <div className="space-y-1 rounded border border-[#b3d8ff] bg-[#ecf5ff] p-3 text-sm text-[#303133] max-w-md mx-auto">
             <p className="font-semibold">
               A disposal step was opened for your product.

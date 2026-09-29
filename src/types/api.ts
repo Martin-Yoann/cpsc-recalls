@@ -1743,6 +1743,8 @@ export interface components {
             caption?: string;
             url: string;
         };
+        /** @enum {string|null} */
+        DisposalReviewReasonCode: "recognition_unclear" | "coverage_insufficient" | "photo_unreadable" | "wrong_product" | "safety_step_not_visible" | "other" | null;
         DisposalTaskProductView: {
             /** Format: uuid */
             campaignProductId: string;
@@ -1757,6 +1759,7 @@ export interface components {
             blockingReasons: string[];
             declarationTextVersion: string | null;
             eligibilityStatus: components["schemas"]["DisposalEligibilityStatus"];
+            evidenceReviewReasonCode: components["schemas"]["DisposalReviewReasonCode"];
             evidenceReviewStatus: components["schemas"]["DisposalBatchReviewStatus"];
             /** Format: date-time */
             expiresAt: string;

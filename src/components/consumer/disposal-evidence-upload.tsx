@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import type { DisposalEvidenceDocument } from "@/lib/api-client";
+import type { DisposalEvidenceDocument, DisposalTask } from "@/lib/api-client";
 import {
   disposeEvidenceReadyToSubmit,
   isDisposalDocumentPending,
@@ -39,6 +39,7 @@ interface Props {
   /** Server-reported review state; null means nothing has been sent yet. */
   reviewStatus:
     "pending" | "accepted" | "needs_resubmission" | "superseded" | null;
+  reviewReasonCode: DisposalTask["evidenceReviewReasonCode"];
   /** Action ids the server will accept right now. */
   allowedActions: readonly string[];
   onChanged: () => void;
@@ -67,9 +68,27 @@ const REASON_LABELS: Record<string, string> = {
   malware_detected: "The file did not pass our safety check.",
 };
 
+const REVIEW_REASON_LABELS: Record<
+  NonNullable<DisposalTask["evidenceReviewReasonCode"]>,
+  string
+> = {
+  recognition_unclear:
+    "Please retake the photo so the product label and identifying details are readable.",
+  coverage_insufficient:
+    "Please show every affected unit and the quantity covered by your claim.",
+  photo_unreadable: "Please retake the photo in clear light without blur.",
+  wrong_product:
+    "The photo appears to show a different product. Please photograph the product in this claim.",
+  safety_step_not_visible:
+    "A required approved step is not visible. Review the instructions before retaking a photo; do not dispose of anything without permission.",
+  other:
+    "Please contact the recall team to confirm exactly which replacement photo is needed.",
+};
+
 export function DisposalEvidenceUpload({
   taskId,
   reviewStatus,
+  reviewReasonCode,
   allowedActions,
   onChanged,
 }: Props) {
@@ -227,8 +246,9 @@ export function DisposalEvidenceUpload({
           {reviewStatus === "needs_resubmission" && (
             <p className="flex items-center gap-2 rounded border border-[#faecd8] bg-[#fdf6ec] p-3 text-sm text-[#e6a23c]">
               <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-              We need different photos. Please check the instructions above and
-              add new ones.
+              {reviewReasonCode
+                ? REVIEW_REASON_LABELS[reviewReasonCode]
+                : "We need different photos. Please check the instructions above and add new ones."}
             </p>
           )}
           {reviewStatus === "pending" && (
