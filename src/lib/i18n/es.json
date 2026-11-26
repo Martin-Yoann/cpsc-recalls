@@ -727,5 +727,17 @@
   "error.forbidden": "Esta acción no está disponible actualmente para su caso.",
   "error.conflict": "Este registro ha cambiado. Actualice su estado antes de intentarlo de nuevo.",
   "error.unavailable": "El servicio no está disponible temporalmente. Inténtelo de nuevo en unos momentos.",
-  "error.unexpected": "No se pudo completar la operación. Inténtelo de nuevo."
+  "error.unexpected": "No se pudo completar la operación. Inténtelo de nuevo.",
+  "disposal.review.recognition": "Vuelva a tomar la foto de modo que la etiqueta y los datos de identificación del producto se puedan leer.",
+  "disposal.review.coverage": "Muestre todas las unidades afectadas y la cantidad incluida en su solicitud.",
+  "disposal.review.unreadable": "Vuelva a tomar la foto con buena iluminación y sin desenfoque.",
+  "disposal.review.wrongProduct": "La foto parece mostrar otro producto. Fotografíe el producto de esta solicitud.",
+  "disposal.review.safetyStep": "No se ve uno de los pasos aprobados obligatorios. Revise las instrucciones antes de repetir la foto; no deseche nada sin autorización.",
+  "disposal.review.other": "Contacte con el equipo de retirada para confirmar qué foto nueva necesita enviar.",
+  "disposal.photos.remove": "Eliminar",
+  "disposal.photos.removing": "Eliminando…",
+  "disposal.photos.retry": "Solo puede enviar a revisión las fotos que hayan superado las comprobaciones. Elimine las rechazadas y vuelva a añadirlas.",
+  "incident.other.required": "Seleccionó Otro para el tipo de fallo. Describa lo ocurrido.",
+  "incident.other.label": "Describa cómo falló el producto",
+  "incident.other.placeholder": "¿Qué ocurrió cuando falló el producto?"
 }

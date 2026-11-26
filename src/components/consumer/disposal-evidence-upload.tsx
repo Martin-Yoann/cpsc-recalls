@@ -9,14 +9,17 @@ import {
   Loader2,
   RefreshCw,
   Upload,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import type { DisposalEvidenceDocument } from "@/lib/api-client";
+import type { DisposalEvidenceDocument, DisposalTask } from "@/lib/api-client";
 import {
   disposeEvidenceReadyToSubmit,
   isDisposalDocumentPending,
+  isDisposalDocumentRemovable,
   refreshDisposalEvidence,
+  removeDisposalEvidence,
   sendDisposalEvidenceForReview,
   uploadDisposalEvidence,
 } from "@/lib/disposal-evidence";
@@ -41,6 +44,7 @@ interface Props {
   /** Server-reported review state; null means nothing has been sent yet. */
   reviewStatus:
     "pending" | "accepted" | "needs_resubmission" | "superseded" | null;
+  reviewReasonCode: DisposalTask["evidenceReviewReasonCode"];
   /** Action ids the server will accept right now. */
   allowedActions: readonly string[];
   onChanged: () => void;
@@ -69,9 +73,27 @@ const REASON_LABELS: Record<string, string> = {
   malware_detected: "ui.the.file.did.not.pass.our.safety.fc0db6",
 };
 
+const REVIEW_REASON_LABELS: Record<
+  NonNullable<DisposalTask["evidenceReviewReasonCode"]>,
+  string
+> = {
+  recognition_unclear:
+    "disposal.review.recognition",
+  coverage_insufficient:
+    "disposal.review.coverage",
+  photo_unreadable: "disposal.review.unreadable",
+  wrong_product:
+    "disposal.review.wrongProduct",
+  safety_step_not_visible:
+    "disposal.review.safetyStep",
+  other:
+    "disposal.review.other",
+};
+
 export function DisposalEvidenceUpload({
   taskId,
   reviewStatus,
+  reviewReasonCode,
   allowedActions,
   onChanged,
 }: Props) {
@@ -79,6 +101,7 @@ export function DisposalEvidenceUpload({
   const [documents, setDocuments] = useState<DisposalEvidenceDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -159,6 +182,26 @@ export function DisposalEvidenceUpload({
     onChanged();
   };
 
+  // The way past a photo that can never be sent: clearing it is what lets the
+  // remaining photos — or a retaken replacement — go to review. Only offered in
+  // the same states the API allows removal, so the button never promises
+  // something the server will refuse.
+  const onRemove = async (documentId: string) => {
+    const token = resolveDisposalToken(taskId);
+    if (!token) return;
+    setRemovingId(documentId);
+    setMessage(null);
+    setProblem(null);
+    const result = await removeDisposalEvidence(taskId, token, documentId);
+    setRemovingId(null);
+    if (!result.ok) {
+      setProblem(result.error.detail);
+      return;
+    }
+    setDocuments(await load());
+    onChanged();
+  };
+
   const ready = disposeEvidenceReadyToSubmit(documents);
 
   // Nothing to offer and nothing to report: the section hides itself rather than
@@ -211,6 +254,18 @@ export function DisposalEvidenceUpload({
                         "ui.this.file.was.not.accepted.0a0cf4")}
                     </span>
                   )}
+                  {mayUpload && isDisposalDocumentRemovable(document) && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={removingId !== null || isUploading}
+                      onClick={() => void onRemove(document.documentId)}
+                    >
+                      <X className="h-4 w-4" aria-hidden="true" />
+                      {t(removingId === document.documentId ? "disposal.photos.removing" : "disposal.photos.remove")}
+                    </Button>
+                  )}
                 </li>
               ))}
             </ul>
@@ -224,7 +279,8 @@ export function DisposalEvidenceUpload({
           {reviewStatus === "needs_resubmission" && (
             <p className="flex items-center gap-2 rounded border border-[#faecd8] bg-[#fdf6ec] p-3 text-sm text-[#e6a23c]">
               <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-              {t("ui.we.need.different.photos.please.check.the.f09986")}</p>
+              {t(reviewReasonCode ? REVIEW_REASON_LABELS[reviewReasonCode] : "ui.we.need.different.photos.please.check.the.f09986")}
+            </p>
           )}
           {reviewStatus === "pending" && (
             <p className="rounded border border-[#e9e9eb] bg-[#f4f4f5] p-3 text-sm text-[#606266]">
@@ -264,7 +320,8 @@ export function DisposalEvidenceUpload({
           </div>
           {documents.length > 0 && !ready && !hasPending && (
             <p className="text-xs text-[#e6a23c]">
-              {t("ui.only.photos.that.passed.our.checks.can.396246")}</p>
+              {t("disposal.photos.retry")}
+            </p>
           )}
         </div>
       )}
@@ -290,7 +347,11 @@ export function DisposalEvidenceUpload({
           size="sm"
           disabled={isUploading}
           onClick={() => {
+            // The document list is this component's own state, but the review
+            // banners above come from the task: "Refresh" refreshes both, or a
+            // consumer who just got their photos accepted sees nothing change.
             void load().then(setDocuments);
+            onChanged();
           }}
         >
           <RefreshCw className="h-4 w-4" aria-hidden="true" />

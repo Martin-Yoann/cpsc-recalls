@@ -127,6 +127,7 @@ export function DisposalTaskLoader({ taskId, supportContact }: Props) {
       <DisposalEvidenceUpload
         taskId={taskId}
         reviewStatus={state.task.evidenceReviewStatus}
+        reviewReasonCode={state.task.evidenceReviewReasonCode}
         allowedActions={state.task.allowedActions}
         onChanged={() => setAttempt((previous) => previous + 1)}
       />

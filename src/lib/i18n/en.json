@@ -727,5 +727,17 @@
   "error.forbidden": "This action is not currently available for your case.",
   "error.conflict": "This record changed. Refresh its status before trying again.",
   "error.unavailable": "The service is temporarily unavailable. Please try again shortly.",
-  "error.unexpected": "The request could not be completed. Please try again."
+  "error.unexpected": "The request could not be completed. Please try again.",
+  "disposal.review.recognition": "Please retake the photo so the product label and identifying details are readable.",
+  "disposal.review.coverage": "Please show every affected unit and the quantity covered by your claim.",
+  "disposal.review.unreadable": "Please retake the photo in clear light without blur.",
+  "disposal.review.wrongProduct": "The photo appears to show a different product. Please photograph the product in this claim.",
+  "disposal.review.safetyStep": "A required approved step is not visible. Review the instructions before retaking a photo; do not dispose of anything without permission.",
+  "disposal.review.other": "Please contact the recall team to confirm exactly which replacement photo is needed.",
+  "disposal.photos.remove": "Remove",
+  "disposal.photos.removing": "Removing…",
+  "disposal.photos.retry": "Only photos that passed our checks can be sent for review. Use Remove on any that were rejected, then add them again.",
+  "incident.other.required": "You selected Other for how the product failed. Please describe what happened.",
+  "incident.other.label": "Describe how the product failed",
+  "incident.other.placeholder": "What happened when the product failed?"
 }

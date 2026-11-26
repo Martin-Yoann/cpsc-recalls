@@ -3,6 +3,7 @@
 import { uploadPrivateObject } from "@/lib/blob-upload";
 import {
   authorizeDisposalUpload,
+  deleteDisposalDocument,
   listDisposalDocuments,
   submitDisposalEvidence,
   type DisposalEvidenceBatch,
@@ -48,6 +49,32 @@ export function disposeEvidenceReadyToSubmit(
   return (
     documents.length > 0 && documents.every((d) => d.status === "verified")
   );
+}
+
+/**
+ * A photo the consumer can clear off the step themselves: never sent for
+ * review, and in a technical state that can only be replaced, not fixed.
+ * Photos inside a review batch are the reviewer's to keep, and the API
+ * refuses their removal anyway — the button follows the same line.
+ */
+export function isDisposalDocumentRemovable(
+  document: DisposalEvidenceDocument,
+): boolean {
+  return (
+    document.status === "rejected" ||
+    document.status === "expired" ||
+    document.status === "uploading"
+  );
+}
+
+export async function removeDisposalEvidence(
+  taskId: string,
+  taskToken: string,
+  documentId: string,
+): Promise<DisposalUploadResult<null>> {
+  const result = await deleteDisposalDocument(taskId, taskToken, documentId);
+  if (!result.ok) return result;
+  return { ok: true, data: null };
 }
 
 export async function uploadDisposalEvidence(
