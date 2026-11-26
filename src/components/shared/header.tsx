@@ -18,7 +18,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { SafetyBanner } from "@/components/consumer/safety-banner";
-import { LanguageSelector } from '@/components/shared/language-selector';
 
 const NAV_ITEMS = [
   { label: "nav.home", href: "/" },
@@ -102,7 +101,6 @@ export function Header() {
 
         {/* Right side: CTA + auth */}
         <div className="flex items-center gap-2 sm:gap-3">
-          <LanguageSelector />
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
               <Link
