@@ -1,5 +1,7 @@
 "use client";
 import { useI18n } from "@/lib/i18n/provider";
+import { problemMessage } from '@/lib/i18n/problem';
+import type { MessageInput } from '@/lib/i18n/translate';
 
 
 import { useEffect, useState } from "react";
@@ -32,7 +34,7 @@ interface Props {
 type LoadState =
   | { status: "loading" }
   | { status: "unopenable" }
-  | { status: "error"; detail: string }
+  | { status: "error"; detail: MessageInput }
   | { status: "ready"; task: DisposalTask };
 
 /**
@@ -49,7 +51,7 @@ async function readTaskState(taskId: string): Promise<LoadState> {
   // from the caller's side, so neither is presented as retryable.
   if (result.status === 404 || result.status === 401)
     return { status: "unopenable" };
-  return { status: "error", detail: result.error.detail };
+  return { status: "error", detail: problemMessage({ ...result.error, status: result.status }) };
 }
 
 export function DisposalTaskLoader({ taskId, supportContact }: Props) {

@@ -1,5 +1,7 @@
 "use client";
 import { useI18n } from "@/lib/i18n/provider";
+import { problemMessage } from '@/lib/i18n/problem';
+import type { MessageInput } from '@/lib/i18n/translate';
 
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -103,7 +105,7 @@ export function DisposalEvidenceUpload({
   const [isUploading, setIsUploading] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [problem, setProblem] = useState<string | null>(null);
+  const [problem, setProblem] = useState<MessageInput | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const mayUpload =
@@ -150,7 +152,7 @@ export function DisposalEvidenceUpload({
     for (const file of Array.from(files)) {
       const result = await uploadDisposalEvidence(taskId, token, file);
       if (!result.ok) {
-        setProblem(result.error.detail);
+        setProblem(problemMessage({ ...result.error, status: result.status }));
         break;
       }
     }
@@ -173,7 +175,7 @@ export function DisposalEvidenceUpload({
     );
     setIsUploading(false);
     if (!result.ok) {
-      setProblem(result.error.detail);
+      setProblem(problemMessage({ ...result.error, status: result.status }));
       return;
     }
     setMessage(
@@ -195,7 +197,7 @@ export function DisposalEvidenceUpload({
     const result = await removeDisposalEvidence(taskId, token, documentId);
     setRemovingId(null);
     if (!result.ok) {
-      setProblem(result.error.detail);
+      setProblem(problemMessage({ ...result.error, status: result.status }));
       return;
     }
     setDocuments(await load());

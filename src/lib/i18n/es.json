@@ -739,5 +739,9 @@
   "disposal.photos.retry": "Solo puede enviar a revisión las fotos que hayan superado las comprobaciones. Elimine las rechazadas y vuelva a añadirlas.",
   "incident.other.required": "Seleccionó Otro para el tipo de fallo. Describa lo ocurrido.",
   "incident.other.label": "Describa cómo falló el producto",
-  "incident.other.placeholder": "¿Qué ocurrió cuando falló el producto?"
+  "incident.other.placeholder": "¿Qué ocurrió cuando falló el producto?",
+  "error.fileTooLarge": "El archivo es demasiado grande. Elija uno más pequeño e inténtelo de nuevo.",
+  "error.fileType": "Este tipo de archivo no es compatible. Elija uno de los tipos indicados en las instrucciones.",
+  "error.notFound": "Este elemento no está disponible. Vuelva a abrir su enlace de acceso o contacte con el equipo de retirada.",
+  "error.expired": "Este enlace ha caducado o ya no es válido. Abra el enlace más reciente que recibió o contacte con el equipo de retirada."
 }

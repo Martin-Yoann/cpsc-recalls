@@ -7,6 +7,27 @@ import ts from 'typescript';
 import { translator, message } from '../src/lib/i18n/translate.ts';
 import { normalizeLocale, browserLocale } from '../src/lib/i18n/locale.ts';
 
+// Load the real mapping with its TS-only types removed; runtime translation is
+// still performed by the same catalogue module used by the application.
+const problemModule = ts.transpileModule(fs.readFileSync(new URL('../src/lib/i18n/problem.ts', import.meta.url), 'utf8'), {
+  compilerOptions: { module: ts.ModuleKind.ESNext },
+}).outputText.replace("'./translate'", JSON.stringify(new URL('../src/lib/i18n/translate.ts', import.meta.url).href));
+const { problemMessage } = await import(`data:text/javascript;base64,${Buffer.from(problemModule).toString('base64')}`);
+
+test('system errors use stable codes rather than English backend sentences', () => {
+  const es = translator('es-US');
+  for (const [status, id] of [[0,'error.network'],[400,'error.validation'],[401,'error.unauthorized'],[403,'error.forbidden'],[404,'error.notFound'],[409,'error.conflict'],[410,'error.expired'],[413,'error.fileTooLarge'],[415,'error.fileType'],[422,'error.validation'],[429,'error.unavailable'],[500,'error.unavailable'],[503,'error.unavailable']]) {
+    const problem = {status, detail:'Backend wording changed; do not display this English text.'};
+    assert.equal(es(problemMessage(problem)),es(id));
+    assert.doesNotMatch(es(problemMessage(problem)), /Backend wording/);
+  }
+  assert.equal(es(problemMessage({type:'https://api.koiimprtinc.com/problems/payload-too-large'})),es('error.fileTooLarge'));
+  assert.equal(es(problemMessage({status:418,type:'about:blank'})),es('error.unexpected'));
+  const retained = problemMessage({status:409});
+  assert.equal(translator('en-US')(retained),translator('en-US')('error.conflict'));
+  assert.equal(es(retained),es('error.conflict'));
+});
+
 test('normalizes Spanish regions and uses English for unsupported languages', () => {
   for (const code of ['es', 'es-ES', 'es-MX', 'ES_us']) assert.equal(normalizeLocale(code), 'es-US');
   for (const code of [undefined, 'en', 'en-GB', 'fr-FR', '../es']) assert.equal(normalizeLocale(code), 'en-US');

@@ -1,5 +1,7 @@
 "use client";
 import { useI18n } from "@/lib/i18n/provider";
+import { problemMessage } from '@/lib/i18n/problem';
+import type { MessageInput } from '@/lib/i18n/translate';
 
 
 import { useState } from "react";
@@ -63,7 +65,7 @@ export function DisposalDeclaration({
     );
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
-  const [problem, setProblem] = useState<string | null>(null);
+  const [problem, setProblem] = useState<MessageInput | null>(null);
 
   if (!mayComplete && !mayExcept) return null;
 
@@ -80,7 +82,7 @@ export function DisposalDeclaration({
     const result = await recordDisposalDeclaration(taskId, token, body);
     setBusy(false);
     if (!result.ok) {
-      setProblem(result.error.detail);
+      setProblem(problemMessage({ ...result.error, status: result.status }));
       return;
     }
     onDeclared();

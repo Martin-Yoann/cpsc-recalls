@@ -739,5 +739,9 @@
   "disposal.photos.retry": "Only photos that passed our checks can be sent for review. Use Remove on any that were rejected, then add them again.",
   "incident.other.required": "You selected Other for how the product failed. Please describe what happened.",
   "incident.other.label": "Describe how the product failed",
-  "incident.other.placeholder": "What happened when the product failed?"
+  "incident.other.placeholder": "What happened when the product failed?",
+  "error.fileTooLarge": "The file is too large. Choose a smaller file and try again.",
+  "error.fileType": "This file type is not supported. Choose a file type listed in the instructions.",
+  "error.notFound": "This item is not available. Reopen your access link or contact recall support.",
+  "error.expired": "This access link has expired or is no longer valid. Reopen the latest link sent to you or contact recall support."
 }
