@@ -1,10 +1,13 @@
 'use client';
+import { useI18n } from "@/lib/i18n/provider";
+
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 
 export default function LoginRedirect() {
+  const { t } = useI18n();
   const { isAuthenticated, openAuthDrawer } = useAuth();
   const router = useRouter();
 
@@ -20,7 +23,6 @@ export default function LoginRedirect() {
 
   return (
     <div className="flex items-center justify-center min-h-[40vh] text-sm text-secondary">
-      Opening sign in...
-    </div>
+      {t("ui.opening.sign.in.b6c888")}</div>
   );
 }

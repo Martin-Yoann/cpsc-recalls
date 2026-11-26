@@ -1,4 +1,6 @@
 ﻿"use client";
+import { useI18n } from "@/lib/i18n/provider";
+
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -16,12 +18,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { SafetyBanner } from "@/components/consumer/safety-banner";
+import { LanguageSelector } from '@/components/shared/language-selector';
 
 const NAV_ITEMS = [
-  { label: "Home", href: "/" },
-  { label: "Check Status", href: "/lookup" },
-  { label: "File Claim", href: "/recalls/music-lollipop-demo-2026" },
-  { label: "FAQ", href: "/faq" },
+  { label: "nav.home", href: "/" },
+  { label: "nav.checkStatus", href: "/lookup" },
+  { label: "ui.file.claim.5adfca", href: "/recalls/music-lollipop-demo-2026" },
+  { label: "nav.faq", href: "/faq" },
 ];
 
 function NavItem({
@@ -35,6 +38,7 @@ function NavItem({
   active: boolean;
   onClick?: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <Link
       href={href}
@@ -46,7 +50,7 @@ function NavItem({
           : "text-muted-foreground hover:text-foreground",
       )}
     >
-      {label}
+      {t(label)}
 
       {/* Hover / Active 下划线 */}
       <span
@@ -63,6 +67,7 @@ function NavItem({
 }
 
 export function Header() {
+  const { t } = useI18n();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, isAuthenticated, logout, openAuthDrawer } = useAuth();
@@ -80,13 +85,12 @@ export function Header() {
           </span>
           <span className="flex flex-col leading-tight">
             <span className="text-[16px] font-bold tracking-tight text-foreground">
-              KOI Recall
-            </span>
+              {t("ui.koi.recall.ccd6c2")}</span>
           </span>
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden items-center gap-8 lg:flex">
+        <div className="hidden items-center gap-8 xl:flex">
           {NAV_ITEMS.map((item) => (
             <NavItem
               key={`${item.href}-${item.label}`}
@@ -98,14 +102,14 @@ export function Header() {
 
         {/* Right side: CTA + auth */}
         <div className="flex items-center gap-2 sm:gap-3">
+          <LanguageSelector />
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
               <Link
                 href="/recalls/music-lollipop-demo-2026"
                 className="btn-brand hidden sm:inline-flex"
               >
-                File a Claim
-              </Link>
+                {t("ui.file.a.claim.49c6f3")}</Link>
               <DropdownMenu>
                 <DropdownMenuTrigger className="outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md">
                   <span className="inline-flex items-center gap-2 border border-border bg-white px-2 py-1.5 rounded-md hover:border-foreground/40 transition-colors">
@@ -113,7 +117,7 @@ export function Header() {
                       {user?.avatarDataUrl && (
                         <AvatarImage
                           src={user.avatarDataUrl}
-                          alt={user.name || "User avatar"}
+                          alt={user.name || t("ui.user.avatar.900527")}
                           className="rounded-full"
                         />
                       )}
@@ -133,24 +137,21 @@ export function Header() {
                     className="hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200 h-8"
                   >
                     <Link href="/dashboard" className="block w-full">
-                      Dashboard
-                    </Link>
+                      {t("ui.dashboard.d87f47")}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => setMobileOpen(false)}
                     className="hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200 h-8"
                   >
                     <Link href="/dashboard/claims" className="block w-full">
-                      My Claims
-                    </Link>
+                      {t("ui.my.claims.ed07c1")}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => logout()}
                     className="h-9 text-brand focus:text-brand cursor-pointer hover:bg-red-50 hover:text-red-600 transition-colors duration-200"
                   >
-                    Sign Out
-                  </DropdownMenuItem>
+                    {t("auth.signOut")}</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -160,14 +161,12 @@ export function Header() {
                 onClick={() => openAuthDrawer("signin")}
                 className="h-9 w-[120px] cursor-pointer rounded-md border border-foreground bg-white text-sm font-semibold text-foreground transition-colors duration-200 hover:border-neutral-700 hover:bg-neutral-100 active:bg-neutral-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2"
               >
-                Sign In
-              </button>
+                {t("auth.signIn")}</button>
               <button
                 onClick={() => openAuthDrawer("register")}
                 className="h-9 w-[120px] cursor-pointer rounded-md border border-brand bg-brand text-sm font-semibold text-white transition-colors duration-200 hover:border-brand-hover hover:bg-brand-hover active:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
               >
-                Register
-              </button>
+                {t("ui.register.d67299")}</button>
             </div>
           )}
 
@@ -175,9 +174,9 @@ export function Header() {
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden h-9 w-9 rounded-md text-foreground"
+            className="xl:hidden h-9 w-9 rounded-md text-foreground"
             onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-label={mobileOpen ? t("ui.close.menu.6c9fc9") : t("ui.open.menu.197101")}
           >
             {mobileOpen ? (
               <X className="h-5 w-5" />
@@ -190,7 +189,7 @@ export function Header() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="border-t border-border bg-white lg:hidden">
+        <div className="border-t border-border bg-white xl:hidden">
           <div className="container-content py-4 space-y-1">
             {NAV_ITEMS.map((item) => (
               <Link
@@ -202,7 +201,7 @@ export function Header() {
                   pathname === item.href ? "text-foreground" : "text-secondary",
                 )}
               >
-                {item.label}
+                {t(item.label)}
               </Link>
             ))}
 
@@ -214,8 +213,7 @@ export function Header() {
                     onClick={() => setMobileOpen(false)}
                     className="block py-2 text-sm font-medium text-foreground"
                   >
-                    Dashboard
-                  </Link>
+                    {t("ui.dashboard.d87f47")}</Link>
                   <button
                     onClick={() => {
                       logout();
@@ -223,8 +221,7 @@ export function Header() {
                     }}
                     className="block w-full text-left py-2 text-sm font-medium text-brand"
                   >
-                    Sign Out
-                  </button>
+                    {t("auth.signOut")}</button>
                 </>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
@@ -235,8 +232,7 @@ export function Header() {
                     }}
                     className="btn-outline justify-center"
                   >
-                    Sign In
-                  </button>
+                    {t("auth.signIn")}</button>
                   <button
                     onClick={() => {
                       openAuthDrawer("register");
@@ -244,8 +240,7 @@ export function Header() {
                     }}
                     className="btn-brand justify-center"
                   >
-                    Register
-                  </button>
+                    {t("ui.register.d67299")}</button>
                 </div>
               )}
             </div>

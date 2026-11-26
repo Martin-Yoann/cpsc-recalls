@@ -870,6 +870,120 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/disposal-tasks/{taskId}/documents/{documentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove one evidence photo that has not entered review
+         * @description Gated on the same policy as uploading evidence, and on the evidence-retention rule: a photo that is part of a submitted batch cannot be removed. Removing a photo is a technical act only and never affects a review decision already made.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header: {
+                    "X-Disposal-Token": string;
+                };
+                path: {
+                    taskId: string;
+                    documentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The photo was scheduled for deletion. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid request. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description The disposal token is missing, wrong, or expired. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Campaign or resource not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description The request is refused by the disposal gates. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unexpected server error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description This capability is not enabled in this environment because a required service or adapter is not configured. */
+                501: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description A required dependency is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/disposal-tasks/{taskId}/evidence": {
         parameters: {
             query?: never;
@@ -1120,7 +1234,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    locale?: "en-US";
+                    locale?: "en-US" | "es-US";
                 };
                 header?: never;
                 path: {
@@ -1540,6 +1654,11 @@ export interface components {
                 code: string;
                 defaultLocale: string;
                 evidenceRequirements: components["schemas"]["EvidenceRequirement"][];
+                faq?: {
+                    answer: string;
+                    question: string;
+                    topic: string;
+                }[];
                 hazard: string;
                 immediateAction: string;
                 locale: string;
@@ -1556,6 +1675,7 @@ export interface components {
                 publishedAt: string | null;
                 remedies: {
                     code: string;
+                    description?: string;
                     displayName: string;
                 }[];
                 remedySummary: string;
@@ -1568,6 +1688,12 @@ export interface components {
                     phone: string;
                 };
                 title: string;
+                translation?: {
+                    /** Format: uuid */
+                    id: string;
+                    revision: number;
+                    sourceVersion: number;
+                };
                 version: number;
             };
         };
@@ -1586,6 +1712,8 @@ export interface components {
              * @example Refund
              */
             approvedResolution: string | null;
+            /** @enum {string|null} */
+            approvedResolutionCode?: "replacement" | "refund" | null;
             /**
              * @description Title of the campaign the case belongs to.
              * @example Music Lollipop Recall
@@ -1609,7 +1737,7 @@ export interface components {
              */
             publicStatus: "received" | "in_review" | "action_required" | "resolution_approved" | "resolution_in_progress" | "completed" | "not_approved" | "closed";
             /**
-             * @description English display copy produced by the API; render verbatim.
+             * @description Legacy English display copy. Localized clients should use publicStatus as the message identifier.
              * @example Under review
              */
             publicStatusLabel: string;
@@ -1618,6 +1746,8 @@ export interface components {
              * @example Replacement
              */
             requestedResolution: string | null;
+            /** @enum {string|null} */
+            requestedResolutionCode?: "replacement" | "refund" | null;
         };
         ClaimDraftResponse: {
             /** Format: uuid */
@@ -1642,6 +1772,10 @@ export interface components {
                 lastName: string;
                 phone?: string;
             };
+            /** @enum {string} */
+            contentLocale?: "en-US" | "es-US";
+            /** Format: uuid */
+            contentTranslationId?: string;
             documentIds: string[];
             /** Format: uuid */
             draftId: string;
@@ -1650,7 +1784,7 @@ export interface components {
             incidentAnswer: "no" | "yes" | "unsure";
             incidentDetails?: components["schemas"]["IncidentDetailsInput"];
             /** @enum {string} */
-            locale: "en-US";
+            locale: "en-US" | "es-US";
             products: components["schemas"]["ClaimedProductInput"][];
             remedyCode: string;
         };
@@ -1743,6 +1877,8 @@ export interface components {
             caption?: string;
             url: string;
         };
+        /** @enum {string|null} */
+        DisposalReviewReasonCode: "recognition_unclear" | "coverage_insufficient" | "photo_unreadable" | "wrong_product" | "safety_step_not_visible" | "other" | null;
         DisposalTaskProductView: {
             /** Format: uuid */
             campaignProductId: string;
@@ -1757,6 +1893,7 @@ export interface components {
             blockingReasons: string[];
             declarationTextVersion: string | null;
             eligibilityStatus: components["schemas"]["DisposalEligibilityStatus"];
+            evidenceReviewReasonCode: components["schemas"]["DisposalReviewReasonCode"];
             evidenceReviewStatus: components["schemas"]["DisposalBatchReviewStatus"];
             /** Format: date-time */
             expiresAt: string;
@@ -1808,6 +1945,7 @@ export interface components {
             eventTypes?: ("injury" | "illness" | "choking" | "ingestion" | "fire" | "overheating" | "property_damage" | "near_miss" | "other" | "unknown")[];
             /** @enum {string} */
             failureMode?: "body_rupture" | "battery_exposure" | "choking_hazard" | "leak" | "overheating" | "other" | "unknown";
+            failureModeOtherDescription?: string;
             injuryDescription?: string;
             /** @enum {string} */
             injurySeverity?: "none" | "minor" | "medical_attention" | "hospitalized" | "death" | "unknown";
@@ -1905,6 +2043,7 @@ export interface components {
                 lotCode: string;
             }[];
             brand: string;
+            description?: string;
             flavors: string[];
             name: string;
             /** Format: uuid */

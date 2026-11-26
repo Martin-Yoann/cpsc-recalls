@@ -1,3 +1,8 @@
+"use client";
+import { useI18n } from "@/lib/i18n/provider";
+import { ContentLanguageNotice } from '@/components/consumer/content-language-notice';
+
+
 import {
   AlertTriangle,
   Camera,
@@ -41,96 +46,96 @@ interface Props {
  */
 const BLOCKING_MESSAGES: Record<string, string> = {
   ELIGIBILITY_NOT_CONFIRMED:
-    "We are still confirming whether this product is part of the recall.",
+    "ui.we.are.still.confirming.whether.this.product.d834bd",
   DISPOSAL_NOT_APPLICABLE:
-    "For this recall, this product does not need to be disposed of by you. Follow the remedy you selected.",
+    "ui.for.this.recall.this.product.does.not.a413fe",
   PRODUCT_RULED_INELIGIBLE:
-    "This product is not part of the recall, so no disposal step applies.",
+    "ui.this.product.is.not.part.of.the.e39aee",
   INSTRUCTION_NOT_APPROVED:
-    "Instructions for this product have not been published yet.",
+    "ui.instructions.for.this.product.have.not.been.e13e2e",
   INSTRUCTION_WITHDRAWN:
-    "The instructions for this product have been withdrawn. Do not act on any copy you have.",
+    "ui.the.instructions.for.this.product.have.been.53d5b5",
   APPROVAL_NOT_AUTHORIZING:
-    "We do not yet have the approval needed to ask you to dispose of this product.",
-  EVIDENCE_NOT_SUBMITTED: "No photos have been sent to us yet.",
-  EVIDENCE_PENDING_REVIEW: "Your photos are with our team for review.",
+    "ui.we.do.not.yet.have.the.approval.3ff30b",
+  EVIDENCE_NOT_SUBMITTED: "ui.no.photos.have.been.sent.to.us.660bed",
+  EVIDENCE_PENDING_REVIEW: "ui.your.photos.are.with.our.team.for.dc5cc6",
   EVIDENCE_NEEDS_RESUBMISSION:
-    "We need different photos before we can continue.",
+    "ui.we.need.different.photos.before.we.can.ceeef5",
   DISPOSAL_ON_HOLD:
-    "This step is paused while we keep your evidence. Please do not dispose of anything yet.",
-  TASK_CLOSED: "This task is closed.",
+    "ui.this.step.is.paused.while.we.keep.a1de0e",
+  TASK_CLOSED: "ui.this.task.is.closed.637b06",
 };
 
 const ELIGIBILITY_LABELS: Record<DisposalTask["eligibilityStatus"], string> = {
-  pending_confirmation: "Being confirmed",
-  confirmed_eligible: "Confirmed part of this recall",
-  not_applicable: "No disposal needed",
-  ineligible: "Not part of this recall",
+  pending_confirmation: "ui.being.confirmed.f0ecc6",
+  confirmed_eligible: "ui.confirmed.part.of.this.recall.72cfa3",
+  not_applicable: "ui.no.disposal.needed.ae3bc6",
+  ineligible: "ui.not.part.of.this.recall.418adb",
 };
 
 const EVIDENCE_LABELS: Record<
   NonNullable<DisposalTask["evidenceReviewStatus"]>,
   string
 > = {
-  pending: "With our team for review",
-  accepted: "Accepted by our team",
-  needs_resubmission: "More photos needed",
-  superseded: "Replaced by newer photos",
+  pending: "ui.with.our.team.for.review.aa26ba",
+  accepted: "ui.accepted.by.our.team.6493f0",
+  needs_resubmission: "ui.more.photos.needed.b98bbc",
+  superseded: "ui.replaced.by.newer.photos.4f2508",
 };
 
 function StatusRow({ label, value }: { label: string; value: string }) {
+  const { t } = useI18n();
   return (
     <div className="flex flex-wrap items-baseline gap-x-2">
       <dt className="text-xs font-medium uppercase tracking-wide text-[#909399]">
-        {label}
+        {t(label)}
       </dt>
-      <dd className="text-sm font-semibold text-[#303133]">{value}</dd>
+      <dd className="text-sm font-semibold text-[#303133]">{t(value)}</dd>
     </div>
   );
 }
 
 export function DisposalInstructions({ task, supportContact }: Props) {
+  const { t } = useI18n();
   const { instruction } = task;
 
   return (
     <section aria-labelledby="disposal-heading" className="space-y-6">
       <header className="space-y-2">
+        <ContentLanguageNotice contentLocale={instruction?.locale} instructions />
         <h2
           id="disposal-heading"
           className="text-lg font-semibold text-[#303133]"
         >
-          Product disposal
-        </h2>
+          {t("ui.product.disposal.dfc4b8")}</h2>
         <p className="text-sm text-[#606266]">
-          This step applies only if we have confirmed your product is part of
-          this recall and have approved instructions for it.
-        </p>
+          {t("ui.this.step.applies.only.if.we.have.8d2e66")}</p>
       </header>
 
       {/* Status: separate facts, never collapsed into one verdict. */}
       <dl className="grid gap-3 rounded border border-[#dcdfe6] bg-[#fafafa] p-4 sm:grid-cols-3">
         <StatusRow
-          label="Product"
+          label={t("ui.product.dd3b86")}
           value={ELIGIBILITY_LABELS[task.eligibilityStatus]}
         />
         <StatusRow
-          label="Your photos"
+          label={t("ui.your.photos.1e1ef1")}
           value={
             task.evidenceReviewStatus
               ? EVIDENCE_LABELS[task.evidenceReviewStatus]
-              : "Not sent yet"
+              : t("ui.not.sent.yet.890dff")
           }
         />
         <StatusRow
-          label="Permission to dispose"
+          label={t("ui.permission.to.dispose.e44402")}
           value={
             task.authorizationStatus === "active"
-              ? "Given"
+              ? t("ui.given.6839d8")
               : task.authorizationStatus === "suspended"
-                ? "Paused"
+                ? t("ui.paused.c7dfb6")
                 : task.authorizationStatus === "revoked"
-                  ? "Withdrawn"
-                  : "Not given"
+                  ? t("ui.withdrawn.ab014c")
+                  : t("ui.not.given.ee3c4a")
           }
         />
       </dl>
@@ -142,10 +147,7 @@ export function DisposalInstructions({ task, supportContact }: Props) {
         >
           <PauseCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <p>
-            <strong className="font-semibold">This step is paused.</strong> We
-            are keeping your evidence and will contact you. Please do not
-            dispose of anything yet.
-          </p>
+            <strong className="font-semibold">{t("ui.this.step.is.paused.3e397c")}</strong> {t("ui.we.are.keeping.your.evidence.and.will.fc93f7")}</p>
         </div>
       )}
 
@@ -158,7 +160,7 @@ export function DisposalInstructions({ task, supportContact }: Props) {
                 aria-hidden="true"
               />
               <span>
-                {BLOCKING_MESSAGES[reason] ?? "This step cannot go ahead yet."}
+                {t(BLOCKING_MESSAGES[reason] ?? "ui.this.step.cannot.go.ahead.yet.f1115b")}
               </span>
             </li>
           ))}
@@ -170,18 +172,15 @@ export function DisposalInstructions({ task, supportContact }: Props) {
       ) : (
         <div className="space-y-2 rounded border border-[#dcdfe6] p-4 text-sm text-[#606266]">
           <p className="font-semibold text-[#303133]">
-            {task.eligibilityStatus === "not_applicable" ||
+            {t(task.eligibilityStatus === "not_applicable" ||
             task.eligibilityStatus === "ineligible"
-              ? "There is nothing for you to dispose of."
-              : "Instructions are not available for this product right now."}
+              ? "ui.there.is.nothing.for.you.to.dispose.66f521"
+              : "ui.instructions.are.not.available.for.this.product.7cd606")}
           </p>
           <p>
-            Please do not dispose of the product on your own initiative. We will
-            only ask you to dispose of it once we have approved instructions in
-            place, and you will be able to see them here.
-          </p>
+            {t("ui.please.do.not.dispose.of.the.product.7a518c")}</p>
           {supportContact && (
-            <p>If you have questions, contact us at {supportContact}.</p>
+            <p>{t("ui.if.you.have.questions.contact.us.at.149e01")}{" "}{supportContact}.</p>
           )}
         </div>
       )}
@@ -194,6 +193,7 @@ function ApprovedInstructions({
 }: {
   instruction: NonNullable<DisposalTask["instruction"]>;
 }) {
+  const { t } = useI18n();
   return (
     <div className="space-y-6 rounded border border-[#dcdfe6] p-4">
       <div className="space-y-1">
@@ -201,7 +201,7 @@ function ApprovedInstructions({
           {instruction.title}
         </h3>
         <p className="text-xs text-[#909399]">
-          Instructions version {instruction.versionNumber} ·{" "}
+          {t("ui.instructions.version.c7d8eb")}{" "}{instruction.versionNumber} ·{t(" ")}
           {instruction.locale}
         </p>
       </div>
@@ -217,8 +217,7 @@ function ApprovedInstructions({
           className="flex items-center gap-2 text-sm font-semibold text-red-800"
         >
           <AlertTriangle className="h-4 w-4" aria-hidden="true" />
-          Safety warnings
-        </h4>
+          {t("ui.safety.warnings.b864d9")}</h4>
         <ul className="mt-3 space-y-2 text-sm text-red-900">
           {instruction.safetyWarnings.map((warning) => (
             <li key={warning} className="flex gap-2">
@@ -236,8 +235,7 @@ function ApprovedInstructions({
           id="disposal-steps"
           className="text-sm font-semibold text-[#303133]"
         >
-          What to do
-        </h4>
+          {t("ui.what.to.do.779b1d")}</h4>
         <ol className="mt-3 space-y-3">
           {instruction.steps
             .slice()
@@ -265,8 +263,7 @@ function ApprovedInstructions({
             id="disposal-examples"
             className="text-sm font-semibold text-[#303133]"
           >
-            Example photos
-          </h4>
+            {t("ui.example.photos.9a351f")}</h4>
           <ul className="mt-3 grid gap-4 sm:grid-cols-2">
             {instruction.referenceImages.map((image) => (
               <li key={image.url} className="space-y-2">
@@ -301,20 +298,17 @@ function ApprovedInstructions({
             id="disposal-video"
             className="text-sm font-semibold text-[#303133]"
           >
-            Video
-          </h4>
+            {t("ui.video.bc17c1")}</h4>
           <a
             className="mt-2 inline-flex items-center gap-2 text-sm text-brand underline"
             href={instruction.videoUrl}
           >
             <PlayCircle className="h-4 w-4" aria-hidden="true" />
-            Watch the instructions
-          </a>
+            {t("ui.watch.the.instructions.e5cf20")}</a>
           {/* A video is an alternative, never the only route: the steps above are
               the same content in text. */}
           <p className="mt-1 text-xs text-[#909399]">
-            The video covers the same steps listed above.
-          </p>
+            {t("ui.the.video.covers.the.same.steps.listed.022bf6")}</p>
         </section>
       )}
 
@@ -328,8 +322,7 @@ function ApprovedInstructions({
             className="flex items-center gap-2 text-sm font-semibold text-[#303133]"
           >
             <Camera className="h-4 w-4" aria-hidden="true" />
-            What your photos must show
-          </h4>
+            {t("ui.what.your.photos.must.show.c75ced")}</h4>
           <ul className="mt-3 space-y-2 text-sm text-[#606266]">
             {instruction.recognitionRequirements.map((requirement) => (
               <li key={requirement} className="flex gap-2">
@@ -345,9 +338,7 @@ function ApprovedInstructions({
       )}
 
       <p className="text-xs text-[#909399]">
-        These instructions come from the company conducting this recall. They
-        are not a government permit or approval.
-      </p>
+        {t("ui.these.instructions.come.from.the.company.conducting.ec512f")}</p>
     </div>
   );
 }

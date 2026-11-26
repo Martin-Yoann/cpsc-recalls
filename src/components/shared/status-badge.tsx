@@ -1,3 +1,7 @@
+"use client";
+import { useI18n } from "@/lib/i18n/provider";
+
+
 // ============================================================
 // KOI Recall Platform — Semantic Status Badge
 // ============================================================
@@ -38,20 +42,20 @@ const STATUS_COLORS: Record<StatusVariant, { dot: string; text: string; bg: stri
 };
 
 const STATUS_LABELS: Record<StatusVariant, string> = {
-  open: 'Open',
-  reviewing: 'Reviewing',
-  verified: 'Verified',
-  resolved: 'Resolved',
-  rejected: 'Rejected',
-  active: 'Active',
-  pending: 'Pending',
-  closed: 'Closed',
-  expanded: 'Expanded',
-  draft: 'Draft',
-  submitted: 'Submitted',
-  under_review: 'Under Review',
-  action_required: 'Action Required',
-  remedy_issued: 'Remedy Issued',
+  open: "ui.open.cf9b77",
+  reviewing: "ui.reviewing.166ea8",
+  verified: "ui.verified.aed3b8",
+  resolved: "ui.resolved.d999ae",
+  rejected: "ui.rejected.27eeb7",
+  active: "ui.active.a733b8",
+  pending: "ui.pending.96f608",
+  closed: "ui.closed.88d86b",
+  expanded: "ui.expanded.6d1704",
+  draft: "ui.draft.23d33e",
+  submitted: "ui.submitted.2e0035",
+  under_review: "ui.under.review.18afed",
+  action_required: "ui.action.required.4cd4f4",
+  remedy_issued: "ui.remedy.issued.c74da1",
 };
 
 interface StatusBadgeProps {
@@ -61,6 +65,7 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ variant, label, className }: StatusBadgeProps) {
+  const { t } = useI18n();
   const colors = STATUS_COLORS[variant];
   return (
     <span
@@ -72,7 +77,7 @@ export function StatusBadge({ variant, label, className }: StatusBadgeProps) {
       )}
     >
       <span className={cn('status-dot', colors.dot)} aria-hidden="true" />
-      {label || STATUS_LABELS[variant]}
+      {t(label || STATUS_LABELS[variant])}
     </span>
   );
 }

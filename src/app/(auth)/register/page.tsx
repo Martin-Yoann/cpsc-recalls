@@ -1,4 +1,6 @@
 'use client';
+import { useI18n } from "@/lib/i18n/provider";
+
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -12,6 +14,7 @@ const BENEFITS = [
 ];
 
 export default function RegisterRedirect() {
+  const { t } = useI18n();
   const { isAuthenticated, openAuthDrawer } = useAuth();
   const router = useRouter();
 
@@ -31,21 +34,19 @@ export default function RegisterRedirect() {
       <section className="hidden lg:block">
         <div className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-3 py-1.5 mb-6">
           <Sparkles className="h-3.5 w-3.5 text-brand" />
-          <span className="label-eyebrow !text-foreground">Welcome to KOI</span>
+          <span className="label-eyebrow !text-foreground">{t("ui.welcome.to.koi.55bf21")}</span>
         </div>
         <h1 className="text-[44px] xl:text-[56px] leading-[1.05] font-bold tracking-[-0.03em] text-foreground max-w-lg">
-          Stay on top of recalls.
-        </h1>
+          {t("ui.stay.on.top.of.recalls.9b4b84")}</h1>
         <p className="mt-5 text-secondary text-lg leading-relaxed max-w-md">
-          Create a free account to keep your claims, status updates, and next steps together — wherever you are.
-        </p>
+          {t("ui.create.a.free.account.to.keep.your.cf7376")}</p>
         <div className="mt-8 space-y-3">
           {BENEFITS.map((item) => (
             <div key={item} className="flex items-center gap-3 text-sm font-semibold text-foreground">
               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-success/10 text-success">
                 <Check className="h-4 w-4" />
               </span>
-              {item}
+              {t(item)}
             </div>
           ))}
         </div>
@@ -56,15 +57,13 @@ export default function RegisterRedirect() {
         <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-md bg-foreground text-white">
           <Shield className="h-7 w-7" />
         </div>
-        <h2 className="text-2xl font-bold tracking-tight text-foreground">Let&apos;s get you set up</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">{t("ui.let.s.get.you.set.up.27eef5")}</h2>
         <p className="mt-2 text-sm text-secondary leading-relaxed">
-          Your account drawer is opening. It only takes a minute to join.
-        </p>
+          {t("ui.your.account.drawer.is.opening.it.only.25c00c")}</p>
         <div className="mt-7 inline-flex items-center gap-2 label-eyebrow">
           <Shield className="h-4 w-4 text-success" />
-          Private & Secure
-        </div>
-        <p className="mt-4 text-xs text-secondary">Opening sign up...</p>
+          {t("ui.private.secure.2f1e67")}</div>
+        <p className="mt-4 text-xs text-secondary">{t("ui.opening.sign.up.1ab699")}</p>
       </section>
     </div>
   );

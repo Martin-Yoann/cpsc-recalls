@@ -1,3 +1,7 @@
+"use client";
+import { useI18n } from "@/lib/i18n/provider";
+
+
 // ============================================================
 // KOI Recall Platform �?Recall Card v3.0
 // Clean, warm cards with risk accent
@@ -19,29 +23,30 @@ const RISK_CONFIG: Record<string, { accent: string; bg: string; text: string; la
     accent: 'border-l-status-rejected',
     bg: 'bg-red-50',
     text: 'text-red-700',
-    label: 'CRITICAL',
+    label: "ui.critical.307df9",
   },
   [RiskLevel.HIGH]: {
     accent: 'border-l-blade-safety',
     bg: 'bg-orange-50',
     text: 'text-orange-700',
-    label: 'HIGH RISK',
+    label: "ui.high.risk.16247a",
   },
   [RiskLevel.MODERATE]: {
     accent: 'border-l-alert-orange',
     bg: 'bg-amber-50',
     text: 'text-amber-700',
-    label: 'MODERATE',
+    label: "ui.moderate.e62959",
   },
   [RiskLevel.LOW]: {
     accent: 'border-l-trust-blue',
     bg: 'bg-blue-50',
     text: 'text-blue-700',
-    label: 'LOW',
+    label: "ui.low.d8b967",
   },
 };
 
 export function RecallCard({ campaign }: RecallCardProps) {
+  const { t } = useI18n();
   // Risk is only shown when the API provides a severity signal (P1-5).
   const risk = (campaign.riskLevel && RISK_CONFIG[campaign.riskLevel]) || null;
 
@@ -66,7 +71,7 @@ export function RecallCard({ campaign }: RecallCardProps) {
                 )}
               >
                 <AlertTriangle className="h-3 w-3" />
-                {risk.label}
+                {t(risk.label)}
               </span>
             )}
           </div>
@@ -90,7 +95,7 @@ export function RecallCard({ campaign }: RecallCardProps) {
                 : campaign.manufacturerName}
             </span>
             <span className="data-chip text-[11px] font-mono">
-              Reference #{campaign.cpscNumber}
+              {t("ui.reference.348555")}{" "}{campaign.cpscNumber}
             </span>
           </div>
 
@@ -98,12 +103,10 @@ export function RecallCard({ campaign }: RecallCardProps) {
           <div className="flex items-center justify-between mt-3">
             {campaign.estimatedUnits > 0 && (
               <span className="text-xs text-text-tertiary">
-                {campaign.estimatedUnits.toLocaleString()} units affected
-              </span>
+                {campaign.estimatedUnits.toLocaleString()} {t("ui.units.affected.820dcb")}</span>
             )}
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-brand-teal opacity-0 group-hover:opacity-100 transition-opacity duration-250">
-              View Recall
-              <ArrowRight className="h-3.5 w-3.5" />
+              {t("ui.view.recall.9130f6")}<ArrowRight className="h-3.5 w-3.5" />
             </span>
           </div>
         </div>

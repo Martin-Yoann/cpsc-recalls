@@ -1,4 +1,6 @@
 'use client';
+import { useI18n } from "@/lib/i18n/provider";
+
 
 import { useRef, useState } from 'react';
 import { User, Mail, Phone, Calendar, Shield, Camera, Check, Loader2, AlertCircle } from 'lucide-react';
@@ -43,6 +45,7 @@ function fileToAvatarDataUrl(file: File): Promise<string> {
 }
 
 export default function ProfilePage() {
+  const { t, locale } = useI18n();
   const { user, updateProfile } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -96,9 +99,9 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="label-eyebrow text-brand">Account</p>
-        <h1 className="mt-2 text-[28px] leading-tight font-bold text-foreground">Profile</h1>
-        <p className="mt-1 text-secondary">Manage your account information · saved to Neon</p>
+        <p className="label-eyebrow text-brand">{t("ui.account.85dfa3")}</p>
+        <h1 className="mt-2 text-[28px] leading-tight font-bold text-foreground">{t("ui.profile.ff4fc0")}</h1>
+        <p className="mt-1 text-secondary">{t("ui.manage.your.account.information.saved.to.neon.964526")}</p>
       </div>
 
       {msg && (
@@ -107,7 +110,7 @@ export default function ProfilePage() {
           msg.kind === 'ok' ? "bg-success/10 text-success" : "bg-brand-light text-brand"
         )}>
           {msg.kind === 'ok' ? <Check className="h-4 w-4 shrink-0" /> : <AlertCircle className="h-4 w-4 shrink-0" />}
-          {msg.text}
+          {t(msg.text)}
         </div>
       )}
 
@@ -115,8 +118,7 @@ export default function ProfilePage() {
       <div className="card-surface p-6">
         <h2 className="text-base font-bold text-foreground pb-3 border-b border-border mb-5 flex items-center gap-2">
           <Shield className="h-4 w-4 text-foreground" />
-          Account Details
-        </h2>
+          {t("ui.account.details.a951f4")}</h2>
 
         <div className="flex items-center gap-4 p-4 rounded-md bg-surface-dim">
           <div className="relative shrink-0">
@@ -133,7 +135,7 @@ export default function ProfilePage() {
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
               className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-white border border-border shadow-sm hover:bg-surface-dim transition-colors disabled:opacity-50"
-              aria-label="Change avatar"
+              aria-label={t("ui.change.avatar.60f2e9")}
             >
               {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin text-secondary" /> : <Camera className="h-3.5 w-3.5 text-secondary" />}
             </button>
@@ -141,7 +143,7 @@ export default function ProfilePage() {
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-lg font-bold text-foreground truncate">{user?.name}</p>
-            <p className="text-sm text-secondary">Consumer</p>
+            <p className="text-sm text-secondary">{t("ui.consumer.0c707f")}</p>
             {user?.avatarDataUrl && (
               <button
                 type="button"
@@ -149,22 +151,21 @@ export default function ProfilePage() {
                 disabled={uploading}
                 className="mt-1 text-xs text-secondary hover:text-brand transition-colors disabled:opacity-50"
               >
-                Remove avatar
-              </button>
+                {t("ui.remove.avatar.58e0c5")}</button>
             )}
           </div>
         </div>
 
         <div className="mt-4 grid sm:grid-cols-3 gap-3">
           {[
-            { label: 'Email', value: user?.email, icon: Mail },
-            { label: 'Phone', value: user?.phone || '—', icon: Phone },
-            { label: 'Registered', value: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '—', icon: Calendar },
+            { label: "contact.email", value: user?.email, icon: Mail },
+            { label: "contact.phone", value: user?.phone || '—', icon: Phone },
+            { label: "ui.registered.a844fc", value: user?.createdAt ? new Date(user.createdAt).toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' }) : '—', icon: Calendar },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-3 p-3 rounded-md bg-surface-dim border border-border">
               <item.icon className="h-4 w-4 text-secondary shrink-0" />
               <div className="min-w-0">
-                <p className="text-xs text-secondary">{item.label}</p>
+                <p className="text-xs text-secondary">{t(item.label)}</p>
                 <p className="text-sm font-semibold text-foreground truncate">{item.value}</p>
               </div>
             </div>
@@ -176,14 +177,13 @@ export default function ProfilePage() {
       <div className="card-surface p-6">
         <h2 className="text-base font-bold text-foreground pb-3 border-b border-border mb-5 flex items-center gap-2">
           <User className="h-4 w-4 text-foreground" />
-          Edit Display Name
-        </h2>
+          {t("ui.edit.display.name.525cba")}</h2>
         <div className="flex gap-2">
           <input
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder="Your display name"
+            placeholder={t("ui.your.display.name.33a614")}
             className="flex-1 h-10 px-3 border border-border bg-white text-sm rounded-md outline-none focus:border-foreground focus:ring-1 focus:ring-foreground"
           />
           <button
@@ -191,12 +191,11 @@ export default function ProfilePage() {
             disabled={savingName || name.trim() === (user?.name ?? '')}
             className="btn-brand disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {savingName ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
+            {savingName ? <Loader2 className="h-4 w-4 animate-spin" /> : t("ui.save.efc007")}
           </button>
         </div>
         <p className="mt-2 text-xs text-secondary">
-          Visible across your claims and dashboard. Changes are saved to your Neon account.
-        </p>
+          {t("ui.visible.across.your.claims.and.dashboard.changes.7bcca0")}</p>
       </div>
     </div>
   );

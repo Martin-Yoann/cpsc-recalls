@@ -10,6 +10,8 @@ import type { Campaign } from '@/types';
 import type { CampaignView } from '@/lib/api-client';
 import { getCampaign as apiGetCampaign } from '@/lib/api-client';
 import { mockCampaigns, getCampaignBySlug } from '@/data/mock-recalls';
+import { usableRecallEmail, usableRecallPhone } from '@/lib/recall-support';
+import { getI18n } from '@/lib/i18n/server';
 
 const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
@@ -21,6 +23,11 @@ function campaignViewToCampaign(view: CampaignView): Campaign {
   const firstProduct = view.products[0];
   const lots = firstProduct?.affectedLots ?? [];
   const dateCodes = [...new Set(lots.map((l) => l.dateCode))].filter(Boolean);
+  const support = {
+    email: usableRecallEmail(view.support.email),
+    phone: usableRecallPhone(view.support.phone),
+    hours: view.support.hours,
+  };
 
   return {
     id: view.code,
@@ -36,9 +43,13 @@ function campaignViewToCampaign(view: CampaignView): Campaign {
     lastUpdated: '',
     remedySummary: view.remedySummary,
     manufacturerName: firstProduct?.brand ?? '',
-    manufacturerContact: view.support?.phone
-      ? `${view.support.phone} (${view.support.hours ?? ''})`
-      : '',
+    support,
+    contentLocale: view.locale === "es-US" ? "es-US" : "en-US",
+    contentTranslationId: view.translation?.id,
+    faq: view.faq ?? [],
+    manufacturerContact: support.phone
+      ? `${support.phone}${support.hours ? ` (${support.hours})` : ''}`
+      : support.email,
     estimatedUnits: 0,
     hazardDescription: view.hazard,
     instructions: view.immediateAction,
@@ -62,7 +73,7 @@ function campaignViewToCampaign(view: CampaignView): Campaign {
       upc: '', // unit UPC not provided by the API yet; empty until it is
       manufactureDateStart: lots[0]?.dateCode ?? '',
       manufactureDateEnd: lots[lots.length - 1]?.dateCode ?? '',
-      description: `${p.name}`,
+      description: p.description || p.name,
       imageUrl: '',
       brandName: p.brand,
       retailerNames: [],
@@ -74,7 +85,7 @@ function campaignViewToCampaign(view: CampaignView): Campaign {
       id: r.code,
       type: remedyTypeForCode(r.code),
       title: r.displayName,
-      description: r.displayName,
+      description: r.description || r.displayName,
       deadline: '',
       requiresEvidence: true,
       evidenceTypes: [EvidenceType.PRODUCT_PHOTO, EvidenceType.PROOF_OF_PURCHASE],
@@ -117,10 +128,13 @@ function remedyTypeForCode(code: string): RemedyType {
 export const fetchCampaign = cache(async function fetchCampaign(
   slug: string,
 ): Promise<{ campaign?: Campaign; error?: { status: number; requestId?: string } }> {
-  const result = await apiGetCampaign(slug);
+  const { locale } = await getI18n();
+  let result = await apiGetCampaign(slug, locale);
+  // Never translate or silently relabel a notice that has no published translation.
+  if (!result.ok && (result.status === 404 || result.status === 400) && locale !== 'en-US') result = await apiGetCampaign(slug, 'en-US');
 
   if (result.ok) {
-    return { campaign: campaignViewToCampaign(result.data.campaign) };
+    return { campaign: { ...campaignViewToCampaign(result.data.campaign), requestedLocale: locale } };
   }
 
   // API failure — demo mode falls back to mock data instead of erroring

@@ -1,3 +1,5 @@
+
+import { getI18n } from "@/lib/i18n/server";
 import { Loader2 } from "lucide-react";
 
 // ============================================================
@@ -5,11 +7,12 @@ import { Loader2 } from "lucide-react";
 // Minimal black-tone skeleton with stable layout
 // ============================================================
 
-export default function RecallLoading() {
+export default async function RecallLoading() {
+  const { t } = await getI18n();
   return (
     <div
       aria-busy="true"
-      aria-label="Loading recall details"
+      aria-label={t("ui.loading.recall.details.da35ca")}
       className="animate-in fade-in duration-300"
     >
       {/* ── Loader bar: 黑色旋转圆环 + 文字 ── */}
@@ -17,8 +20,7 @@ export default function RecallLoading() {
         <div className="flex items-center gap-3">
           <Loader2 className="h-5 w-5 animate-spin text-black" strokeWidth={1.5} />
           <span className="text-sm font-medium text-black/70">
-            Loading recall details…
-          </span>
+            {t("ui.loading.recall.details.a811e0")}</span>
         </div>
       </div>
 

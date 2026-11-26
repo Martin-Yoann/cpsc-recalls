@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n/provider";
+
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -45,12 +47,12 @@ interface Props {
 }
 
 const STATUS_LABELS: Record<DisposalEvidenceDocument["status"], string> = {
-  uploading: "Uploading",
-  verifying: "Checking",
-  verified: "Passed our checks",
-  scan_pending: "Checking",
-  rejected: "Rejected",
-  expired: "Expired",
+  uploading: "ui.uploading.de2724",
+  verifying: "ui.checking.97876b",
+  verified: "ui.passed.our.checks.63dbc3",
+  scan_pending: "ui.checking.97876b",
+  rejected: "ui.rejected.27eeb7",
+  expired: "ui.expired.a689a9",
 };
 
 const STATUS_STYLES: Record<DisposalEvidenceDocument["status"], string> = {
@@ -63,8 +65,8 @@ const STATUS_STYLES: Record<DisposalEvidenceDocument["status"], string> = {
 };
 
 const REASON_LABELS: Record<string, string> = {
-  mime_mismatch: "The file type did not match what was sent.",
-  malware_detected: "The file did not pass our safety check.",
+  mime_mismatch: "ui.the.file.type.did.not.match.what.31f030",
+  malware_detected: "ui.the.file.did.not.pass.our.safety.fc0db6",
 };
 
 export function DisposalEvidenceUpload({
@@ -73,6 +75,7 @@ export function DisposalEvidenceUpload({
   allowedActions,
   onChanged,
 }: Props) {
+  const { t } = useI18n();
   const [documents, setDocuments] = useState<DisposalEvidenceDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -151,7 +154,7 @@ export function DisposalEvidenceUpload({
       return;
     }
     setMessage(
-      "Sent for review. We will look at your photos and let you know.",
+      "ui.sent.for.review.we.will.look.at.8bada3",
     );
     onChanged();
   };
@@ -173,13 +176,9 @@ export function DisposalEvidenceUpload({
           id="disposal-evidence"
           className="text-sm font-semibold text-[#303133]"
         >
-          Your photos
-        </h3>
+          {t("ui.your.photos.1e1ef1")}</h3>
         <p className="text-xs text-[#909399]">
-          Passing our checks only confirms the file itself is readable and safe.
-          A person then looks at whether it shows what the instructions above
-          ask for.
-        </p>
+          {t("ui.passing.our.checks.only.confirms.the.file.08c898")}</p>
       </div>
 
       {isLoading ? (
@@ -188,8 +187,7 @@ export function DisposalEvidenceUpload({
           className="flex items-center gap-2 text-sm text-[#606266]"
         >
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          Loading your photos…
-        </p>
+          {t("ui.loading.your.photos.dce1c4")}</p>
       ) : (
         <>
           {documents.length > 0 && (
@@ -205,12 +203,12 @@ export function DisposalEvidenceUpload({
                   <span
                     className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_STYLES[document.status]}`}
                   >
-                    {STATUS_LABELS[document.status]}
+                    {t(STATUS_LABELS[document.status])}
                   </span>
                   {document.statusReason && (
                     <span className="w-full text-xs text-[#f56c6c]">
-                      {REASON_LABELS[document.statusReason] ??
-                        "This file was not accepted."}
+                      {t(REASON_LABELS[document.statusReason] ??
+                        "ui.this.file.was.not.accepted.0a0cf4")}
                     </span>
                   )}
                 </li>
@@ -221,21 +219,16 @@ export function DisposalEvidenceUpload({
           {reviewStatus === "accepted" && (
             <p className="flex items-center gap-2 rounded border border-[#e1f3d8] bg-[#f0f9eb] p-3 text-sm text-[#67c23a]">
               <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
-              Our team accepted your photos.
-            </p>
+              {t("ui.our.team.accepted.your.photos.eff9e5")}</p>
           )}
           {reviewStatus === "needs_resubmission" && (
             <p className="flex items-center gap-2 rounded border border-[#faecd8] bg-[#fdf6ec] p-3 text-sm text-[#e6a23c]">
               <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-              We need different photos. Please check the instructions above and
-              add new ones.
-            </p>
+              {t("ui.we.need.different.photos.please.check.the.f09986")}</p>
           )}
           {reviewStatus === "pending" && (
             <p className="rounded border border-[#e9e9eb] bg-[#f4f4f5] p-3 text-sm text-[#606266]">
-              Your photos are with our team for review. You can leave this page
-              and come back.
-            </p>
+              {t("ui.your.photos.are.with.our.team.for.e12844")}</p>
           )}
         </>
       )}
@@ -258,30 +251,27 @@ export function DisposalEvidenceUpload({
               onClick={() => inputRef.current?.click()}
             >
               <Upload className="h-4 w-4" aria-hidden="true" />
-              Add photos
-            </Button>
+              {t("ui.add.photos.a59893")}</Button>
             {mayUpload && documents.length > 0 && (
               <Button
                 type="button"
                 disabled={isUploading || !ready}
                 onClick={() => void onSendForReview()}
               >
-                {isUploading ? "Sending…" : "Send for review"}
+                {t(isUploading ? "ui.sending.cf7655" : "ui.send.for.review.ddc873")}
               </Button>
             )}
           </div>
           {documents.length > 0 && !ready && !hasPending && (
             <p className="text-xs text-[#e6a23c]">
-              Only photos that passed our checks can be sent for review. Remove
-              any that were rejected and add them again.
-            </p>
+              {t("ui.only.photos.that.passed.our.checks.can.396246")}</p>
           )}
         </div>
       )}
 
       {message && (
         <p role="status" className="text-sm text-[#67c23a]">
-          {message}
+          {t(message)}
         </p>
       )}
       {problem && (
@@ -290,7 +280,7 @@ export function DisposalEvidenceUpload({
           className="flex items-center gap-2 text-sm text-[#f56c6c]"
         >
           <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-          {problem}
+          {t(problem)}
         </p>
       )}
       {documents.length > 0 && (
@@ -304,8 +294,7 @@ export function DisposalEvidenceUpload({
           }}
         >
           <RefreshCw className="h-4 w-4" aria-hidden="true" />
-          Refresh status
-        </Button>
+          {t("ui.refresh.status.ade15a")}</Button>
       )}
     </section>
   );

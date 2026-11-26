@@ -237,7 +237,7 @@ async function fetchApi<T>(
     ok: false,
     error: {
       type: "about:blank",
-      title: "Network Error",
+      title: "ui.network.error.da3f76",
       status: 0,
       detail: "Could not reach the API server.",
       requestId: rid,

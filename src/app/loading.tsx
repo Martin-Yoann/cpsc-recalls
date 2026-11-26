@@ -1,6 +1,9 @@
+
+import { getI18n } from "@/lib/i18n/server";
 import { Loader2 } from "lucide-react";
 
-export default function RootLoading() {
+export default async function RootLoading() {
+  const { t } = await getI18n();
   return (
     <div
       className="flex min-h-[70vh] items-center justify-center px-4 py-10"
@@ -13,8 +16,7 @@ export default function RootLoading() {
         {/* 白色文字渐入，模拟“延伸”效果 */}
         <div className="overflow-hidden">
           <p className="animate-[fadeInUp_0.8s_ease-out] text-sm font-medium text-black/80">
-            Loading…
-          </p>
+            {t("ui.loading.33ce41")}</p>
         </div>
       </div>
 

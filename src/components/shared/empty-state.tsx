@@ -1,3 +1,7 @@
+"use client";
+import { useI18n } from "@/lib/i18n/provider";
+
+
 // ============================================================
 // KOI Recall Platform — Empty State
 // ============================================================
@@ -24,6 +28,7 @@ export function EmptyState({
   ctaHref,
   className,
 }: EmptyStateProps) {
+  const { t } = useI18n();
   return (
     <div
       className={cn(
@@ -34,16 +39,16 @@ export function EmptyState({
       <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-md border border-border bg-surface-secondary">
         <Icon className="h-8 w-8 text-text-tertiary" />
       </div>
-      <h3 className="text-lg font-semibold text-text-primary mb-1.5">{title}</h3>
+      <h3 className="text-lg font-semibold text-text-primary mb-1.5">{t(title)}</h3>
       {description && (
         <p className="text-sm text-text-secondary max-w-sm leading-relaxed mb-6">
-          {description}
+          {t(description)}
         </p>
       )}
       {ctaLabel && ctaHref && (
         <Link href={ctaHref}>
           <Button variant="default" size="sm" className="bg-brand-teal hover:bg-blade-resolution-dark">
-            {ctaLabel}
+            {t(ctaLabel)}
           </Button>
         </Link>
       )}

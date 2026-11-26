@@ -1,4 +1,6 @@
 ﻿"use client";
+import { useI18n } from "@/lib/i18n/provider";
+
 
 import { useState, useEffect } from "react";
 import type { Variants } from "framer-motion";
@@ -14,17 +16,17 @@ import { cn } from "@/lib/utils";
 
 // ─── Schemas ───
 const loginSchema = z.object({
-  email: z.string().min(1, "Email is required").email("Invalid email format"),
-  password: z.string().min(1, "Password is required"),
+  email: z.string().min(1, "ui.email.is.required.4da1d5").email("ui.invalid.email.format.789ec2"),
+  password: z.string().min(1, "ui.password.is.required.6c56a9"),
 });
 
 const registerSchema = z
   .object({
-    name: z.string().min(1, "Name is required").min(2, "Name must be at least 2 characters"),
-    email: z.string().min(1, "Email is required").email("Invalid email format"),
-    phone: z.string().min(1, "Phone number is required").refine(validatePhone, "Please enter a valid phone number"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string().min(1, "Please confirm your password"),
+    name: z.string().min(1, "ui.name.is.required.222c72").min(2, "ui.name.must.be.at.least.2.characters.0acc3f"),
+    email: z.string().min(1, "ui.email.is.required.4da1d5").email("ui.invalid.email.format.789ec2"),
+    phone: z.string().min(1, "ui.phone.number.is.required.f84537").refine(validatePhone, "ui.please.enter.a.valid.phone.number.4986d6"),
+    password: z.string().min(6, "ui.password.must.be.at.least.6.characters.c01752"),
+    confirmPassword: z.string().min(1, "ui.please.confirm.your.password.51d69a"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -52,15 +54,16 @@ function Field({
   register: UseFormRegisterReturn;
   autoComplete?: string;
 }) {
+  const { t } = useI18n();
   return (
     <div>
       <label htmlFor={id} className="block text-xs font-semibold text-foreground mb-1.5">
-        {label}
+        {t(label)}
       </label>
       <input
         id={id}
         type={type}
-        placeholder={placeholder}
+        placeholder={t(placeholder)}
         autoComplete={autoComplete}
         className={cn(
           "h-10 w-full px-3 border bg-white text-sm rounded-md outline-none transition-colors",
@@ -70,12 +73,13 @@ function Field({
         )}
         {...register}
       />
-      {error && <p className="mt-1 text-xs text-brand">{error}</p>}
+      {error && <p className="mt-1 text-xs text-brand">{t(error)}</p>}
     </div>
   );
 }
 
 export function AuthDrawer() {
+  const { t } = useI18n();
   const { authDrawerOpen, authDrawerMode, closeAuthDrawer, openAuthDrawer, login, register } = useAuth();
   const [showPw, setShowPw] = useState(false);
   const [serverError, setServerError] = useState("");
@@ -89,13 +93,13 @@ export function AuthDrawer() {
   const onSignIn = async (data: LoginFormData) => {
     setServerError("");
     const r = await login(data.email, data.password);
-    if (!r.success) setServerError(r.error || "Login failed.");
+    if (!r.success) setServerError(r.error || "ui.login.failed.244ad5");
   };
 
   const onRegister = async (data: RegisterFormData) => {
     setServerError("");
     const r = await register({ name: data.name, email: data.email, phone: data.phone, password: data.password });
-    if (!r.success) setServerError(r.error || "Registration failed.");
+    if (!r.success) setServerError(r.error || "ui.registration.failed.4ea79f");
   };
 
   const switchTab = (mode: "signin" | "register") => {
@@ -168,14 +172,14 @@ export function AuthDrawer() {
                   <Shield className="h-4 w-4" />
                 </span>
                 <div>
-                  <p id="auth-drawer-title" className="text-base font-bold text-foreground">KOI Recall</p>
-                  <p className="label-eyebrow !text-[10px]">Consumer Account</p>
+                  <p id="auth-drawer-title" className="text-base font-bold text-foreground">{t("ui.koi.recall.ccd6c2")}</p>
+                  <p className="label-eyebrow !text-[10px]">{t("ui.consumer.account.cb1d64")}</p>
                 </div>
               </div>
               <button
                 onClick={closeAuthDrawer}
                 className="flex h-9 w-9 items-center justify-center rounded-md text-foreground hover:bg-surface-dim transition-colors"
-                aria-label="Close"
+                aria-label={t("ui.close.bbfa77")}
               >
                 <X className="h-5 w-5" />
               </button>
@@ -198,7 +202,7 @@ export function AuthDrawer() {
                       activeIndex === index ? "text-white" : "text-secondary hover:text-foreground"
                     )}
                   >
-                    {tab === "signin" ? "Sign In" : "Create Account"}
+                    {t(tab === "signin" ? "auth.signIn" : "ui.create.account.eff4fd")}
                   </button>
                 ))}
               </div>
@@ -207,7 +211,7 @@ export function AuthDrawer() {
             <div className="flex-1 overflow-y-auto px-6 py-5">
               {serverError && (
                 <div className="mb-4 rounded-md border border-brand/20 bg-brand-light p-3 text-sm text-brand">
-                  {serverError}
+                  {t(serverError)}
                 </div>
               )}
 
@@ -223,7 +227,7 @@ export function AuthDrawer() {
                     exit="exit"
                   >
                     <Field
-                      label="Email Address"
+                      label={t("ui.email.address.09ba55")}
                       id="sd-email"
                       type="email"
                       placeholder="your@email.com"
@@ -233,13 +237,12 @@ export function AuthDrawer() {
                     />
                     <div>
                       <label htmlFor="sd-pw" className="block text-xs font-semibold text-foreground mb-1.5">
-                        Password
-                      </label>
+                        {t("ui.password.8be3c9")}</label>
                       <div className="relative">
                         <input
                           id="sd-pw"
                           type={showPw ? "text" : "password"}
-                          placeholder="Enter your password"
+                          placeholder={t("ui.enter.your.password.137816")}
                           autoComplete="current-password"
                           className={cn(
                             "h-10 w-full px-3 pr-10 border bg-white text-sm rounded-md outline-none transition-colors",
@@ -257,7 +260,7 @@ export function AuthDrawer() {
                           {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
-                      {signInErrors.password && <p className="mt-1 text-xs text-brand">{signInErrors.password.message}</p>}
+                      {signInErrors.password && <p className="mt-1 text-xs text-brand">{t(signInErrors.password.message)}</p>}
                     </div>
 
                     <button
@@ -272,7 +275,7 @@ export function AuthDrawer() {
                       disabled={signingIn}
                       className="btn-brand w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed h-11"
                     >
-                      {signingIn ? <><Loader2 className="h-4 w-4 animate-spin" /> Signing In…</> : "Sign In"}
+                      {signingIn ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("ui.signing.in.ad53ee")}</> : t("auth.signIn")}
                     </button>
                   </motion.form>
                 ) : (
@@ -286,15 +289,15 @@ export function AuthDrawer() {
                     exit="exit"
                   >
                     <Field
-                      label="Full Name"
+                      label={t("ui.full.name.64346b")}
                       id="sd-name"
-                      placeholder="Your full name"
+                      placeholder={t("ui.your.full.name.d90476")}
                       error={regErrors.name?.message}
                       register={regForm.register("name")}
                       autoComplete="name"
                     />
                     <Field
-                      label="Email Address"
+                      label={t("ui.email.address.09ba55")}
                       id="sd-remail"
                       type="email"
                       placeholder="your@email.com"
@@ -303,7 +306,7 @@ export function AuthDrawer() {
                       autoComplete="email"
                     />
                     <Field
-                      label="Phone Number"
+                      label={t("ui.phone.number.ab25d6")}
                       id="sd-phone"
                       type="tel"
                       placeholder="13812341234"
@@ -313,13 +316,12 @@ export function AuthDrawer() {
                     />
                     <div>
                       <label htmlFor="sd-rpw" className="block text-xs font-semibold text-foreground mb-1.5">
-                        Password
-                      </label>
+                        {t("ui.password.8be3c9")}</label>
                       <div className="relative">
                         <input
                           id="sd-rpw"
                           type={showPw ? "text" : "password"}
-                          placeholder="At least 6 characters"
+                          placeholder={t("ui.at.least.6.characters.d5af56")}
                           autoComplete="new-password"
                           className={cn(
                             "h-10 w-full px-3 pr-10 border bg-white text-sm rounded-md outline-none transition-colors",
@@ -337,13 +339,13 @@ export function AuthDrawer() {
                           {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
-                      {regErrors.password && <p className="mt-1 text-xs text-brand">{regErrors.password.message}</p>}
+                      {regErrors.password && <p className="mt-1 text-xs text-brand">{t(regErrors.password.message)}</p>}
                     </div>
                     <Field
-                      label="Confirm Password"
+                      label={t("ui.confirm.password.c2d404")}
                       id="sd-cpw"
                       type="password"
-                      placeholder="Re-enter your password"
+                      placeholder={t("ui.re.enter.your.password.e76472")}
                       error={regErrors.confirmPassword?.message}
                       register={regForm.register("confirmPassword")}
                       autoComplete="new-password"
@@ -361,7 +363,7 @@ export function AuthDrawer() {
                        }}
                       className="btn-brand w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed h-11"
                     >
-                      {registering ? <><Loader2 className="h-4 w-4 animate-spin" /> Creating Account…</> : "Create Account"}
+                      {registering ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("ui.creating.account.a48e84")}</> : t("ui.create.account.eff4fd")}
                     </button>
                   </motion.form>
                 )}
@@ -376,8 +378,7 @@ export function AuthDrawer() {
                 className="inline-flex items-center gap-2 text-sm font-medium text-secondary hover:text-foreground transition-colors"
               >
                 <Search className="h-4 w-4" />
-                Check status without an account
-              </Link>
+                {t("ui.check.status.without.an.account.68a04b")}</Link>
             </div>
           </motion.aside>
         </>

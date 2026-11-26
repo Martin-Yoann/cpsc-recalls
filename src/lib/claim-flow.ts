@@ -14,6 +14,7 @@ import {
 } from "@/lib/api-client";
 import { saveDisposalToken } from "@/lib/disposal-access";
 import { uploadPrivateObject } from "@/lib/blob-upload";
+import { browserLocale, normalizeLocale } from '@/lib/i18n/locale';
 
 const SESSION_KEY_PREFIX = "koi_claim_flow:";
 export const CLAIM_FLOW_FORM_VERSION = "consumer-claim-form-v1";
@@ -242,6 +243,8 @@ function toSnapshot(session: ClaimFlowSession): ClaimFlowSessionSnapshot {
 }
 
 export interface ClaimFlowSubmitInput {
+  contentLocale?: "en-US" | "es-US";
+  contentTranslationId?: string;
   locale: string;
   consumer: ClaimConsumerInput;
   products: ClaimProductInput[];
@@ -289,7 +292,7 @@ export function createDefaultForm(product?: {
   shapes?: string[];
 }): ClaimFlowDraftState {
   return {
-    locale: "en-US",
+    locale: browserLocale(),
     consumer: {
       firstName: "",
       lastName: "",
@@ -613,7 +616,7 @@ export class ClaimFlowModule {
   buildSubmitInput(
     session: ClaimFlowSession,
     privacyNoticeVersion: string,
-    options?: { addressRequired?: boolean },
+    options?: { addressRequired?: boolean; contentLocale?: "en-US" | "es-US"; contentTranslationId?: string },
   ): ClaimFlowSubmitInput {
     // UI values ARE the OpenAPI enum values — no conversion layer (design §5.6).
     const incidentDetails: IncidentDetailsInput =
@@ -656,7 +659,9 @@ export class ClaimFlowModule {
       Boolean(deliveryAddress.postalCode);
 
     return {
-      locale: session.form.locale,
+      locale: browserLocale(),
+      contentLocale: options?.contentLocale,
+      contentTranslationId: options?.contentTranslationId,
       remedyCode: session.remedyCode ?? "",
       documentIds: session.documents.map((document) => document.documentId),
       incidentAnswer: session.form.incidentAnswer,
@@ -707,7 +712,9 @@ export class ClaimFlowModule {
     const body: ClaimSubmissionRequest = {
       draftId: session.draftId,
       draftToken: session.draftToken,
-      locale: "en-US",
+      locale: normalizeLocale(input.locale),
+      contentLocale: input.contentLocale,
+      contentTranslationId: input.contentTranslationId,
       consumer: input.consumer,
       products: input.products,
       remedyCode: input.remedyCode,

@@ -4,6 +4,8 @@ import { Providers } from '@/components/shared/providers';
 import { Header } from '@/components/shared/header';
 import { Footer } from '@/components/shared/footer';
 import { Analytics } from '@/components/shared/analytics';
+import { getI18n } from '@/lib/i18n/server';
+import { I18nProvider } from '@/lib/i18n/provider';
 import './globals.css';
 
 /**
@@ -34,23 +36,24 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { locale } = await getI18n();
   return (
     <html
-      lang="en"
+      lang={locale === 'es-US' ? 'es' : 'en'}
       className={`h-full antialiased ${inter.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col font-sans">
-        <Providers>
+        <I18nProvider initialLocale={locale}><Providers>
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
-        </Providers>
+        </Providers></I18nProvider>
         <Analytics />
       </body>
     </html>

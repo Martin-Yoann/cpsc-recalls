@@ -1,3 +1,7 @@
+"use client";
+import { useI18n } from "@/lib/i18n/provider";
+
+
 // ============================================================
 // KOI Recall Platform — Product Identity Card v3.0
 // Shows shapes, flavors, lots, and package identifiers
@@ -14,6 +18,7 @@ interface ProductIdentityCardProps {
 }
 
 export function ProductIdentityCard({ product, affectedLots, dateCodes }: ProductIdentityCardProps) {
+  const { t } = useI18n();
   return (
     <div className="rounded-2xl border bg-surface-elevated shadow-sm overflow-hidden">
       {/* Header */}
@@ -46,8 +51,7 @@ export function ProductIdentityCard({ product, affectedLots, dateCodes }: Produc
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest flex items-center gap-1">
                 <Candy className="h-3 w-3" />
-                Candy Shapes
-              </label>
+                {t("ui.candy.shapes.85a96b")}</label>
               <div className="flex flex-wrap gap-1.5">
                 {product.shapes.map((shape) => (
                   <Badge key={shape} variant="secondary" className="font-medium text-xs">
@@ -63,8 +67,7 @@ export function ProductIdentityCard({ product, affectedLots, dateCodes }: Produc
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest flex items-center gap-1">
                 <Sparkles className="h-3 w-3" />
-                Flavors
-              </label>
+                {t("ui.flavors.152942")}</label>
               <div className="flex flex-wrap gap-1.5">
                 {product.flavors.map((flavor) => (
                   <Badge key={flavor} variant="secondary" className="font-medium text-xs">
@@ -80,8 +83,7 @@ export function ProductIdentityCard({ product, affectedLots, dateCodes }: Produc
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest flex items-center gap-1">
                 <Barcode className="h-3 w-3" />
-                Affected Lot Codes
-              </label>
+                {t("ui.affected.lot.codes.e0f4f4")}</label>
               <p className="text-sm font-mono font-semibold text-blade-safety bg-blade-safety-light rounded-md px-3 py-2 border border-blade-safety-medium/30">
                 {affectedLots.join(' · ')}
               </p>
@@ -93,8 +95,7 @@ export function ProductIdentityCard({ product, affectedLots, dateCodes }: Produc
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
-                Affected Date Codes
-              </label>
+                {t("ui.affected.date.codes.6b1b1a")}</label>
               <p className="text-sm font-mono font-semibold text-text-primary bg-surface-secondary rounded-md px-3 py-2 border">
                 {dateCodes.join(' · ')}
               </p>
@@ -106,8 +107,7 @@ export function ProductIdentityCard({ product, affectedLots, dateCodes }: Produc
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest flex items-center gap-1">
                 <Barcode className="h-3 w-3" />
-                UPC Code
-              </label>
+                {t("ui.upc.code.fbb7cd")}</label>
               <p className="text-sm font-mono font-semibold text-text-primary bg-surface-secondary rounded-md px-3 py-2 border">
                 {product.upc}
               </p>
@@ -118,8 +118,7 @@ export function ProductIdentityCard({ product, affectedLots, dateCodes }: Produc
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest flex items-center gap-1">
               <Calendar className="h-3 w-3" />
-              Manufacture Date Range
-            </label>
+              {t("ui.manufacture.date.range.03d075")}</label>
             <p className="text-sm font-mono font-semibold text-text-primary bg-surface-secondary rounded-md px-3 py-2 border">
               {product.manufactureDateStart} — {product.manufactureDateEnd}
             </p>
@@ -130,8 +129,7 @@ export function ProductIdentityCard({ product, affectedLots, dateCodes }: Produc
         <div className="mt-5 pt-4 border-t">
           <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest flex items-center gap-1 mb-2">
             <Store className="h-3 w-3" />
-            Sold At
-          </label>
+            {t("ui.sold.at.b6d435")}</label>
           <div className="flex flex-wrap gap-1.5">
             {product.retailerNames.map((retailer) => (
               <Badge key={retailer} variant="secondary" className="font-medium text-xs">

@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:recall-support": "node --test scripts/recall-support.test.mjs",
+    "test:i18n": "node --test scripts/i18n.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

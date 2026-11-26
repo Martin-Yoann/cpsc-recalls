@@ -9,6 +9,7 @@ import { Check, ShieldAlert, SearchCheck, CheckCircle2 } from 'lucide-react';
 import type { BladeStage } from '@/types';
 import { BLADE_CONFIG } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n/provider';
 
 interface BladeProgressProps {
   current: BladeStage;
@@ -24,6 +25,7 @@ const BLADE_ICONS: Record<BladeStage, React.ComponentType<{ className?: string }
 };
 
 export function BladeProgress({ current, completedSteps }: BladeProgressProps) {
+  const { t } = useI18n();
   return (
     <div className="container-content py-6">
       <div className="flex items-center relative max-w-lg mx-auto">
@@ -72,7 +74,7 @@ export function BladeProgress({ current, completedSteps }: BladeProgressProps) {
               </div>
               <div className="text-center">
                 <p className={cn('text-[10px] font-bold uppercase tracking-wider', isCurrent ? 'text-text-primary' : 'text-text-tertiary')}>
-                  {config.label.split(' ')[0]}
+                  {t(config.label.split(' ')[0])}
                 </p>
               </div>
             </div>

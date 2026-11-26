@@ -1,3 +1,5 @@
+
+import { getI18n } from "@/lib/i18n/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -28,6 +30,7 @@ export const metadata: Metadata = {
 };
 
 export default async function DisposalPage({ params }: DisposalPageProps) {
+  const { t } = await getI18n();
   const { slug, taskId } = await params;
   const { campaign, error } = await fetchCampaign(slug);
   if (error || !campaign) notFound();
@@ -40,17 +43,14 @@ export default async function DisposalPage({ params }: DisposalPageProps) {
           className="inline-flex items-center gap-1.5 text-sm text-[#606266] underline hover:text-[#303133]"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Back to the recall notice
-        </Link>
+          {t("ui.back.to.the.recall.notice.c58c66")}</Link>
       </div>
 
       <h1 className="mb-2 text-2xl font-semibold text-[#303133]">
         {campaign.title}
       </h1>
       <p className="mb-8 text-sm text-[#606266]">
-        This page shows the disposal step for your claim, when one applies to
-        your product.
-      </p>
+        {t("ui.this.page.shows.the.disposal.step.for.3f15e4")}</p>
 
       <DisposalTaskLoader
         taskId={taskId}

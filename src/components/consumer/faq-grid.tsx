@@ -1,3 +1,7 @@
+"use client";
+import { useI18n } from "@/lib/i18n/provider";
+
+
 import Link from "next/link";
 import { Clock, Receipt, Package, ShieldCheck, FileText, Phone } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -11,37 +15,38 @@ type FAQ = {
 const FAQS: FAQ[] = [
   {
     icon: Clock,
-    question: "How long does a claim take?",
-    answer: "Most claims are reviewed within 5–7 business days. You'll receive status updates by email and can track progress in your dashboard.",
+    question: "ui.how.long.does.a.claim.take.5a48fb",
+    answer: "ui.review.and.remedy.timing.depend.on.the.f4e060",
   },
   {
     icon: Receipt,
-    question: "Do I need my receipt?",
-    answer: "Proof of purchase is required for refund claims. Replacement claims only need a photo of the product showing the lot code.",
+    question: "ui.do.i.need.my.receipt.39c1e6",
+    answer: "ui.evidence.requirements.depend.on.the.recall.review.58bc7b",
   },
   {
     icon: Package,
-    question: "How do I return the item?",
-    answer: "Most remedies don't require a return. Stop using the product, keep it in a safe place, and follow the remedy-specific instructions we'll email you.",
+    question: "ui.how.do.i.return.the.item.5d2484",
+    answer: "ui.follow.the.return.or.disposal.instructions.in.e19eb4",
   },
   {
     icon: ShieldCheck,
-    question: "Is my information secure?",
-    answer: "All claim data is encrypted in transit and at rest. We never share personal information with third parties beyond the manufacturer handling your remedy.",
+    question: "ui.is.my.information.secure.266c4c",
+    answer: "ui.read.the.privacy.notice.linked.in.your.7f6178",
   },
   {
     icon: FileText,
-    question: "What documents are required?",
-    answer: "At minimum: product photo showing the lot code. For refunds: also a receipt or bank statement showing the purchase.",
+    question: "ui.what.documents.are.required.494d06",
+    answer: "ui.the.claim.form.lists.the.document.types.5bb4a8",
   },
   {
     icon: Phone,
-    question: "How do I contact support?",
-    answer: "Call 1-800-555-SAFE (Mon–Fri 9am–5pm ET) or email support@koiimprtinc.com. We respond within one business day.",
+    question: "ui.how.do.i.contact.support.6012fd",
+    answer: "ui.use.the.email.address.phone.number.and.9aaf1a",
   },
 ];
 
 export function FAQGrid() {
+  const { t } = useI18n();
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {FAQS.map(({ icon: Icon, question, answer }) => (
@@ -53,9 +58,9 @@ export function FAQGrid() {
             <Icon className="h-5 w-5" />
           </div>
           <h3 className="text-base font-semibold text-foreground mb-2 group-hover:text-brand transition-colors">
-            {question}
+            {t(question)}
           </h3>
-          <p className="text-sm text-secondary leading-relaxed">{answer}</p>
+          <p className="text-sm text-secondary leading-relaxed">{t(answer)}</p>
         </article>
       ))}
     </div>
@@ -63,14 +68,13 @@ export function FAQGrid() {
 }
 
 export function FAQCTA() {
+  const { t } = useI18n();
   return (
     <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
       <Link href="/faq" className="btn-dark">
-        View All Questions
-      </Link>
+        {t("ui.view.all.questions.c04d7d")}</Link>
       <Link href="/lookup" className="btn-outline">
-        Check Existing Claim
-      </Link>
+        {t("ui.check.existing.claim.391444")}</Link>
     </div>
   );
 }

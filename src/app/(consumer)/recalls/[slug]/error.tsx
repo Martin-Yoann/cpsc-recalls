@@ -1,4 +1,6 @@
 'use client';
+import { useI18n } from "@/lib/i18n/provider";
+
 
 import { useEffect } from 'react';
 import Link from 'next/link';
@@ -24,6 +26,7 @@ export default function RecallNoticeError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { t } = useI18n();
   useEffect(() => {
     console.error('[recalls] notice failed to load', { message: error.message, digest: error.digest });
   }, [error]);
@@ -31,23 +34,18 @@ export default function RecallNoticeError({
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-4">
       <div className="w-full max-w-lg card-elevated p-10 text-center">
-        <p className="label-eyebrow text-alert">Temporarily unavailable</p>
+        <p className="label-eyebrow text-alert">{t("ui.temporarily.unavailable.88f0e1")}</p>
         <h1 className="mt-3 text-[32px] leading-tight font-bold tracking-[-0.02em] text-foreground">
-          We couldn&apos;t load this recall notice
-        </h1>
+          {t("ui.we.couldn.t.load.this.recall.notice.e8405c")}</h1>
         <p className="mt-4 text-secondary leading-relaxed">
-          This is a problem on our side, not a statement about your product. Please try again in a
-          moment. If you need an answer now, contact the support details in your recall letter.
-        </p>
+          {t("ui.this.is.a.problem.on.our.side.891666")}</p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <button type="button" onClick={reset} className="btn-dark">
             <RefreshCw className="h-4 w-4" />
-            Try again
-          </button>
+            {t("ui.try.again.042c86")}</button>
           <Link href="/" className="btn-outline">
             <Home className="h-4 w-4" />
-            Back to Home
-          </Link>
+            {t("ui.back.to.home.ce7472")}</Link>
         </div>
       </div>
     </div>

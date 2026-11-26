@@ -1,6 +1,8 @@
-﻿// src/app/faq/faq-client.tsx
-
 "use client";
+import { useI18n } from "@/lib/i18n/provider";
+
+
+﻿// src/app/faq/faq-client.tsx
 
 import { useMemo, useState } from "react";
 import { ArrowRight, Search, X } from "lucide-react";
@@ -25,102 +27,120 @@ import { Input } from "@/components/ui/input";
 const FAQS = [
   {
     category: "Basics",
-    question: "What is a product recall?",
+    question: "ui.what.is.a.product.recall.c4c4e0",
     answer:
-      "A product recall is an action taken when a product may present a safety risk or does not comply with applicable safety requirements. A recall may ask consumers to stop using the product and follow specific instructions for a repair, replacement, refund, or other remedy.",
+      "ui.a.product.recall.is.an.action.taken.015b7d",
   },
 
   {
     category: "Basics",
-    question: "Why has a product been recalled?",
+    question: "ui.why.has.a.product.been.recalled.5cebee",
     answer:
-      "A recall may be issued because a product presents a safety hazard, contains a defect, or does not meet an applicable mandatory safety standard. The specific recall notice explains the identified hazard and the products covered by the recall.",
+      "ui.a.recall.may.be.issued.because.a.1f79cc",
   },
 
   {
     category: "Product",
-    question: "How do I know if my product is affected?",
+    question: "ui.how.do.i.know.if.my.product.aa3904",
     answer:
-      "Compare your product with the identification information in the recall notice. This may include the product name, brand, model number, serial number, UPC, lot code, date code, or other identifying information. A recall may apply only to specific products or production periods.",
+      "ui.compare.your.product.with.the.identification.information.eaf5c3",
   },
 
   {
     category: "Product",
-    question: "Where can I find my product's model or lot number?",
+    question: "ui.where.can.i.find.my.product.s.7076e1",
     answer:
-      "Identification information may be printed on the product, packaging, label, rating plate, barcode, or another location described in the recall notice. Check the specific recall notice for the exact location and information you need.",
+      "ui.identification.information.may.be.printed.on.the.d7e496",
   },
 
   {
     category: "Safety",
-    question: "What should I do if my product is recalled?",
+    question: "ui.what.should.i.do.if.my.product.46b544",
     answer:
-      "Follow the safety instructions in the specific recall notice. In many cases, consumers are instructed to stop using the recalled product immediately and keep it away from others until the recall instructions have been completed.",
+      "ui.follow.the.safety.instructions.in.the.specific.c20bed",
   },
 
   {
     category: "Safety",
-    question: "Can I continue using the product if it appears to be working normally?",
+    question: "ui.can.i.continue.using.the.product.if.bad8e8",
     answer:
-      "Do not assume that a recalled product is safe because it appears to work normally. Follow the instructions in the recall notice. If the notice instructs consumers to stop using the product, discontinue use as directed.",
+      "ui.do.not.assume.that.a.recalled.product.61aabd",
   },
 
   {
     category: "Remedy",
-    question: "What remedy will I receive?",
+    question: "ui.what.remedy.will.i.receive.0dab3e",
     answer:
-      "The available remedy depends on the specific recall. A recall may offer a refund, repair, replacement, disposal instructions, or other corrective action. The recall notice should be used to determine which remedy is available for your product.",
+      "ui.the.available.remedy.depends.on.the.specific.cb4c2e",
   },
 
   {
     category: "Remedy",
-    question: "Will I automatically receive a refund?",
+    question: "ui.will.i.automatically.receive.a.refund.0017fe",
     answer:
-      "Not necessarily. There is no single remedy that applies to every recall. The available remedy may be a refund, repair, replacement, or another corrective action. Check the specific recall notice for the remedy offered for your product.",
+      "ui.not.necessarily.there.is.no.single.remedy.6289d8",
   },
 
   {
     category: "Remedy",
-    question: "How long do I have to participate in a recall?",
+    question: "ui.how.long.do.i.have.to.participate.adb82b",
     answer:
-      "There is no universal deadline that applies to every product recall. Recall terms and remedy availability can vary. Follow the instructions and contact information provided in the specific recall notice.",
+      "ui.there.is.no.universal.deadline.that.applies.97226e",
   },
 
   {
     category: "Claims",
-    question: "How do I file a recall claim?",
+    question: "ui.how.do.i.file.a.recall.claim.9a7b9d",
     answer:
-      "If the recall requires a claim or registration, follow the submission instructions provided for that recall. You may be asked for information that helps identify the product and verify your eligibility for the available remedy.",
+      "ui.if.the.recall.requires.a.claim.or.302251",
   },
 
   {
     category: "Claims",
-    question: "What information may I need to provide?",
+    question: "ui.what.information.may.i.need.to.provide.b4fb93",
     answer:
-      "Requirements vary by recall. Depending on the recall, you may need product identification information, purchase information, photographs, an order number, or other documentation. Only provide information specifically requested by the recall instructions.",
+      "ui.requirements.vary.by.recall.depending.on.the.2e1d7c",
   },
 
   {
     category: "Claims",
-    question: "I no longer have my receipt. Can I still participate?",
+    question: "ui.i.no.longer.have.my.receipt.can.ce1b59",
     answer:
-      "Requirements vary by recall. Some recalls may accept alternative information to identify the product or verify the claim. Review the specific recall instructions or contact the recall administrator for guidance.",
+      "ui.requirements.vary.by.recall.some.recalls.may.319b67",
   },
 
   {
     category: "Claims",
-    question: "How can I check the status of my claim?",
+    question: "ui.how.long.does.a.claim.take.5a48fb",
     answer:
-      "If your recall provides a claim number and reference information, you can use the Check Status page to look up the current status of your case.",
+      "ui.review.and.remedy.timing.depend.on.the.f4e060",
+  },
+  {
+    category: "Safety",
+    question: "ui.should.i.return.or.dispose.of.the.8e247d",
+    answer:
+      "ui.follow.the.return.or.disposal.instructions.in.d07e80",
+  },
+  {
+    category: "Claims",
+    question: "ui.how.can.i.get.help.if.i.2bed53",
+    answer:
+      "ui.use.the.email.address.or.phone.number.742962",
+  },
+  {
+    category: "Claims",
+    question: "ui.how.can.i.check.the.status.of.704cb3",
+    answer:
+      "ui.if.your.recall.provides.a.claim.number.d51826",
   },
 ];
 
 const CATEGORIES = [
-  { id: "Basics", label: "Recall Basics" },
-  { id: "Product", label: "Product Identification" },
-  { id: "Safety", label: "Safety" },
-  { id: "Remedy", label: "Remedy" },
-  { id: "Claims", label: "Claims" },
+  { id: "Basics", label: "ui.recall.basics.89b5fa" },
+  { id: "Product", label: "ui.product.identification.22b283" },
+  { id: "Safety", label: "ui.safety.db6e7e" },
+  { id: "Remedy", label: "ui.remedy.99e347" },
+  { id: "Claims", label: "ui.claims.06e8db" },
 ];
 
 /* =========================================================
@@ -128,6 +148,7 @@ const CATEGORIES = [
 ========================================================= */
 
 export function FaqClient() {
+  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] =
     useState<string | null>(null);
@@ -143,8 +164,8 @@ export function FaqClient() {
     return FAQS.filter((faq) => {
       const matchesSearch =
         !query ||
-        faq.question.toLowerCase().includes(query) ||
-        faq.answer.toLowerCase().includes(query);
+        t(faq.question).toLowerCase().includes(query) ||
+        t(faq.answer).toLowerCase().includes(query);
 
       const matchesCategory =
         !activeCategory ||
@@ -152,7 +173,7 @@ export function FaqClient() {
 
       return matchesSearch && matchesCategory;
     });
-  }, [searchQuery, activeCategory]);
+  }, [searchQuery, activeCategory, t]);
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
@@ -176,8 +197,7 @@ export function FaqClient() {
                 "text-[#163A5F]"
               )}
             >
-              KOI Recall
-            </p>
+              {t("ui.koi.recall.ccd6c2")}</p>
 
             <h1
               className={cn(
@@ -190,8 +210,7 @@ export function FaqClient() {
                 "sm:text-[44px]"
               )}
             >
-              Help Center
-            </h1>
+              {t("ui.help.center.110158")}</h1>
 
             <p
               className={cn(
@@ -203,9 +222,7 @@ export function FaqClient() {
                 "sm:text-[16px]"
               )}
             >
-              Clear answers about product recalls, safety
-              instructions, remedies, and claims.
-            </p>
+              {t("ui.clear.answers.about.product.recalls.safety.instructions.24a747")}</p>
 
           </div>
 
@@ -237,7 +254,7 @@ export function FaqClient() {
                 onChange={(e) =>
                   setSearchQuery(e.target.value)
                 }
-                placeholder="Search recall questions..."
+                placeholder={t("ui.search.recall.questions.a4a613")}
                 className={cn(
                   "h-12 w-full",
                   "rounded-xl",
@@ -262,7 +279,7 @@ export function FaqClient() {
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  aria-label="Clear search"
+                  aria-label={t("ui.clear.search.67300d")}
                   className={cn(
                     "absolute right-3 top-1/2 z-10",
                     "flex h-7 w-7",
@@ -290,10 +307,10 @@ export function FaqClient() {
                 "sm:text-right"
               )}
             >
-              {filteredFaqs.length}{" "}
-              {filteredFaqs.length === 1
-                ? "question"
-                : "questions"}
+              {filteredFaqs.length}{t(" ")}
+              {t(filteredFaqs.length === 1
+                ? "ui.question.3b2be2"
+                : "ui.questions.ff3d39")}
             </p>
 
           </div>
@@ -308,7 +325,7 @@ export function FaqClient() {
             )}
           >
 
-            {[{ id: null, label: "All" }, ...CATEGORIES].map(
+            {[{ id: null, label: "ui.all.6a7208" }, ...CATEGORIES].map(
               (cat) => {
                 const isActive =
                   activeCategory === cat.id;
@@ -340,7 +357,7 @@ export function FaqClient() {
                           )
                     )}
                   >
-                    {cat.label}
+                    {t(cat.label)}
                   </button>
                 );
               }
@@ -395,7 +412,7 @@ export function FaqClient() {
                     )}
                   >
                     <span className="pr-6">
-                      {faq.question}
+                      {t(faq.question)}
                     </span>
                   </AccordionTrigger>
 
@@ -414,7 +431,7 @@ export function FaqClient() {
                         "text-slate-600"
                       )}
                     >
-                      {faq.answer}
+                      {t(faq.answer)}
                     </div>
                   </AccordionContent>
 
@@ -435,12 +452,10 @@ export function FaqClient() {
               <Search className="mx-auto h-5 w-5 text-slate-300" />
 
               <p className="mt-3 text-[14px] font-semibold text-slate-800">
-                No matching questions
-              </p>
+                {t("ui.no.matching.questions.b9b5f4")}</p>
 
               <p className="mt-1 text-[13px] text-slate-500">
-                Try another search term or category.
-              </p>
+                {t("ui.try.another.search.term.or.category.f138c3")}</p>
 
               <button
                 type="button"
@@ -450,8 +465,7 @@ export function FaqClient() {
                 }}
                 className="mt-4 text-[13px] font-semibold text-[#163A5F] hover:text-[#1D4F7A]"
               >
-                Clear filters
-              </button>
+                {t("ui.clear.filters.412226")}</button>
             </div>
           )}
 
@@ -477,13 +491,10 @@ export function FaqClient() {
             <div>
 
               <p className="text-[14px] font-semibold text-slate-900">
-                Need information about your case?
-              </p>
+                {t("ui.need.information.about.your.case.f31719")}</p>
 
               <p className="mt-1 text-[12px] text-slate-500">
-                Check your recall claim using your claim number
-                and reference.
-              </p>
+                {t("ui.check.your.recall.claim.using.your.claim.39fbd0")}</p>
 
             </div>
 
@@ -504,8 +515,7 @@ export function FaqClient() {
                 "hover:bg-[#1D4F7A]"
               )}
             >
-              Check Recall Status
-              <ArrowRight className="h-3.5 w-3.5" />
+              {t("ui.check.recall.status.d85ce6")}<ArrowRight className="h-3.5 w-3.5" />
             </a>
 
           </div>
@@ -527,11 +537,7 @@ export function FaqClient() {
               "text-slate-400"
             )}
           >
-            Recall remedies, eligibility requirements, safety
-            instructions, and other terms vary by recall. Always
-            follow the instructions in the applicable recall
-            notice.
-          </p>
+            {t("ui.recall.remedies.eligibility.requirements.safety.instructions.and.3579a3")}</p>
 
         </div>
 

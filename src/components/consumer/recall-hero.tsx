@@ -1,3 +1,7 @@
+"use client";
+import { useI18n } from "@/lib/i18n/provider";
+
+
 // ============================================================
 // KOI Recall Platform — Recall Hero v3.0
 // ============================================================
@@ -13,13 +17,14 @@ interface RecallHeroProps {
 }
 
 const RISK_CONFIG: Record<string, { bg: string; text: string; border: string; label: string }> = {
-  [RiskLevel.CRITICAL]: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', label: 'CRITICAL RISK' },
-  [RiskLevel.HIGH]: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200', label: 'HIGH RISK' },
-  [RiskLevel.MODERATE]: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', label: 'MODERATE RISK' },
-  [RiskLevel.LOW]: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', label: 'LOW RISK' },
+  [RiskLevel.CRITICAL]: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', label: "ui.critical.risk.ed32b2" },
+  [RiskLevel.HIGH]: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200', label: "ui.high.risk.16247a" },
+  [RiskLevel.MODERATE]: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', label: "ui.moderate.risk.730ead" },
+  [RiskLevel.LOW]: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', label: "ui.low.risk.6aa3a6" },
 };
 
 export function RecallHero({ campaign }: RecallHeroProps) {
+  const { t } = useI18n();
   // Risk is only shown when the API provides a severity signal (P1-5).
   const risk = (campaign.riskLevel && RISK_CONFIG[campaign.riskLevel]) || null;
 
@@ -37,7 +42,7 @@ export function RecallHero({ campaign }: RecallHeroProps) {
               )}
             >
               <AlertTriangle className="h-3.5 w-3.5" />
-              {risk.label}
+              {t(risk.label)}
             </span>
           )}
         </div>
@@ -56,12 +61,12 @@ export function RecallHero({ campaign }: RecallHeroProps) {
         <div className="flex flex-wrap items-center gap-3 mt-6">
           <span className="data-chip">
             <Hash className="h-3.5 w-3.5" />
-            Reference #{campaign.cpscNumber}
+            {t("ui.reference.348555")}{" "}{campaign.cpscNumber}
           </span>
           {campaign.recallDate && (
             <span className="data-chip">
               <Calendar className="h-3.5 w-3.5" />
-              Recalled {campaign.recallDate}
+              {t("ui.recalled.338fe3")}{" "}{campaign.recallDate}
             </span>
           )}
           {campaign.manufacturerName && (
@@ -73,8 +78,7 @@ export function RecallHero({ campaign }: RecallHeroProps) {
           {campaign.estimatedUnits > 0 && (
             <span className="data-chip">
               <Package className="h-3.5 w-3.5" />
-              {campaign.estimatedUnits.toLocaleString()} units
-            </span>
+              {campaign.estimatedUnits.toLocaleString()} {t("ui.units.917625")}</span>
           )}
         </div>
 
@@ -86,13 +90,12 @@ export function RecallHero({ campaign }: RecallHeroProps) {
             </div>
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-blade-safety-text/60 mb-1">
-                Hazard Description
-              </p>
+                {t("ui.hazard.description.f0689f")}</p>
               <p className="text-sm text-text-primary leading-relaxed">
                 {campaign.hazardDescription}
               </p>
               <p className="text-sm font-semibold text-blade-safety mt-3">
-                <strong>Immediate action:</strong> {campaign.instructions}
+                <strong>{t("ui.immediate.action.9cb9a5")}</strong> {campaign.instructions}
               </p>
             </div>
           </div>

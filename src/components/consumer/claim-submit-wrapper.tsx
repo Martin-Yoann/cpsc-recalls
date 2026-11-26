@@ -1,4 +1,8 @@
 "use client";
+import { useI18n } from "@/lib/i18n/provider";
+import { message, type MessageInput } from '@/lib/i18n/translate';
+import { problemMessage } from '@/lib/i18n/problem';
+
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -49,25 +53,25 @@ interface Props {
 }
 
 const PURCHASE_CHANNEL_OPTIONS = [
-  { value: "amazon", label: "Amazon" },
-  { value: "tiktok", label: "TikTok Shop" },
-  { value: "koi", label: "KOI direct" },
-  { value: "retailer", label: "Retailer / store" },
-  { value: "gift", label: "Gift" },
-  { value: "other", label: "Other" },
+  { value: "amazon", label: "ui.amazon.74c0fd" },
+  { value: "tiktok", label: "ui.tiktok.shop.afa85c" },
+  { value: "koi", label: "ui.koi.direct.9bfaf8" },
+  { value: "retailer", label: "ui.retailer.store.2eb78e" },
+  { value: "gift", label: "ui.gift.8d0a32" },
+  { value: "other", label: "ui.other.6e6a6f" },
 ] as const;
 
 const INCIDENT_EVENT_OPTIONS = [
-  { value: "injury", label: "Injury" },
-  { value: "illness", label: "Illness" },
-  { value: "choking", label: "Choking" },
-  { value: "ingestion", label: "Ingestion" },
-  { value: "fire", label: "Fire" },
-  { value: "overheating", label: "Overheating" },
-  { value: "property_damage", label: "Property damage" },
-  { value: "near_miss", label: "Near miss" },
-  { value: "other", label: "Other" },
-  { value: "unknown", label: "Unknown" },
+  { value: "injury", label: "ui.injury.889d51" },
+  { value: "illness", label: "ui.illness.c58225" },
+  { value: "choking", label: "ui.choking.90ccd5" },
+  { value: "ingestion", label: "ui.ingestion.ee02ed" },
+  { value: "fire", label: "ui.fire.78baeb" },
+  { value: "overheating", label: "ui.overheating.07b91e" },
+  { value: "property_damage", label: "ui.property.damage.79e46c" },
+  { value: "near_miss", label: "ui.near.miss.661e7e" },
+  { value: "other", label: "ui.other.6e6a6f" },
+  { value: "unknown", label: "ui.unknown.bc7819" },
 ] as const;
 
 /**
@@ -81,9 +85,9 @@ const DOCUMENT_CATEGORY_OPTIONS: Array<{
   value: ClaimTimeEvidenceCategory;
   label: string;
 }> = [
-  { value: "proof_of_purchase", label: "Proof of purchase" },
-  { value: "product_photo", label: "Product photo" },
-  { value: "incident_evidence", label: "Incident evidence" },
+  { value: "proof_of_purchase", label: "ui.proof.of.purchase.46c22f" },
+  { value: "product_photo", label: "ui.product.photo.5a6865" },
+  { value: "incident_evidence", label: "ui.incident.evidence.c39c94" },
 ];
 
 function formatDocumentCategory(category: DocumentCategory) {
@@ -94,10 +98,10 @@ function formatDocumentCategory(category: DocumentCategory) {
 }
 
 function describeEvidenceRule(rule: CampaignEvidenceRequirement) {
-  const minimum = rule.minimumFiles;
+  const minimum = Math.max(rule.minimumFiles, rule.required ? 1 : 0);
   const maximum = rule.maximumFiles;
-  const requiredLabel = rule.required || minimum > 0 ? "Required" : "Optional";
-  return `${requiredLabel} - ${formatDocumentCategory(rule.category)} (${minimum}-${maximum} file${maximum === 1 ? "" : "s"})`;
+  const requiredLabel = rule.required || minimum > 0 ? "form.required" : "form.optional";
+  return message('evidence.rule', { requirement: message(requiredLabel), category: message(formatDocumentCategory(rule.category)), minimum, maximum });
 }
 
 function formatMimeTypes(mimeTypes: string[]) {
@@ -115,31 +119,31 @@ const DOCUMENT_STATUS_META: Record<
   { label: string; className: string }
 > = {
   uploading: {
-    label: "Uploading",
+    label: "ui.uploading.de2724",
     className: "bg-[#f4f4f5] text-[#606266] border-[#dcdfe6]",
   },
   verifying: {
-    label: "Verifying…",
+    label: "ui.verifying.691f43",
     className: "bg-[#ecf5ff] text-[#409eff] border-[#b3d8ff]",
   },
   verified: {
-    label: "Verified",
+    label: "ui.verified.aed3b8",
     className: "bg-[#f0f9eb] text-[#529b2e] border-[#c2e7b0]",
   },
   scan_pending: {
-    label: "Scan pending",
+    label: "ui.scan.pending.897887",
     className: "bg-[#fdf6ec] text-[#b88230] border-[#f5dab1]",
   },
   rejected: {
-    label: "Rejected",
+    label: "ui.rejected.27eeb7",
     className: "bg-[#fef0f0] text-[#f56c6c] border-[#fbc4c4]",
   },
   expired: {
-    label: "Expired",
+    label: "ui.expired.a689a9",
     className: "bg-[#fef0f0] text-[#f56c6c] border-[#fbc4c4]",
   },
   failed: {
-    label: "Upload failed",
+    label: "ui.upload.failed.ad0d06",
     className: "bg-[#fef0f0] text-[#f56c6c] border-[#fbc4c4]",
   },
 };
@@ -149,6 +153,7 @@ function DocumentStatusChip({
 }: {
   status: ClaimFlowDocumentReceipt["status"];
 }) {
+  const { t } = useI18n();
   // The fallback is the failure treatment, not the in-progress one: an unrecognised status
   // must not read as "still working on it", which is the promise nobody can keep.
   const meta = DOCUMENT_STATUS_META[status] ?? DOCUMENT_STATUS_META.failed!;
@@ -156,7 +161,7 @@ function DocumentStatusChip({
     <span
       className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] font-medium ${meta.className}`}
     >
-      {meta.label}
+      {t(meta.label)}
     </span>
   );
 }
@@ -181,6 +186,7 @@ function ElSelect({
   id?: string;
   disabled?: boolean;
 }) {
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
 
   const selectedLabel =
@@ -203,7 +209,7 @@ function ElSelect({
         onClick={() => !disabled && setIsOpen(!isOpen)}
       >
         <span className={value ? "text-[#303133]" : "text-[#c0c4cc]"}>
-          {selectedLabel}
+          {t(selectedLabel)}
         </span>
         <ChevronDown
           className={`
@@ -227,7 +233,7 @@ function ElSelect({
                 setIsOpen(false);
               }}
             >
-              {option.label}
+              {t(option.label)}
             </div>
           ))}
         </div>
@@ -280,13 +286,14 @@ function ElCheckbox({
 }
 
 export function ClaimSubmitWrapper({ campaign }: Props) {
+  const { t } = useI18n();
   const firstProduct = campaign.affectedProducts[0];
   const [session, setSession] = useState<ClaimFlowSession | null>(null);
   const [submitted, setSubmitted] = useState<ClaimConfirmation | null>(null);
   /** Set once the consumer has seen Page 4 and moved on to the confirmation. */
   const [disposalAcknowledged, setDisposalAcknowledged] = useState(false);
   const [problem, setProblem] = useState<ProblemDetails | null>(null);
-  const [validationMessage, setValidationMessage] = useState<string | null>(
+  const [validationMessage, setValidationMessage] = useState<MessageInput | null>(
     null,
   );
   const [pendingRemedyId, setPendingRemedyId] = useState<string | null>(null);
@@ -471,30 +478,31 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
 
   const validateEvidenceRequirements = (
     documents: ClaimFlowSession["documents"],
-  ): string | null => {
+  ): MessageInput | null => {
     for (const rule of evidenceRequirements) {
       const count = documents.filter(
         (document) => document.category === rule.category,
       ).length;
       if (count > rule.maximumFiles) {
-        return `Too many ${formatDocumentCategory(rule.category).toLowerCase()} files. Maximum allowed is ${rule.maximumFiles}.`;
+        return message('validation.files.maximum', { category: message(formatDocumentCategory(rule.category)), count: rule.maximumFiles });
       }
       if (count < rule.minimumFiles || (rule.required && count === 0)) {
-        return `Please upload ${rule.minimumFiles} ${formatDocumentCategory(rule.category).toLowerCase()} file${rule.minimumFiles === 1 ? "" : "s"} before submitting.`;
+        const minimum = Math.max(rule.minimumFiles, rule.required ? 1 : 0);
+        return message('validation.files.minimum', { category: message(formatDocumentCategory(rule.category)), count: minimum });
       }
     }
     return null;
   };
 
-  const validateBeforeSubmit = (current: ClaimFlowSession): string | null => {
+  const validateBeforeSubmit = (current: ClaimFlowSession): MessageInput | null => {
     const { form } = current;
-    if (!current.remedyCode) return "Please choose a resolution option first.";
+    if (!current.remedyCode) return "ui.please.choose.a.resolution.option.first.9a68ee";
     if (
       !form.consumer.firstName.trim() ||
       !form.consumer.lastName.trim() ||
       !form.consumer.email.trim()
     ) {
-      return "Please complete first name, last name, and email.";
+      return "validation.contactRequired";
     }
     // Design §5.5 / P2-1: shipment-style remedies require the delivery
     // address; a refund may leave it out entirely. A partially typed refund
@@ -515,18 +523,18 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
       (field) => field.trim().length > 0,
     );
     if (addressNeeded && !addressComplete) {
-      return "Please complete your mailing address before submission.";
+      return "ui.please.complete.your.mailing.address.before.submission.4830fe";
     }
     if (!addressNeeded && addressStarted && !addressComplete) {
-      return "Please finish or clear the mailing address before submission.";
+      return "ui.please.finish.or.clear.the.mailing.address.a97f04";
     }
     if ((form.consumer.countryCode.trim() || "US").length !== 2) {
-      return "Please enter a valid 2-letter country code.";
+      return "ui.please.enter.a.valid.2.letter.country.757f00";
     }
     if (!form.product.campaignProductId)
-      return "Please choose the affected product.";
+      return "ui.please.choose.the.affected.product.14e0ba";
     if (!form.privacyAccepted || !form.accuracyAccepted) {
-      return "Please accept both required attestations before submission.";
+      return "ui.please.accept.both.required.attestations.before.submission.a4479d";
     }
     const evidenceError = validateEvidenceRequirements(current.documents);
     if (evidenceError) return evidenceError;
@@ -539,27 +547,27 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
       switch (blocker?.status) {
         case "uploading":
         case "verifying":
-          return "One or more files are still being verified by the recall team. Please wait a moment and try again.";
+          return "ui.one.or.more.files.are.still.being.3fe5c6";
         case "scan_pending":
-          return "Security scanning is still in progress for one of your files.";
+          return "ui.security.scanning.is.still.in.progress.for.f00b36";
         case "rejected":
-          return "A file was rejected during verification. Please remove it and upload a different one.";
+          return "ui.a.file.was.rejected.during.verification.please.d8710b";
         case "expired":
-          return "An upload expired before it could be verified. Please remove that file and upload it again.";
+          return "ui.an.upload.expired.before.it.could.be.1570f7";
         case "failed":
           // Waiting cannot help here, so the message says what does — and names the file,
           // which is the only thing that tells the consumer which row to remove.
-          return `${blocker.fileName} could not be uploaded${blocker.failureReason ? `: ${blocker.failureReason}` : ""}. Remove it and upload it again.`;
+          return message('validation.file.failed', { file: blocker.fileName });
         default:
-          return "All evidence files must be verified before submitting.";
+          return "ui.all.evidence.files.must.be.verified.before.a1d87d";
       }
     }
     if (form.incidentAnswer !== "no") {
       if (!form.incident.occurredDate && !form.incident.occurredDateUnknown) {
-        return "For incident claims, provide an incident date or mark it as unknown.";
+        return "ui.for.incident.claims.provide.an.incident.date.50c8ae";
       }
       if (form.incidentAnswer === "yes" && !form.incident.eventTypes.length) {
-        return "Select at least one incident event type when the answer is yes.";
+        return "ui.select.at.least.one.incident.event.type.ba083c";
       }
       // Mirrors the contract's cross-field rule so the answer arrives as an
       // inline message rather than a 422 after the whole form is submitted.
@@ -570,7 +578,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
         form.incident.medicalTreatment !== "none" &&
         form.incident.medicalTreatment !== "unknown";
       if (form.incident.medicalTreatmentReceived === "no" && namesTreatment) {
-        return "You answered that no medical treatment was received, but a treatment was selected above. Please correct one of them.";
+        return "ui.you.answered.that.no.medical.treatment.was.24f3c8";
       }
     }
     return null;
@@ -590,7 +598,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
       ).length;
       if (existingCount + files.length > selectedRule.maximumFiles) {
         setValidationMessage(
-          `You can upload at most ${selectedRule.maximumFiles} ${formatDocumentCategory(category).toLowerCase()} file${selectedRule.maximumFiles === 1 ? "" : "s"}.`,
+          message('validation.files.limit', { category: message(formatDocumentCategory(category)), count: selectedRule.maximumFiles }),
         );
         return;
       }
@@ -633,12 +641,11 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
               aria-hidden="true"
             />
             <p>
-              Your claim was accepted. Reference{" "}
+              {t("ui.your.claim.was.accepted.reference.05704a")}{t(" ")}
               <span className="font-mono font-semibold">
                 {submitted.caseReference}
               </span>
-              . One more step may apply to your product.
-            </p>
+              {t("ui.one.more.step.may.apply.to.your.592060")}</p>
           </div>
 
           <DisposalTaskLoader
@@ -648,20 +655,16 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
 
           <div className="flex flex-wrap items-center gap-3">
             <Button type="button" onClick={() => setDisposalAcknowledged(true)}>
-              Continue
-            </Button>
+              {t("ui.continue.2e0262")}</Button>
             <Button
               type="button"
               variant="outline"
               onClick={() => setDisposalAcknowledged(true)}
             >
-              I will come back to this later
-            </Button>
+              {t("ui.i.will.come.back.to.this.later.4b166f")}</Button>
           </div>
           <p className="text-xs text-[#909399]">
-            You can return to this step from the link in the message we send
-            about this recall.
-          </p>
+            {t("ui.you.can.return.to.this.step.from.840acf")}</p>
         </div>
       );
     }
@@ -673,16 +676,13 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
         </div>
         <div>
           <h3 className="text-xl font-bold text-[#303133] mb-1">
-            Claim Submitted
-          </h3>
+            {t("ui.claim.submitted.4bb1c3")}</h3>
           <p className="text-sm text-[#606266]">
-            Your claim was accepted by KOI Recall API.
-          </p>
+            {t("ui.your.claim.was.accepted.by.koi.recall.a4dcdf")}</p>
         </div>
         <div className="inline-flex flex-col items-center rounded border border-[#dcdfe6] bg-[#f5f7fa] p-4">
           <p className="text-[10px] font-bold text-[#909399] uppercase tracking-widest mb-1">
-            Case Reference
-          </p>
+            {t("ui.case.reference.4461c6")}</p>
           <p className="text-2xl font-mono font-bold text-[#409eff]">
             {submitted.caseReference}
           </p>
@@ -690,11 +690,11 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
         <div className="space-y-2 text-sm text-[#606266] max-w-md mx-auto">
           <p className="flex items-center justify-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-[#409eff]" />
-            Confirmation email queued: {submitted.emailStatus}
+            {t("ui.confirmation.email.queued.6df1d3")}{" "}{t(submitted.emailStatus)}
           </p>
           <p className="flex items-center justify-center gap-2">
             <ClipboardList className="h-4 w-4 text-[#409eff]" />
-            Next step: {submitted.nextStep}
+            {t("ui.next.step.934fd4")}{" "}{t(submitted.nextStep)}
           </p>
         </div>
         {submitted.disposal && (
@@ -704,18 +704,14 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
           // yet. The wording has to change when delivery does.
           <div className="space-y-1 rounded border border-[#b3d8ff] bg-[#ecf5ff] p-3 text-sm text-[#303133] max-w-md mx-auto">
             <p className="font-semibold">
-              A disposal step was opened for your product.
-            </p>
+              {t("ui.a.disposal.step.was.opened.for.your.883082")}</p>
             <p className="text-[#606266]">
-              Return with the link below, or from the one in the email we sent
-              about this claim. Either takes you back to this step.
-            </p>
+              {t("ui.return.with.the.link.below.or.from.c62b1e")}</p>
             <Link
               href={submitted.disposal.resumePath}
               className="inline-flex items-center gap-1.5 font-semibold text-[#409eff] underline"
             >
-              Return to the disposal step
-              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+              {t("ui.return.to.the.disposal.step.9f4868")}<ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
           </div>
         )}
@@ -723,9 +719,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
         <div className="space-y-3">
           <div className="space-y-1 text-sm text-[#606266]">
             <p>
-              Use your case reference on this device now, or create an account
-              later for cross-device access.
-            </p>
+              {t("ui.use.your.case.reference.on.this.device.6a0664")}</p>
           </div>
           <div className="flex flex-wrap justify-center gap-2">
             <Link href="/claims">
@@ -734,8 +728,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                 variant="outline"
                 className="border-[#dcdfe6] text-[#606266] hover:border-[#409eff] hover:text-[#409eff]"
               >
-                View Claims
-              </Button>
+                {t("ui.view.claims.fcd41d")}</Button>
             </Link>
             <Link href="/lookup">
               <Button
@@ -743,16 +736,14 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                 variant="outline"
                 className="border-[#dcdfe6] text-[#606266] hover:border-[#409eff] hover:text-[#409eff]"
               >
-                Check Status
-              </Button>
+                {t("nav.checkStatus")}</Button>
             </Link>
             <Button
               size="sm"
               onClick={handleReset}
               className="bg-[#409eff] text-white hover:bg-[#337ecc] border-0"
             >
-              Start Another Claim
-            </Button>
+              {t("ui.start.another.claim.faff29")}</Button>
           </div>
         </div>
       </div>
@@ -763,8 +754,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
     return (
       <div className="rounded border border-[#dcdfe6] bg-white p-6 text-sm text-[#606266] flex items-center gap-3">
         <Loader2 className="h-4 w-4 animate-spin text-[#409eff]" />
-        Preparing secure claim session...
-      </div>
+        {t("ui.preparing.secure.claim.session.7dbc0c")}</div>
     );
   }
 
@@ -773,12 +763,11 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
       <div className="rounded border border-red-500/20 bg-red-50 p-4 space-y-2">
         <p className="text-sm font-semibold text-red-500 flex items-center gap-2">
           <AlertCircle className="h-4 w-4" />
-          Claim flow unavailable
-        </p>
-        <p className="text-sm text-[#606266]">{problem.detail}</p>
+          {t("ui.claim.flow.unavailable.ed60bc")}</p>
+        <p className="text-sm text-[#606266]">{t(problemMessage(problem))}</p>
         {problem.requestId && (
           <p className="text-xs text-[#909399]">
-            Request ID: {problem.requestId}
+            {t("ui.request.id.364dc5")}{" "}{problem.requestId}
           </p>
         )}
       </div>
@@ -802,50 +791,39 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
     >
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#909399]">
-          Draft Ready
-        </p>
+          {t("ui.draft.ready.96b5a4")}</p>
         <h3 className="text-lg font-bold text-[#303133] mt-1">
-          Requested resolution captured
-        </h3>
+          {t("ui.requested.resolution.captured.12aba7")}</h3>
         <p className="text-sm text-[#606266] mt-1">
-          Resolution `{selectedRemedy.id}` is stored in the draft session. This
-          bridge form now persists claim data into session storage and submits
-          using the real API contract.
-        </p>
+          {t("ui.resolution.8a9c4d")}{selectedRemedy.id}{t("ui.is.stored.in.the.draft.session.this.43a2c8")}</p>
       </div>
 
       <div className="rounded border border-[#dcdfe6] bg-[#f5f7fa] p-4 text-sm text-[#606266] space-y-2">
         <p>
-          <span className="font-semibold text-[#303133]">Draft ID:</span>{" "}
+          <span className="font-semibold text-[#303133]">{t("ui.draft.id.065855")}</span>{t(" ")}
           {session.draftId}
         </p>
         <p>
-          <span className="font-semibold text-[#303133]">Expires:</span>{" "}
+          <span className="font-semibold text-[#303133]">{t("ui.expires.081ecd")}</span>{t(" ")}
           {session.expiresAt}
         </p>
         <p>
           <span className="font-semibold text-[#303133]">
-            Requested Resolution:
-          </span>{" "}
+            {t("ui.requested.resolution.d3b23c")}</span>{t(" ")}
           {selectedRemedy.title}
         </p>
         <p>
-          <span className="font-semibold text-[#303133]">Form Version:</span>{" "}
+          <span className="font-semibold text-[#303133]">{t("ui.form.version.745926")}</span>{t(" ")}
           {CLAIM_FLOW_FORM_VERSION}
         </p>
       </div>
 
       <div className="rounded border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-        Your selection is a requested resolution and remains subject to
-        eligibility and operational review.
-      </div>
+        {t("ui.your.selection.is.a.requested.resolution.and.1b552a")}</div>
 
       {selectedRemedy.type === "refund" && (
         <div className="rounded border border-[#dcdfe6] bg-[#f5f7fa] p-4 text-sm text-[#606266]">
-          If approved, the refund will be processed outside this website by the
-          appropriate finance, ecommerce, or payment team. This website does not
-          collect card or bank details.
-        </div>
+          {t("ui.if.approved.the.refund.will.be.processed.223913")}</div>
       )}
 
       {/* ===== 消费者信息 ===== */}
@@ -855,8 +833,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             htmlFor="first-name"
             className="text-sm font-medium text-[#303133]"
           >
-            First name
-          </Label>
+            {t("claim.firstName")}</Label>
           <Input
             id="first-name"
             value={session.form.consumer.firstName}
@@ -874,8 +851,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             htmlFor="last-name"
             className="text-sm font-medium text-[#303133]"
           >
-            Last name
-          </Label>
+            {t("claim.lastName")}</Label>
           <Input
             id="last-name"
             value={session.form.consumer.lastName}
@@ -890,8 +866,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="email" className="text-sm font-medium text-[#303133]">
-            Email
-          </Label>
+            {t("contact.email")}</Label>
           <Input
             id="email"
             type="email"
@@ -907,8 +882,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="phone" className="text-sm font-medium text-[#303133]">
-            Phone
-          </Label>
+            {t("contact.phone")}</Label>
           <Input
             id="phone"
             value={session.form.consumer.phone}
@@ -926,8 +900,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             htmlFor="address-line1"
             className="text-sm font-medium text-[#303133]"
           >
-            Address line 1
-          </Label>
+            {t("ui.address.line.1.168619")}</Label>
           <Input
             id="address-line1"
             value={session.form.consumer.addressLine1}
@@ -948,8 +921,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             htmlFor="address-line2"
             className="text-sm font-medium text-[#303133]"
           >
-            Address line 2
-          </Label>
+            {t("ui.address.line.2.88d419")}</Label>
           <Input
             id="address-line2"
             value={session.form.consumer.addressLine2}
@@ -967,8 +939,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="city" className="text-sm font-medium text-[#303133]">
-            City
-          </Label>
+            {t("ui.city.427162")}</Label>
           <Input
             id="city"
             value={session.form.consumer.city}
@@ -983,8 +954,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="state" className="text-sm font-medium text-[#303133]">
-            State / Province
-          </Label>
+            {t("ui.state.province.d9a83a")}</Label>
           <Input
             id="state"
             value={session.form.consumer.state}
@@ -1002,8 +972,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             htmlFor="postal-code"
             className="text-sm font-medium text-[#303133]"
           >
-            Postal code
-          </Label>
+            {t("ui.postal.code.d7432c")}</Label>
           <Input
             id="postal-code"
             value={session.form.consumer.postalCode}
@@ -1021,8 +990,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             htmlFor="country-code"
             className="text-sm font-medium text-[#303133]"
           >
-            Country code
-          </Label>
+            {t("ui.country.code.2eb6c4")}</Label>
           <Input
             id="country-code"
             maxLength={2}
@@ -1048,8 +1016,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             htmlFor="product"
             className="text-sm font-medium text-[#303133]"
           >
-            Affected product
-          </Label>
+            {t("ui.affected.product.1c8cb2")}</Label>
           <ElSelect
             id="product"
             value={session.form.product.campaignProductId}
@@ -1070,8 +1037,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             htmlFor="purchase-channel"
             className="text-sm font-medium text-[#303133]"
           >
-            Purchase channel
-          </Label>
+            {t("ui.purchase.channel.7b19fa")}</Label>
           <ElSelect
             id="purchase-channel"
             value={session.form.product.purchaseChannel}
@@ -1093,8 +1059,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             htmlFor="purchase-date"
             className="text-sm font-medium text-[#303133]"
           >
-            Purchase date
-          </Label>
+            {t("ui.purchase.date.a40d89")}</Label>
           <Input
             id="purchase-date"
             type="date"
@@ -1113,8 +1078,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             htmlFor="order-number"
             className="text-sm font-medium text-[#303133]"
           >
-            Order number
-          </Label>
+            {t("ui.order.number.1c14bf")}</Label>
           <Input
             id="order-number"
             value={session.form.product.orderNumber}
@@ -1132,8 +1096,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             htmlFor="lot-code"
             className="text-sm font-medium text-[#303133]"
           >
-            Lot code
-          </Label>
+            {t("ui.lot.code.be1bd4")}</Label>
           <Input
             id="lot-code"
             value={session.form.product.lotCode}
@@ -1151,8 +1114,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             htmlFor="date-code"
             className="text-sm font-medium text-[#303133]"
           >
-            Date code
-          </Label>
+            {t("ui.date.code.39e679")}</Label>
           <Input
             id="date-code"
             value={session.form.product.dateCode}
@@ -1174,8 +1136,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             htmlFor="incident-answer"
             className="text-sm font-medium text-[#303133]"
           >
-            Did the recalled product cause an incident?
-          </Label>
+            {t("ui.did.the.recalled.product.cause.an.incident.bdbc18")}</Label>
           <ElSelect
             id="incident-answer"
             value={session.form.incidentAnswer}
@@ -1190,9 +1151,9 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
               }))
             }
             options={[
-              { value: "no", label: "No" },
-              { value: "yes", label: "Yes" },
-              { value: "unsure", label: "Unsure" },
+              { value: "no", label: "ui.no.816c52" },
+              { value: "yes", label: "ui.yes.5397e0" },
+              { value: "unsure", label: "ui.unsure.205738" },
             ]}
           />
         </div>
@@ -1205,8 +1166,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                   htmlFor="incident-date"
                   className="text-sm font-medium text-[#303133]"
                 >
-                  Incident date
-                </Label>
+                  {t("ui.incident.date.795efc")}</Label>
                 <Input
                   id="incident-date"
                   type="date"
@@ -1236,8 +1196,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                     }))
                   }
                 >
-                  Date unknown
-                </ElCheckbox>
+                  {t("ui.date.unknown.798f8b")}</ElCheckbox>
               </div>
             </div>
 
@@ -1246,8 +1205,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                 htmlFor="incident-description"
                 className="text-sm font-medium text-[#303133]"
               >
-                What happened?
-              </Label>
+                {t("ui.what.happened.e9ef65")}</Label>
               <Textarea
                 id="incident-description"
                 rows={4}
@@ -1267,8 +1225,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
 
             <div className="space-y-2">
               <Label className="text-sm font-medium text-[#303133]">
-                Event types
-              </Label>
+                {t("ui.event.types.0b420f")}</Label>
               <div className="grid gap-2 sm:grid-cols-2">
                 {INCIDENT_EVENT_OPTIONS.map((option) => {
                   const checked = session.form.incident.eventTypes.includes(
@@ -1292,7 +1249,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                         }))
                       }
                     >
-                      {option.label}
+                      {t(option.label)}
                     </ElCheckbox>
                   );
                 })}
@@ -1305,8 +1262,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                   htmlFor="injury-severity"
                   className="text-sm font-medium text-[#303133]"
                 >
-                  Injury severity
-                </Label>
+                  {t("ui.injury.severity.a17527")}</Label>
                 <ElSelect
                   id="injury-severity"
                   value={session.form.incident.injurySeverity}
@@ -1321,16 +1277,16 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                     }))
                   }
                   options={[
-                    { value: "", label: "Select" },
-                    { value: "none", label: "None" },
-                    { value: "minor", label: "Minor" },
+                    { value: "", label: "ui.select.859822" },
+                    { value: "none", label: "ui.none.6eef66" },
+                    { value: "minor", label: "ui.minor.100b45" },
                     {
                       value: "medical_attention",
-                      label: "Needed medical attention",
+                      label: "ui.needed.medical.attention.9918fa",
                     },
-                    { value: "hospitalized", label: "Hospitalized" },
-                    { value: "death", label: "Death" },
-                    { value: "unknown", label: "Unknown" },
+                    { value: "hospitalized", label: "ui.hospitalized.e40651" },
+                    { value: "death", label: "ui.death.d8c7d8" },
+                    { value: "unknown", label: "ui.unknown.bc7819" },
                   ]}
                 />
               </div>
@@ -1339,8 +1295,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                   htmlFor="medical-treatment"
                   className="text-sm font-medium text-[#303133]"
                 >
-                  Medical treatment
-                </Label>
+                  {t("ui.medical.treatment.889166")}</Label>
                 <ElSelect
                   id="medical-treatment"
                   value={session.form.incident.medicalTreatment}
@@ -1355,13 +1310,13 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                     }))
                   }
                   options={[
-                    { value: "", label: "Select" },
-                    { value: "none", label: "None" },
-                    { value: "first_aid", label: "First aid" },
-                    { value: "outpatient", label: "Outpatient clinic" },
-                    { value: "emergency", label: "Emergency room" },
-                    { value: "hospitalized", label: "Hospitalized" },
-                    { value: "unknown", label: "Unknown" },
+                    { value: "", label: "ui.select.859822" },
+                    { value: "none", label: "ui.none.6eef66" },
+                    { value: "first_aid", label: "ui.first.aid.bbe1aa" },
+                    { value: "outpatient", label: "ui.outpatient.clinic.563c17" },
+                    { value: "emergency", label: "ui.emergency.room.688a5c" },
+                    { value: "hospitalized", label: "ui.hospitalized.e40651" },
+                    { value: "unknown", label: "ui.unknown.bc7819" },
                   ]}
                 />
               </div>
@@ -1370,8 +1325,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                   htmlFor="used-as-intended"
                   className="text-sm font-medium text-[#303133]"
                 >
-                  Used as intended
-                </Label>
+                  {t("ui.used.as.intended.57fc06")}</Label>
                 <ElSelect
                   id="used-as-intended"
                   value={session.form.incident.usedAsIntended}
@@ -1386,10 +1340,10 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                     }))
                   }
                   options={[
-                    { value: "", label: "Select" },
-                    { value: "yes", label: "Yes" },
-                    { value: "no", label: "No" },
-                    { value: "unknown", label: "Unknown" },
+                    { value: "", label: "ui.select.859822" },
+                    { value: "yes", label: "ui.yes.5397e0" },
+                    { value: "no", label: "ui.no.816c52" },
+                    { value: "unknown", label: "ui.unknown.bc7819" },
                   ]}
                 />
               </div>
@@ -1402,8 +1356,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                   htmlFor="unit-type"
                   className="text-sm font-medium text-[#303133]"
                 >
-                  Which unit was involved?
-                </Label>
+                  {t("ui.which.unit.was.involved.93a4fc")}</Label>
                 <ElSelect
                   id="unit-type"
                   value={session.form.incident.unitType}
@@ -1418,10 +1371,10 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                     }))
                   }
                   options={[
-                    { value: "", label: "Select" },
-                    { value: "original", label: "The recalled unit" },
-                    { value: "replacement", label: "A replacement unit" },
-                    { value: "unknown", label: "Unknown" },
+                    { value: "", label: "ui.select.859822" },
+                    { value: "original", label: "ui.the.recalled.unit.e34e33" },
+                    { value: "replacement", label: "ui.a.replacement.unit.019af3" },
+                    { value: "unknown", label: "ui.unknown.bc7819" },
                   ]}
                 />
               </div>
@@ -1430,8 +1383,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                   htmlFor="failure-mode"
                   className="text-sm font-medium text-[#303133]"
                 >
-                  How did the product fail?
-                </Label>
+                  {t("ui.how.did.the.product.fail.504861")}</Label>
                 <ElSelect
                   id="failure-mode"
                   value={session.form.incident.failureMode}
@@ -1446,17 +1398,17 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                     }))
                   }
                   options={[
-                    { value: "", label: "Select" },
-                    { value: "body_rupture", label: "Body or casing broke" },
+                    { value: "", label: "ui.select.859822" },
+                    { value: "body_rupture", label: "ui.body.or.casing.broke.dbe0e9" },
                     {
                       value: "battery_exposure",
-                      label: "Battery became exposed",
+                      label: "ui.battery.became.exposed.f66455",
                     },
-                    { value: "choking_hazard", label: "Small part came loose" },
-                    { value: "leak", label: "Leaked" },
-                    { value: "overheating", label: "Overheated" },
-                    { value: "other", label: "Other" },
-                    { value: "unknown", label: "Unknown" },
+                    { value: "choking_hazard", label: "ui.small.part.came.loose.cae5eb" },
+                    { value: "leak", label: "ui.leaked.34a98d" },
+                    { value: "overheating", label: "ui.overheated.8baab4" },
+                    { value: "other", label: "ui.other.6e6a6f" },
+                    { value: "unknown", label: "ui.unknown.bc7819" },
                   ]}
                 />
               </div>
@@ -1465,8 +1417,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                   htmlFor="treatment-received"
                   className="text-sm font-medium text-[#303133]"
                 >
-                  Was medical treatment received?
-                </Label>
+                  {t("ui.was.medical.treatment.received.801600")}</Label>
                 <ElSelect
                   id="treatment-received"
                   value={session.form.incident.medicalTreatmentReceived}
@@ -1481,10 +1432,10 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                     }))
                   }
                   options={[
-                    { value: "", label: "Select" },
-                    { value: "yes", label: "Yes" },
-                    { value: "no", label: "No" },
-                    { value: "unknown", label: "Unknown" },
+                    { value: "", label: "ui.select.859822" },
+                    { value: "yes", label: "ui.yes.5397e0" },
+                    { value: "no", label: "ui.no.816c52" },
+                    { value: "unknown", label: "ui.unknown.bc7819" },
                   ]}
                 />
               </div>
@@ -1498,8 +1449,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                   htmlFor="injury-description"
                   className="text-sm font-medium text-[#303133]"
                 >
-                  Describe the injury
-                </Label>
+                  {t("ui.describe.the.injury.101375")}</Label>
                 <Textarea
                   id="injury-description"
                   rows={3}
@@ -1513,7 +1463,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                       },
                     }))
                   }
-                  placeholder="What injury occurred, and what part of the body was affected?"
+                  placeholder={t("ui.what.injury.occurred.and.what.part.of.01a6f9")}
                   className="rounded border border-[#dcdfe6] px-3 py-2 text-sm text-[#303133] transition-colors placeholder:text-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20"
                 />
               </div>
@@ -1552,13 +1502,13 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div className="space-y-1 text-sm">
                     <p className="font-medium text-[#303133]">
-                      {formatDocumentCategory(rule.category)}
+                      {t(formatDocumentCategory(rule.category))}
                     </p>
                     <p className="text-xs text-[#909399]">
-                      {rule.required || rule.minimumFiles > 0
-                        ? "Required"
-                        : "Optional"}{" "}
-                      | Uploaded {uploadedCount} of {rule.maximumFiles}
+                      {t(rule.required || rule.minimumFiles > 0
+                        ? "form.required"
+                        : "form.optional")}{t(" ")}
+                      {t("ui.uploaded.51a548")}{" "}{uploadedCount} {t("ui.of.de04fa")}{" "}{rule.maximumFiles}
                     </p>
                     {rule.instructions ? (
                       <p className="text-xs text-[#909399]">
@@ -1567,7 +1517,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                     ) : null}
                     {rule.allowedMimeTypes.length ? (
                       <p className="text-xs text-[#909399]">
-                        Accepted: {formatMimeTypes(rule.allowedMimeTypes)}
+                        {t("ui.accepted.a93098")}{" "}{formatMimeTypes(rule.allowedMimeTypes)}
                       </p>
                     ) : null}
                   </div>
@@ -1578,11 +1528,11 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                     `}
                   >
                     <Upload className="h-4 w-4" />
-                    {isUploading
-                      ? "Uploading..."
+                    {t(isUploading
+                      ? "ui.uploading.070e32"
                       : limitReached
-                        ? "Limit reached"
-                        : `Add ${formatDocumentCategory(rule.category)}`}
+                        ? "ui.limit.reached.068bb7"
+                        : `Add ${formatDocumentCategory(rule.category)}`)}
                     <input
                       type="file"
                       className="hidden"
@@ -1616,8 +1566,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                   className="h-7 px-2 text-xs text-[#409eff] hover:text-[#337ecc]"
                 >
                   <RefreshCw className="mr-1 h-3 w-3" />
-                  Refresh status
-                </Button>
+                  {t("ui.refresh.status.ade15a")}</Button>
               </div>
             )}
             {session.documents.map((document) => (
@@ -1631,7 +1580,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                     <DocumentStatusChip status={document.status} />
                   </p>
                   <p className="text-xs text-[#909399]">
-                    {formatDocumentCategory(document.category)} |{" "}
+                    {t(formatDocumentCategory(document.category))} |{t(" ")}
                     {document.documentId}
                   </p>
                 </div>
@@ -1648,19 +1597,18 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
           </div>
         ) : (
           <p className="text-sm text-[#909399]">
-            No evidence receipts attached yet.
-          </p>
+            {t("ui.no.evidence.receipts.attached.yet.25a777")}</p>
         )}
       </div>
 
       <div className="rounded border border-[#dcdfe6] p-4 text-sm text-[#606266]">
-        <p className="font-medium text-[#303133]">Evidence requirements</p>
+        <p className="font-medium text-[#303133]">{t("ui.evidence.requirements.08f233")}</p>
         {evidenceRequirements.length ? (
           <div className="mt-2 space-y-2 text-xs text-[#909399]">
             {evidenceRequirements.map((rule) => (
               <div key={rule.category}>
                 <p className="font-medium text-[#303133]">
-                  {describeEvidenceRule(rule)}
+                  {t(describeEvidenceRule(rule))}
                 </p>
                 <p>{rule.instructions}</p>
               </div>
@@ -1668,21 +1616,18 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
           </div>
         ) : (
           <p className="mt-1 text-xs text-[#909399]">
-            No campaign-specific evidence requirements were returned.
-          </p>
+            {t("ui.no.campaign.specific.evidence.requirements.were.returned.21e17d")}</p>
         )}
       </div>
 
       <div className="rounded border border-[#dcdfe6] p-4 text-sm text-[#606266]">
         <p className="font-medium text-[#303133]">
-          Mailing address
-          {remedyRequiresMailingAddress(selectedRemedy?.type)
+          {t("ui.mailing.address.a5e34b")}{" "}{t(remedyRequiresMailingAddress(selectedRemedy?.type)
             ? ""
-            : " (not required for this remedy)"}
+            : " (not required for this remedy)")}
         </p>
         <p className="mt-1 text-xs text-[#909399]">
-          Used for replacement or other remedies that need shipment details.
-        </p>
+          {t("ui.used.for.replacement.or.other.remedies.that.9301d2")}</p>
       </div>
 
       {/* ===== 复选框 ===== */}
@@ -1693,14 +1638,13 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             updateForm((form) => ({ ...form, privacyAccepted: checked }))
           }
         >
-          I acknowledge{" "}
+          {t("ui.i.acknowledge.0ce652")}{t(" ")}
           <Link
             className="font-medium text-[#409eff] underline"
             href={privacyNoticeHref}
           >
-            the privacy notice
-          </Link>{" "}
-          version `{privacyNoticeVersion}`.
+            {t("ui.the.privacy.notice.26bb7e")}</Link>{t(" ")}
+          {t("ui.version.d74fc0")}{privacyNoticeVersion}`.
         </ElCheckbox>
         <ElCheckbox
           checked={session.form.accuracyAccepted}
@@ -1708,24 +1652,23 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             updateForm((form) => ({ ...form, accuracyAccepted: checked }))
           }
         >
-          I confirm the submitted information is accurate for form version `
-          {CLAIM_FLOW_FORM_VERSION}`.
+          {t("ui.i.confirm.the.submitted.information.is.accurate.a877c2")}{CLAIM_FLOW_FORM_VERSION}`.
         </ElCheckbox>
       </div>
 
       {validationMessage && (
         <div className="rounded border border-red-500/20 bg-red-50 p-4 text-sm text-red-500">
-          {validationMessage}
+          {t(validationMessage)}
         </div>
       )}
 
       {problem && (
         <div className="rounded border border-red-500/20 bg-red-50 p-4 text-sm text-[#606266]">
-          <p className="font-semibold text-red-500">Last API issue</p>
-          <p>{problem.detail}</p>
+          <p className="font-semibold text-red-500">{t("ui.last.api.issue.ee20a9")}</p>
+          <p>{t(problemMessage(problem))}</p>
           {problem.requestId && (
             <p className="text-xs text-[#909399] mt-1">
-              Request ID: {problem.requestId}
+              {t("ui.request.id.364dc5")}{" "}{problem.requestId}
             </p>
           )}
         </div>
@@ -1738,8 +1681,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
           onClick={handleReset}
           className="border-[#dcdfe6] text-[#606266] hover:border-[#409eff] hover:text-[#409eff]"
         >
-          Reset Draft
-        </Button>
+          {t("ui.reset.draft.cc26b5")}</Button>
         <Button
           className="bg-[#409eff] text-white hover:bg-[#337ecc] border-0 disabled:bg-[#a0cfff]"
           disabled={isSubmitting}
@@ -1755,6 +1697,8 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             const result = await claimFlowModule.submit(
               current,
               claimFlowModule.buildSubmitInput(current, privacyNoticeVersion, {
+                contentLocale: campaign.contentLocale,
+                contentTranslationId: campaign.contentTranslationId,
                 addressRequired: remedyRequiresMailingAddress(
                   selectedRemedy?.type,
                 ),
@@ -1771,7 +1715,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
             setProblem(result.error);
           }}
         >
-          {isSubmitting ? "Submitting..." : "Submit Through API"}
+          {t(isSubmitting ? "ui.submitting.46a1a6" : "claim.submitAction")}
         </Button>
       </div>
     </div>

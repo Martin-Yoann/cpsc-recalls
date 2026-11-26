@@ -1,4 +1,6 @@
 'use client';
+import { useI18n } from "@/lib/i18n/provider";
+
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -16,6 +18,7 @@ interface ClaimDetailClientProps {
 }
 
 export function ClaimDetailClient({ claimNumber, backHref, backLabel }: ClaimDetailClientProps) {
+  const { t, locale } = useI18n();
   const { user, isAuthenticated, openAuthDrawer } = useAuth();
   const [detail, setDetail] = useState<ClaimLookupPayload | null | undefined>(undefined);
 
@@ -36,7 +39,7 @@ export function ClaimDetailClient({ claimNumber, backHref, backLabel }: ClaimDet
     <div className="space-y-6">
       <Link href={backHref} className="inline-flex items-center gap-1.5 text-sm text-secondary hover:text-foreground transition-colors">
         <ArrowLeft className="h-4 w-4" />
-        {backLabel}
+        {t(backLabel)}
       </Link>
 
       {/* Header */}
@@ -48,7 +51,7 @@ export function ClaimDetailClient({ claimNumber, backHref, backLabel }: ClaimDet
               <StatusBadge variant={claim.status} />
             </div>
             <p className="text-sm text-secondary">
-              Submitted {new Date(claim.submittedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+              {t("ui.submitted.2e0035")}{" "}{new Date(claim.submittedAt).toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
             <p className="mt-1 text-sm font-medium text-foreground">
               {detail.campaignTitle || claim.campaignTitle}
@@ -59,16 +62,14 @@ export function ClaimDetailClient({ claimNumber, backHref, backLabel }: ClaimDet
             <div className="max-w-sm p-4 rounded-md bg-surface-dim text-sm">
               <p className="flex items-center gap-2 font-semibold text-foreground">
                 <LockKeyhole className="h-4 w-4" />
-                This guest view only works on this device after lookup.
-              </p>
+                {t("ui.this.guest.view.only.works.on.this.8df3b2")}</p>
               <button
                 type="button"
                 onClick={() => openAuthDrawer('register')}
                 className="mt-2 inline-flex items-center gap-2 font-semibold text-brand hover:underline"
               >
                 <UserRoundPlus className="h-4 w-4" />
-                Sign up to keep claims synced everywhere
-              </button>
+                {t("ui.sign.up.to.keep.claims.synced.everywhere.d5ed81")}</button>
             </div>
           )}
         </div>
@@ -77,25 +78,24 @@ export function ClaimDetailClient({ claimNumber, backHref, backLabel }: ClaimDet
       <div className="grid gap-4 md:grid-cols-2">
         {/* Product */}
         <div className="card-surface p-6">
-          <h2 className="text-base font-bold text-foreground pb-3 border-b border-border mb-4">Product Information</h2>
+          <h2 className="text-base font-bold text-foreground pb-3 border-b border-border mb-4">{t("ui.product.information.8f093e")}</h2>
           <p className="text-sm font-semibold text-foreground">{detail.productName || claim.productName}</p>
           <div className="mt-3 space-y-1.5 text-xs text-secondary">
-            <p>Lot: <span className="font-mono font-semibold text-foreground">{claim.lotCode || 'N/A'}</span></p>
-            <p>Date: <span className="font-mono font-semibold text-foreground">{claim.dateCode || 'N/A'}</span></p>
+            <p>{t("ui.lot.94d34d")}<span className="font-mono font-semibold text-foreground">{claim.lotCode || 'N/A'}</span></p>
+            <p>{t("ui.date.81b7d2")}<span className="font-mono font-semibold text-foreground">{claim.dateCode || 'N/A'}</span></p>
           </div>
           {claim.campaignSlug && (
             <Link
               href={`/recalls/${claim.campaignSlug}`}
               className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand hover:underline"
             >
-              View recall details →
-            </Link>
+              {t("ui.view.recall.details.6aafc3")}</Link>
           )}
         </div>
 
         {/* Remedy */}
         <div className="card-surface p-6">
-          <h2 className="text-base font-bold text-foreground pb-3 border-b border-border mb-4">Remedy Details</h2>
+          <h2 className="text-base font-bold text-foreground pb-3 border-b border-border mb-4">{t("ui.remedy.details.1498bb")}</h2>
           <div className="flex items-center gap-2 mb-3">
             {claim.remedyType === 'refund' ? (
               <Wallet className="h-4 w-4 text-foreground" />
@@ -103,7 +103,7 @@ export function ClaimDetailClient({ claimNumber, backHref, backLabel }: ClaimDet
               <Package className="h-4 w-4 text-foreground" />
             )}
             <span className="inline-flex items-center rounded-md bg-surface-dim px-2 py-0.5 text-xs font-semibold text-foreground">
-              {detail.remedyType === 'refund' ? 'Refund' : 'Replacement'}
+              {t(detail.remedyType === "refund" ? "remedy.refund" : "remedy.replacement")}
             </span>
           </div>
           <p className="text-sm font-semibold text-foreground">
@@ -111,7 +111,7 @@ export function ClaimDetailClient({ claimNumber, backHref, backLabel }: ClaimDet
           </p>
           {detail.refundAmount && (
             <p className="mt-2 text-base font-bold text-foreground">
-              Compensation: <span className="text-brand">${detail.refundAmount.toFixed(2)}</span>
+              {t("ui.compensation.cf03ba")}<span className="text-brand">${detail.refundAmount.toFixed(2)}</span>
             </p>
           )}
         </div>
@@ -120,22 +120,21 @@ export function ClaimDetailClient({ claimNumber, backHref, backLabel }: ClaimDet
       {/* Evidence */}
       <div className="card-surface p-6">
         <h2 className="text-base font-bold text-foreground pb-3 border-b border-border mb-4">
-          Submitted Evidence ({claim.evidenceCount} file{claim.evidenceCount !== 1 ? 's' : ''})
+          {t("ui.submitted.evidence.338ccb")}{claim.evidenceCount} {t("ui.file.971c41")}{" "}{t(claim.evidenceCount !== 1 ? 's' : '')})
         </h2>
         {claim.evidenceCount > 0 ? (
           <div className="flex items-center gap-3 p-3 rounded-md bg-surface-dim">
             <FileText className="h-5 w-5 shrink-0 text-foreground" />
             <div className="min-w-0">
               <p className="text-sm font-semibold text-foreground">
-                {claim.evidenceCount} evidence file{claim.evidenceCount !== 1 ? 's' : ''} submitted
-              </p>
+                {claim.evidenceCount} {t("ui.evidence.file.aa92af")}{" "}{t(claim.evidenceCount !== 1 ? 's' : '')} {t("ui.submitted.fda437")}</p>
               <p className="text-xs text-secondary mt-0.5">
-                Submitted with claim on {new Date(claim.submittedAt).toLocaleDateString('en-US')}
+                {t("ui.submitted.with.claim.on.e8966e")}{" "}{new Date(claim.submittedAt).toLocaleDateString(locale)}
               </p>
             </div>
           </div>
         ) : (
-          <p className="py-4 text-center text-sm text-secondary">No evidence files submitted yet</p>
+          <p className="py-4 text-center text-sm text-secondary">{t("ui.no.evidence.files.submitted.yet.629004")}</p>
         )}
       </div>
     </div>

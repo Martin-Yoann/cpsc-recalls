@@ -7,9 +7,9 @@ import type { BladeStage, NavItem } from "@/types";
 // === Navigation ===
 export const NAV_ITEMS: NavItem[] = [
   { label: "Safety Recall", href: "/recalls/music-lollipop-demo-2026" },
-  { label: "How It Works", href: "/how-it-works" },
-  { label: "Active Recalls", href: "/#active-recalls" },
-  { label: "FAQ", href: "/faq" },
+  { label: "ui.how.it.works.8cecc8", href: "/how-it-works" },
+  { label: "ui.active.recalls.f6dc50", href: "/#active-recalls" },
+  { label: "nav.faq", href: "/faq" },
 ];
 
 // === Blade Configuration ===
@@ -37,7 +37,7 @@ export const BLADE_CONFIG: Record<BladeStage, BladeConfig> = {
   },
   verification: {
     stage: "verification",
-    label: "Verification",
+    label: "stage.verification",
     color: "var(--blade-verification)",
     lightColor: "var(--blade-verification-light)",
     darkColor: "var(--blade-verification-dark)",
@@ -47,7 +47,7 @@ export const BLADE_CONFIG: Record<BladeStage, BladeConfig> = {
   },
   resolution: {
     stage: "resolution",
-    label: "Resolution",
+    label: "stage.resolution",
     color: "var(--blade-resolution)",
     lightColor: "var(--blade-resolution-light)",
     darkColor: "var(--blade-resolution-dark)",
@@ -66,20 +66,20 @@ export const RISK_LEVEL_LABELS: Record<string, string> = {
 };
 
 export const RECALL_STATUS_LABELS: Record<string, string> = {
-  active: "Active",
-  closed: "Closed",
-  pending: "Pending",
-  expanded: "Expanded",
+  active: "ui.active.a733b8",
+  closed: "ui.closed.88d86b",
+  pending: "ui.pending.96f608",
+  expanded: "ui.expanded.6d1704",
 };
 
 export const CLAIM_STATUS_LABELS: Record<string, string> = {
-  draft: "Draft",
-  submitted: "Submitted",
-  under_review: "Under Review",
-  verified: "Verified",
-  remedy_issued: "Remedy Issued",
-  resolved: "Resolved",
-  rejected: "Rejected",
+  draft: "ui.draft.23d33e",
+  submitted: "ui.submitted.2e0035",
+  under_review: "ui.under.review.18afed",
+  verified: "ui.verified.aed3b8",
+  remedy_issued: "ui.remedy.issued.c74da1",
+  resolved: "ui.resolved.d999ae",
+  rejected: "ui.rejected.27eeb7",
 };
 
 /**
@@ -134,15 +134,15 @@ export function remedyRequiresMailingAddress(
 }
 
 export const REMEDY_TYPE_LABELS: Record<string, string> = {
-  refund: "Refund",
-  replacement: "Replacement",
+  refund: "remedy.refund",
+  replacement: "remedy.replacement",
   repair: "Repair",
   disposal_instruction: "Disposal Instructions",
   voucher: "Voucher",
 };
 
 export const INCIDENT_SEVERITY_LABELS: Record<string, string> = {
-  minor: "Minor",
+  minor: "ui.minor.100b45",
   moderate: "Moderate",
   serious: "Serious",
   fatal: "Fatal",
@@ -168,11 +168,11 @@ export const ALLOWED_FILE_EXTENSIONS = [
 
 // === Claim Steps ===
 export const CLAIM_STEPS = [
-  { id: "submitted", label: "Submitted", blade: "verification" },
-  { id: "under_review", label: "Under Review", blade: "verification" },
-  { id: "verified", label: "Verified", blade: "verification" },
-  { id: "remedy_issued", label: "Remedy Issued", blade: "resolution" },
-  { id: "resolved", label: "Resolved", blade: "resolution" },
+  { id: "submitted", label: "ui.submitted.2e0035", blade: "verification" },
+  { id: "under_review", label: "ui.under.review.18afed", blade: "verification" },
+  { id: "verified", label: "ui.verified.aed3b8", blade: "verification" },
+  { id: "remedy_issued", label: "ui.remedy.issued.c74da1", blade: "resolution" },
+  { id: "resolved", label: "ui.resolved.d999ae", blade: "resolution" },
 ] as const;
 
 // === Eligibility Steps ===

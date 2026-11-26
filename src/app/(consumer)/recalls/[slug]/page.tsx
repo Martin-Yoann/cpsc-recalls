@@ -1,3 +1,5 @@
+
+import { getI18n } from "@/lib/i18n/server";
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import {
@@ -7,7 +9,6 @@ import {
   HelpCircle,
   Info,
   Package,
-  Phone,
   Search,
   ArrowRight,
 } from 'lucide-react';
@@ -15,6 +16,8 @@ import Link from 'next/link';
 import { fetchCampaign } from '@/lib/api-adapter';
 import { ClaimSubmitWrapper } from '@/components/consumer/claim-submit-wrapper';
 import { StatusBadge } from '@/components/shared/status-badge';
+import { RecallSupport } from '@/components/consumer/recall-support';
+import { ContentLanguageNotice } from '@/components/consumer/content-language-notice';
 import { RiskLevel } from '@/types';
 
 interface RecallPageProps {
@@ -78,7 +81,7 @@ export async function generateMetadata({ params }: RecallPageProps): Promise<Met
   };
 }
 
-function SectionHeading({
+async function SectionHeading({
   icon: Icon,
   step,
   children,
@@ -89,6 +92,7 @@ function SectionHeading({
   children: React.ReactNode;
   description?: string;
 }) {
+  const { t } = await getI18n();
   return (
     <div className="mb-6">
       <div className="flex items-center gap-3 mb-2">
@@ -97,18 +101,19 @@ function SectionHeading({
         <h2 className="text-xl font-bold text-foreground">{children}</h2>
       </div>
       {description && (
-        <p className="text-sm text-secondary leading-relaxed max-w-2xl">{description}</p>
+        <p className="text-sm text-secondary leading-relaxed max-w-2xl">{t(description)}</p>
       )}
     </div>
   );
 }
 
-function SideCard({ title, icon: Icon, children }: { title: string; icon?: typeof Info; children: React.ReactNode }) {
+async function SideCard({ title, icon: Icon, children }: { title: string; icon?: typeof Info; children: React.ReactNode }) {
+  const { t } = await getI18n();
   return (
     <div className="card-surface p-5">
       <h3 className="mb-4 flex items-center gap-2 pb-3 border-b border-border text-base font-semibold text-foreground">
         {Icon && <Icon className="h-4 w-4 text-brand" />}
-        {title}
+        {t(title)}
       </h3>
       {children}
     </div>
@@ -116,6 +121,7 @@ function SideCard({ title, icon: Icon, children }: { title: string; icon?: typeo
 }
 
 export default async function RecallPage({ params }: RecallPageProps) {
+  const { t, locale } = await getI18n();
   const { campaign, error } = await fetchCampaign((await params).slug);
 
   // Distinguish "there is no such notice" from "we could not load it". Only the
@@ -132,23 +138,16 @@ export default async function RecallPage({ params }: RecallPageProps) {
   const product = campaign.affectedProducts?.[0];
   if (!product) notFound();
 
-  // Adapter packs contact as "phone (hours)" — split instead of inventing
-  // defaults for either part.
-  const rawContact = campaign.manufacturerContact || '';
-  const openParen = rawContact.indexOf(' (');
-  const supportPhone = (openParen === -1 ? rawContact : rawContact.slice(0, openParen)).trim();
-  const supportHours =
-    openParen === -1 ? '' : rawContact.slice(openParen + 2).replace(/\)\s*$/, '').trim();
-
   return (
     <div className="bg-background text-foreground">
       <main className="container-content py-10 sm:py-12">
+        <ContentLanguageNotice contentLocale={campaign.contentLocale} />
         {/* ── Header ── */}
         <header className="mb-10 pb-8 border-b border-border">
           <div className="flex items-center gap-2 text-sm text-secondary mb-4">
-            <Link href="/" className="hover:text-foreground">Home</Link>
+            <Link href="/" className="hover:text-foreground">{t("nav.home")}</Link>
             <span>/</span>
-            <Link href="/#active-recalls" className="hover:text-foreground">Recalls</Link>
+            <Link href="/#active-recalls" className="hover:text-foreground">{t("ui.recalls.8b3be4")}</Link>
             <span>/</span>
             <span className="text-foreground">{campaign.cpscNumber}</span>
           </div>
@@ -159,10 +158,10 @@ export default async function RecallPage({ params }: RecallPageProps) {
               <span
                 className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold uppercase tracking-wider ${riskStyles[campaign.riskLevel] || 'bg-surface-dim text-foreground'}`}
               >
-                {riskLabels[campaign.riskLevel] || campaign.riskLevel}
+                {t(riskLabels[campaign.riskLevel] || campaign.riskLevel)}
               </span>
             )}
-            <span className="label-data">Reference #{campaign.cpscNumber}</span>
+            <span className="label-data">{t("ui.reference.348555")}{" "}{campaign.cpscNumber}</span>
           </div>
 
           <h1 className="text-[36px] sm:text-[40px] leading-[1.1] font-bold tracking-[-0.02em] text-foreground max-w-4xl">
@@ -176,10 +175,10 @@ export default async function RecallPage({ params }: RecallPageProps) {
           {/* Data strip — only API-provided facts; absent values render as em dash */}
           <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-border">
             <div>
-              <p className="label-eyebrow">Recall Date</p>
+              <p className="label-eyebrow">{t("ui.recall.date.c1046f")}</p>
               <p className="mt-1 text-sm font-semibold text-foreground">
                 {campaign.recallDate
-                  ? new Date(campaign.recallDate).toLocaleDateString('en-US', {
+                  ? new Date(campaign.recallDate).toLocaleDateString(locale, {
                       month: 'long',
                       day: 'numeric',
                       year: 'numeric',
@@ -188,17 +187,17 @@ export default async function RecallPage({ params }: RecallPageProps) {
               </p>
             </div>
             <div>
-              <p className="label-eyebrow">Manufacturer</p>
+              <p className="label-eyebrow">{t("ui.manufacturer.7adfcd")}</p>
               <p className="mt-1 text-sm font-semibold text-foreground truncate">{campaign.manufacturerName || '—'}</p>
             </div>
             <div>
-              <p className="label-eyebrow">Affected Units</p>
+              <p className="label-eyebrow">{t("ui.affected.units.066be0")}</p>
               <p className="mt-1 text-sm font-mono font-semibold text-foreground">
                 {campaign.estimatedUnits > 0 ? campaign.estimatedUnits.toLocaleString() : '—'}
               </p>
             </div>
             <div>
-              <p className="label-eyebrow">Last Updated</p>
+              <p className="label-eyebrow">{t("ui.last.updated.66f3e1")}</p>
               <p className="mt-1 text-sm font-semibold text-foreground">{campaign.lastUpdated || '—'}</p>
             </div>
           </div>
@@ -213,20 +212,19 @@ export default async function RecallPage({ params }: RecallPageProps) {
               <SectionHeading
                 step="01"
                 icon={Info}
-                description="Check whether your product matches this recall. Locate the lot code, date code, shape, and flavor on your package."
+                description={t("ui.check.whether.your.product.matches.this.recall.4a1d32")}
               >
-                Identify the Product
-              </SectionHeading>
+                {t("ui.identify.the.product.24b5c9")}</SectionHeading>
 
               <div className="card-surface p-6">
                 <div className="grid gap-6 sm:grid-cols-2 pb-6 border-b border-border">
                   <div>
-                    <p className="label-eyebrow mb-3">Product Details</p>
+                    <p className="label-eyebrow mb-3">{t("ui.product.details.279cc0")}</p>
                     <div className="space-y-2 text-sm text-foreground">
-                      <p><span className="text-secondary">Name:</span> <strong className="font-semibold">{product.name}</strong></p>
-                      <p><span className="text-secondary">Brand:</span> <strong className="font-semibold">{product.brandName}</strong></p>
+                      <p><span className="text-secondary">{t("ui.name.71dd2e")}</span> <strong className="font-semibold">{product.name}</strong></p>
+                      <p><span className="text-secondary">{t("ui.brand.549489")}</span> <strong className="font-semibold">{product.brandName}</strong></p>
                       <div>
-                        <span className="text-secondary">Shapes:</span>{' '}
+                        <span className="text-secondary">{t("ui.shapes.f2c870")}</span>{t(' ')}
                         <span className="inline-flex flex-wrap gap-1.5">
                           {product.shapes?.map((shape) => (
                             <span key={shape} className="rounded-md bg-info/10 px-2 py-0.5 text-xs font-medium text-info">
@@ -236,7 +234,7 @@ export default async function RecallPage({ params }: RecallPageProps) {
                         </span>
                       </div>
                       <div>
-                        <span className="text-secondary">Flavors:</span>{' '}
+                        <span className="text-secondary">{t("ui.flavors.77f930")}</span>{t(' ')}
                         <span className="inline-flex flex-wrap gap-1.5">
                           {product.flavors?.map((flavor) => (
                             <span key={flavor} className="rounded-md bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
@@ -249,21 +247,21 @@ export default async function RecallPage({ params }: RecallPageProps) {
                   </div>
 
                   <div>
-                    <p className="label-eyebrow mb-3">Hazard Description</p>
+                    <p className="label-eyebrow mb-3">{t("ui.hazard.description.f0689f")}</p>
                     <p className="text-sm leading-relaxed text-foreground">
                       {campaign.hazardDescription}
                     </p>
                     <div className="mt-3 flex items-start gap-2 p-3 bg-brand-light rounded-md border border-brand/20">
                       <AlertTriangle className="h-4 w-4 text-brand shrink-0 mt-0.5" />
                       <p className="text-xs text-brand font-medium leading-relaxed">
-                        Stop using a potentially affected product until its lot code has been checked.
+                        {campaign.instructions || t("ui.follow.the.safety.instructions.in.the.applicable.31bd5b")}
                       </p>
                     </div>
                   </div>
                 </div>
 
                 <div className="pt-5">
-                  <p className="label-eyebrow mb-3">Affected Lot Codes</p>
+                  <p className="label-eyebrow mb-3">{t("ui.affected.lot.codes.e0f4f4")}</p>
                   <div className="flex flex-wrap gap-2">
                     {campaign.affectedLots?.map((lot) => (
                       <code
@@ -276,7 +274,7 @@ export default async function RecallPage({ params }: RecallPageProps) {
                   </div>
                   {campaign.dateCodes && campaign.dateCodes.length > 0 && (
                     <p className="mt-3 text-xs text-secondary">
-                      Date codes:{' '}
+                      {t("ui.date.codes.e60c9e")}{" "}{t(' ')}
                       <span className="font-mono font-semibold text-foreground">
                         {campaign.dateCodes.join(', ')}
                       </span>
@@ -286,15 +284,25 @@ export default async function RecallPage({ params }: RecallPageProps) {
               </div>
             </section>
 
+            {Boolean(campaign.faq?.length) && (
+              <section lang={campaign.contentLocale} className="card-surface p-6 space-y-4">
+                {campaign.faq!.map((item, index) => (
+                  <details key={index} className="border-b border-border pb-4">
+                    <summary className="cursor-pointer font-semibold">{item.question}</summary>
+                    <p className="mt-3 whitespace-pre-line text-sm text-secondary">{item.answer}</p>
+                  </details>
+                ))}
+              </section>
+            )}
+
             {/* 2. Submit Claim */}
             <section>
               <SectionHeading
                 step="02"
                 icon={FileText}
-                description={campaign.remedySummary || 'Select the resolution option that works best for you.'}
+                description={campaign.remedySummary || t("ui.follow.the.remedy.instructions.provided.for.this.45c968")}
               >
-                Submit a Claim
-              </SectionHeading>
+                {t("claim.submit")}</SectionHeading>
 
               <div className="card-surface p-6">
                 <ClaimSubmitWrapper campaign={campaign} />
@@ -304,79 +312,61 @@ export default async function RecallPage({ params }: RecallPageProps) {
 
           {/* Right sidebar */}
           <aside className="space-y-5 lg:sticky lg:top-20 lg:self-start">
-            <SideCard title="Need Help?" icon={HelpCircle}>
-              {supportPhone ? (
-                <div className="flex items-start gap-3 p-3 bg-surface-dim rounded-md text-sm">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground text-white">
-                    <Phone className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground">Consumer Support</p>
-                    <p className="text-xs text-secondary mt-0.5">{supportPhone}</p>
-                    {supportHours && (
-                      <p className="mt-1 text-[10px] text-secondary">{supportHours}</p>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm text-secondary">Contact details are provided in the campaign notice.</p>
-              )}
+            <SideCard title={t("ui.need.help.8a3838")} icon={HelpCircle}>
+              <RecallSupport support={campaign.support} />
 
               <div className="mt-5">
-                <p className="label-eyebrow mb-3">What to Expect</p>
+                <p className="label-eyebrow mb-3">{t("ui.what.to.expect.84fa9a")}</p>
                 <ol className="space-y-3 text-sm">
                   <li className="flex gap-3">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-bold text-white">1</span>
-                    <span className="text-foreground leading-relaxed pt-0.5">Submit your claim with your contact and product details.</span>
+                    <span className="text-foreground leading-relaxed pt-0.5">{t("ui.submit.your.claim.with.your.contact.and.fa37fb")}</span>
                   </li>
                   <li className="flex gap-3">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-bold text-white">2</span>
-                    <span className="text-foreground leading-relaxed pt-0.5">The review team checks your submission and keeps your case status updated.</span>
+                    <span className="text-foreground leading-relaxed pt-0.5">{t("ui.the.review.team.checks.your.submission.and.5dd08b")}</span>
                   </li>
                   <li className="flex gap-3">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-bold text-white">3</span>
-                    <span className="text-foreground leading-relaxed pt-0.5">Track progress any time with your case reference via status lookup.</span>
+                    <span className="text-foreground leading-relaxed pt-0.5">{t("ui.track.progress.any.time.with.your.case.cdfd34")}</span>
                   </li>
                 </ol>
               </div>
             </SideCard>
 
-            <SideCard title="Where to Find Codes" icon={Search}>
+            <SideCard title={t("ui.where.to.find.codes.961b80")} icon={Search}>
               <ul className="space-y-3 text-sm">
                 <li className="flex gap-3">
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-dim text-secondary">
                     <Package className="h-3.5 w-3.5" />
                   </span>
-                  <span className="text-foreground leading-relaxed pt-0.5">Look for product identifiers (SKU, UPC, model) on the package or label.</span>
+                  <span className="text-foreground leading-relaxed pt-0.5">{t("ui.look.for.product.identifiers.sku.upc.model.1c664b")}</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-dim text-secondary">
                     <FileText className="h-3.5 w-3.5" />
                   </span>
-                  <span className="text-foreground leading-relaxed pt-0.5">Lot and date codes are typically printed near the package seal.</span>
+                  <span className="text-foreground leading-relaxed pt-0.5">{t("ui.lot.and.date.codes.are.typically.printed.90d8c1")}</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-dim text-secondary">
                     <Eye className="h-3.5 w-3.5" />
                   </span>
-                  <span className="text-foreground leading-relaxed pt-0.5">Select visible attributes like shape or flavor from the label.</span>
+                  <span className="text-foreground leading-relaxed pt-0.5">{t("ui.select.visible.attributes.like.shape.or.flavor.c9b07b")}</span>
                 </li>
               </ul>
             </SideCard>
 
-            <SideCard title="Quick Links" icon={FileText}>
+            <SideCard title={t("ui.quick.links.917bcf")} icon={FileText}>
               <div className="space-y-1">
                 <Link href="/lookup" className="flex items-center justify-between gap-2 px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-surface-dim transition-colors group">
-                  Track an existing claim
-                  <ArrowRight className="h-3.5 w-3.5 text-secondary group-hover:text-brand transition-colors" />
+                  {t("ui.track.an.existing.claim.2e9ba8")}<ArrowRight className="h-3.5 w-3.5 text-secondary group-hover:text-brand transition-colors" />
                 </Link>
                 <Link href="/faq" className="flex items-center justify-between gap-2 px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-surface-dim transition-colors group">
-                  Frequently asked questions
-                  <ArrowRight className="h-3.5 w-3.5 text-secondary group-hover:text-brand transition-colors" />
+                  {t("ui.frequently.asked.questions.af90ce")}<ArrowRight className="h-3.5 w-3.5 text-secondary group-hover:text-brand transition-colors" />
                 </Link>
                 <Link href="/#active-recalls" className="flex items-center justify-between gap-2 px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-surface-dim transition-colors group">
-                  All active recalls
-                  <ArrowRight className="h-3.5 w-3.5 text-secondary group-hover:text-brand transition-colors" />
+                  {t("ui.all.active.recalls.ed53ae")}<ArrowRight className="h-3.5 w-3.5 text-secondary group-hover:text-brand transition-colors" />
                 </Link>
               </div>
             </SideCard>

@@ -1,22 +1,27 @@
+"use client";
+import { useI18n } from "@/lib/i18n/provider";
+
+
 import Link from "next/link";
-import { ShieldCheck, Phone, Mail } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
 const FOOTER_LINKS = [
-  { label: "Home", href: "/" },
-  { label: "Check Claim Status", href: "/lookup" },
-  { label: "Active Recalls", href: "/#active-recalls" },
-  { label: "File a Claim", href: "/recalls/music-lollipop-demo-2026" },
-  { label: "FAQ", href: "/faq" },
+  { label: "nav.home", href: "/" },
+  { label: "ui.check.claim.status.cf5234", href: "/lookup" },
+  { label: "ui.active.recalls.f6dc50", href: "/#active-recalls" },
+  { label: "ui.file.a.claim.49c6f3", href: "/recalls/music-lollipop-demo-2026" },
+  { label: "nav.faq", href: "/faq" },
 ];
 
 const FOOTER_LEGAL = [
-  { label: "Privacy Policy", href: "/privacy" },
-  { label: "Terms of Service", href: "/faq" },
-  { label: "Accessibility", href: "/faq" },
-  { label: "Contact Support", href: "/faq" },
+  { label: "ui.privacy.policy.9db108", href: "/privacy" },
+  { label: "ui.terms.of.service.0c8a9a", href: "/faq" },
+  { label: "ui.accessibility.d66004", href: "/faq" },
+  { label: "ui.contact.support.fe1a29", href: "/faq" },
 ];
 
 export function Footer() {
+  const { t } = useI18n();
   return (
     <footer className="footer-band w-full">
       <div className="container-content py-12">
@@ -27,34 +32,25 @@ export function Footer() {
               <span className="flex h-8 w-8 items-center justify-center bg-white text-black rounded-md">
                 <ShieldCheck className="h-4 w-4" />
               </span>
-              <span className="text-[16px] font-bold text-white">KOI Recall</span>
+              <span className="text-[16px] font-bold text-white">{t("ui.koi.recall.ccd6c2")}</span>
             </Link>
             <p className="text-sm leading-relaxed max-w-sm">
-              Official product recall portal. Verify, submit, and track recall claims
-              with regulatory-grade security.
-            </p>
-            <div className="space-y-2 pt-1">
-              <div className="flex items-center gap-2 text-sm">
-                <Phone className="h-4 w-4 shrink-0" />
-                <span>1-800-555-SAFE</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Mail className="h-4 w-4 shrink-0" />
-                <span>support@koiimprtinc.com</span>
-              </div>
-            </div>
+              {t("ui.official.product.recall.portal.verify.submit.and.058d29")}</p>
+            <p className="text-sm leading-relaxed max-w-sm">
+              {t("ui.for.recall.assistance.use.the.contact.details.ffc6e6")}</p>
+            <Link href="/#active-recalls" className="inline-flex text-sm underline underline-offset-4">
+              {t("ui.find.recall.contact.information.c16fc8")}</Link>
           </div>
 
           {/* Platform */}
           <div>
             <h4 className="text-[13px] font-semibold uppercase tracking-wider mb-4">
-              Platform
-            </h4>
+              {t("ui.platform.123a7f")}</h4>
             <ul className="space-y-2.5">
               {FOOTER_LINKS.map((link) => (
                 <li key={link.label}>
                   <Link href={link.href} className="text-sm">
-                    {link.label}
+                    {t(link.label)}
                   </Link>
                 </li>
               ))}
@@ -64,13 +60,12 @@ export function Footer() {
           {/* Legal */}
           <div>
             <h4 className="text-[13px] font-semibold uppercase tracking-wider mb-4">
-              Legal
-            </h4>
+              {t("ui.legal.902c91")}</h4>
             <ul className="space-y-2.5">
               {FOOTER_LEGAL.map((link) => (
                 <li key={link.label}>
                   <Link href={link.href} className="text-sm">
-                    {link.label}
+                    {t(link.label)}
                   </Link>
                 </li>
               ))}
@@ -83,11 +78,9 @@ export function Footer() {
       <div className="border-t border-white/10">
         <div className="container-content py-5 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-xs">
-            &copy; {new Date().getFullYear()} KOI Importer Inc. All rights reserved.
-          </p>
+            &copy; {new Date().getFullYear()} {t("ui.koi.importer.inc.all.rights.reserved.732ee0")}</p>
           <p className="text-xs">
-            Not affiliated with the U.S. Consumer Product Safety Commission.
-          </p>
+            {t("ui.not.affiliated.with.the.u.s.consumer.f3a791")}</p>
         </div>
       </div>
     </footer>

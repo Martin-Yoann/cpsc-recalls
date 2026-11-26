@@ -1,4 +1,7 @@
 'use client';
+import { useI18n } from "@/lib/i18n/provider";
+import { message, type MessageInput } from '@/lib/i18n/translate';
+
 
 // ============================================================
 // KOI Recall Platform — Recall Check Card v6.0
@@ -21,7 +24,7 @@ type CheckResult = 'potential_match' | 'not_matched' | 'manual_review' | null;
 type SelectOption = { value: string; label: string };
 
 const selectClassNames = {
-  menuButton: () => 'flex h-10 w-full cursor-pointer items-center justify-between rounded-md border border-[#dcdfe6] bg-white px-3 text-sm text-gray-900 shadow-none transition-colors hover:border-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20',
+  menuButton: () => 'flex h-10 min-w-0 w-full cursor-pointer items-center justify-between rounded-md border border-[#dcdfe6] bg-white px-3 text-sm text-gray-900 shadow-none transition-colors hover:border-[#c0c4cc] focus:border-[#409eff] focus:outline-none focus:ring-2 focus:ring-[#409eff]/20 [&>div:first-child]:min-w-0 [&>div:first-child]:overflow-hidden [&>div:first-child]:pl-0 [&>div:first-child]:pr-1 [&_svg]:size-4',
   menu: 'absolute left-0 top-full z-50 mt-1 w-full overflow-hidden rounded-md border border-[#e4e7ed] bg-white py-1 shadow-[0_4px_12px_rgba(0,0,0,0.12)]',
   list: 'max-h-52 overflow-y-auto py-1',
   listItem: ({ isSelected }: { isSelected?: boolean } = {}) => `cursor-pointer px-3 py-2 text-sm text-[#606266] transition-colors hover:bg-[#ecf5ff] hover:text-[#409eff] ${isSelected ? 'bg-[#ecf5ff] text-[#409eff]' : ''}`,
@@ -32,6 +35,7 @@ const selectClassNames = {
 };
 
 export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
+  const { t } = useI18n();
   const [shape, setShape] = useState('');
   const [flavor, setFlavor] = useState('');
   const [lotCode, setLotCode] = useState('');
@@ -39,7 +43,7 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
   const [result, setResult] = useState<CheckResult>(null);
   const [error, setError] = useState('');
   const [isChecking, setIsChecking] = useState(false);
-  const [apiError, setApiError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<MessageInput | null>(null);
 
   const shapes = product?.shapes || [];
   const flavors = product?.flavors || [];
@@ -54,7 +58,7 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
 
   const handleCheck = async () => {
     if (!shape && !flavor && !lotCode && !dateCode) {
-      setError('Select at least one field to check your product.');
+      setError("ui.select.at.least.one.field.to.check.7cc49c");
       return;
     }
     setError('');
@@ -72,7 +76,7 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
     if (apiResult.ok) {
       setResult(apiResult.data.result);
     } else {
-      setApiError(`Unable to verify. Please try again or contact support. Ref: ${apiResult.error.requestId?.slice(0, 8) || 'N/A'}`);
+      setApiError(message('error.verification', { reference: apiResult.error.requestId?.slice(0, 8) || 'N/A' }));
     }
 
     setIsChecking(false);
@@ -88,25 +92,23 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blade-resolution-light border border-blade-resolution-medium/30">
               <ShieldCheck className="h-6 w-6 text-blade-resolution" />
             </div>
-            <h4 className="text-base font-bold text-blade-resolution">Product Matched</h4>
-            <p className="text-sm text-text-secondary">The identifiers you selected are listed in this recall scope.</p>
+            <h4 className="text-base font-bold text-blade-resolution">{t("ui.product.matched.f24929")}</h4>
+            <p className="text-sm text-text-secondary">{t("ui.the.identifiers.you.selected.are.listed.in.93615f")}</p>
             <div className="inline-flex flex-wrap justify-center gap-x-5 gap-y-1 rounded-lg bg-surface-secondary border p-2.5 text-sm">
-              {shape && <span><strong>Shape:</strong> {shape}</span>}
-              {flavor && <span><strong>Flavor:</strong> {flavor}</span>}
-              {lotCode && <span><strong>Lot:</strong> <code className="font-mono text-blade-verification">{lotCode}</code></span>}
-              {dateCode && <span><strong>Date:</strong> <code className="font-mono text-blade-verification">{dateCode}</code></span>}
+              {shape && <span><strong>{t("ui.shape.14edb2")}</strong> {shape}</span>}
+              {flavor && <span><strong>{t("ui.flavor.f03677")}</strong> {flavor}</span>}
+              {lotCode && <span><strong>{t("ui.lot.94d34d")}</strong> <code className="font-mono text-blade-verification">{lotCode}</code></span>}
+              {dateCode && <span><strong>{t("ui.date.81b7d2")}</strong> <code className="font-mono text-blade-verification">{dateCode}</code></span>}
             </div>
             <p className="text-xs text-text-tertiary">
-              This check is preliminary and is not a final eligibility decision.
-            </p>
+              {t("ui.this.check.is.preliminary.and.is.not.0abfed")}</p>
             <div className="flex flex-wrap items-center justify-center gap-2">
-              <Button variant="outline" size="default" onClick={reset}>Check Again</Button>
+              <Button variant="outline" size="default" onClick={reset}>{t("ui.check.again.e6a1ed")}</Button>
               <Link
                 href={`/recalls/${campaign.slug}`}
                 className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-foreground bg-foreground px-3 text-sm font-medium text-white transition-colors hover:bg-foreground/90"
               >
-                Go to Recall Page
-              </Link>
+                {t("ui.go.to.recall.page.308045")}</Link>
             </div>
           </div>
         ) : result === 'not_matched' ? (
@@ -114,60 +116,58 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 border border-amber-200">
               <XCircle className="h-6 w-6 text-amber-600" />
             </div>
-            <h4 className="text-base font-bold text-amber-700">No Automated Match</h4>
+            <h4 className="text-base font-bold text-amber-700">{t("ui.no.automated.match.f52bc2")}</h4>
             <p className="text-sm text-text-secondary">
-              The values you selected were not found in this recall scope. This does not confirm your product is safe — please try different selections or continue to manual review.
-            </p>
-            <Button variant="outline" size="default" onClick={reset}>Try Again</Button>
+              {t("ui.the.values.you.selected.were.not.found.2ff158")}</p>
+            <Button variant="outline" size="default" onClick={reset}>{t("ui.try.again.cef2fe")}</Button>
           </div>
         ) : result === 'manual_review' ? (
           <div className="text-center py-4 space-y-3">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blade-verification-light border border-blade-verification-medium/30">
               <AlertTriangle className="h-6 w-6 text-blade-verification" />
             </div>
-            <h4 className="text-base font-bold text-blade-verification">Additional Review Needed</h4>
+            <h4 className="text-base font-bold text-blade-verification">{t("ui.additional.review.needed.ec2d19")}</h4>
             <p className="text-sm text-text-secondary">
-              We could not automatically confirm whether your product is affected. Your submission will be reviewed by our team.
-            </p>
-            <Button variant="outline" size="sm" onClick={reset}>Try Different Selections</Button>
+              {t("ui.we.could.not.automatically.confirm.whether.your.eb5023")}</p>
+            <Button variant="outline" size="sm" onClick={reset}>{t("ui.try.different.selections.9d7fbc")}</Button>
           </div>
         ) : apiError ? (
           <div className="text-center py-4 space-y-3">
             <XCircle className="h-10 w-10 mx-auto text-red-500" />
-            <p className="text-sm text-text-secondary">{apiError}</p>
-            <Button variant="outline" size="sm" onClick={handleCheck}>Retry</Button>
+            <p className="text-sm text-text-secondary">{t(apiError)}</p>
+            <Button variant="outline" size="sm" onClick={handleCheck}>{t("ui.retry.9f5cd8")}</Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {/* Candy Shape */}
             {shapes.length > 0 && (
-              <div className="relative space-y-1.5">
-                <p className="text-xs font-semibold">Candy Shape</p>
-                <Select value={optionFor(shape, shapes)} onChange={selectValue(setShape)} options={optionsFor(shapes)} placeholder="Select Shape" primaryColor="blue" isSearchable={false} isClearable={false} classNames={selectClassNames} />
+              <div className="relative min-w-0 space-y-1.5">
+                <p className="text-xs font-semibold">{t("ui.candy.shape.863e4e")}</p>
+                <Select value={optionFor(shape, shapes)} onChange={selectValue(setShape)} options={optionsFor(shapes)} placeholder={t("ui.select.shape.146d7c")} primaryColor="blue" isSearchable={false} isClearable={false} classNames={selectClassNames} />
               </div>
             )}
 
             {/* Flavor */}
             {flavors.length > 0 && (
-              <div className="relative space-y-1.5">
-                <p className="text-xs font-semibold">Flavor</p>
-                <Select value={optionFor(flavor, flavors)} onChange={selectValue(setFlavor)} options={optionsFor(flavors)} placeholder="Select Flavor" primaryColor="blue" isSearchable={false} isClearable={false} classNames={selectClassNames} />
+              <div className="relative min-w-0 space-y-1.5">
+                <p className="text-xs font-semibold">{t("ui.flavor.51adc2")}</p>
+                <Select value={optionFor(flavor, flavors)} onChange={selectValue(setFlavor)} options={optionsFor(flavors)} placeholder={t("ui.select.flavor.0926fe")} primaryColor="blue" isSearchable={false} isClearable={false} classNames={selectClassNames} />
               </div>
             )}
 
             {/* Lot Code */}
             {lots.length > 0 && (
-              <div className="relative space-y-1.5">
-                <p className="text-xs font-semibold">Affected Lot Code</p>
-                <Select value={optionFor(lotCode, lots)} onChange={selectValue(setLotCode)} options={optionsFor(lots)} placeholder="Select Lot Code" primaryColor="blue" isSearchable={false} isClearable={false} classNames={selectClassNames} />
+              <div className="relative min-w-0 space-y-1.5">
+                <p className="text-xs font-semibold">{t("ui.affected.lot.code.05cfc5")}</p>
+                <Select value={optionFor(lotCode, lots)} onChange={selectValue(setLotCode)} options={optionsFor(lots)} placeholder={t("ui.select.lot.code.0ff31d")} primaryColor="blue" isSearchable={false} isClearable={false} classNames={selectClassNames} />
               </div>
             )}
 
             {/* Date Code */}
             {dates.length > 0 && (
-              <div className="relative space-y-1.5">
-                <p className="text-xs font-semibold">Date Code</p>
-                <Select value={optionFor(dateCode, dates)} onChange={selectValue(setDateCode)} options={optionsFor(dates)} placeholder="Select Date Code" primaryColor="blue" isSearchable={false} isClearable={false} classNames={selectClassNames} />
+              <div className="relative min-w-0 space-y-1.5">
+                <p className="text-xs font-semibold">{t("ui.date.code.8d4869")}</p>
+                <Select value={optionFor(dateCode, dates)} onChange={selectValue(setDateCode)} options={optionsFor(dates)} placeholder={t("ui.select.date.code.20f29c")} primaryColor="blue" isSearchable={false} isClearable={false} classNames={selectClassNames} />
               </div>
             )}
 
@@ -175,16 +175,15 @@ export function RecallCheckCard({ campaign, product }: RecallCheckCardProps) {
             <div className="flex items-start gap-2 rounded-lg bg-surface-secondary border p-3 sm:col-span-2">
               <Info className="h-4 w-4 text-text-tertiary shrink-0 mt-0.5" />
               <p className="text-xs text-text-tertiary leading-relaxed">
-                Select the shape, flavor, lot code, and date code printed on your package. We&apos;ll check them against this recall scope.
-              </p>
+                {t("ui.select.the.shape.flavor.lot.code.and.1e7475")}</p>
             </div>
 
-            {error && <p className="text-xs text-destructive sm:col-span-2">{error}</p>}
+            {error && <p className="text-xs text-destructive sm:col-span-2">{t(error)}</p>}
 
             <Button onClick={handleCheck} disabled={isChecking}
               className="h-10 w-full font-semibold cursor-pointer btn-lift btn-press sm:col-span-2"
               style={{ backgroundColor: isChecking ? '#7B7A7A' : '#363434', borderColor: isChecking ? '#0d0d0d' : '#1B1B1B', color: '#fff', opacity: 1 }}>
-              {isChecking ? <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Checking...</> : 'Check My Product'}
+              {isChecking ? <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />{t("ui.checking.494d0f")}</> : t("ui.check.my.product.053630")}
             </Button>
           </div>
         )}

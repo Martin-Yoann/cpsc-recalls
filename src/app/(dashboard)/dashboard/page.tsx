@@ -1,4 +1,6 @@
 'use client';
+import { useI18n } from "@/lib/i18n/provider";
+
 
 // ============================================================
 // KOI Recall Platform — User Dashboard v4
@@ -52,6 +54,7 @@ const STATUS_BAR_COLORS: Record<ClaimStatusKey, string> = {
 };
 
 export default function DashboardPage() {
+  const { t, locale } = useI18n();
   const { user } = useAuth();
   const [claims, setClaims] = useState<ConsumerClaim[] | null>(null);
   // Design §9/§14: mock orders are demo-only fixtures.
@@ -90,31 +93,29 @@ export default function DashboardPage() {
       {/* Welcome */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <p className="label-eyebrow text-brand">Dashboard</p>
+          <p className="label-eyebrow text-brand">{t("ui.dashboard.d87f47")}</p>
           <h1 className="mt-2 text-[28px] leading-tight font-bold text-foreground">
-            Welcome back, {user?.name}
+            {t("ui.welcome.back.8c8b73")}{user?.name}
           </h1>
           <p className="mt-1 text-secondary">
-            Here is your recall processing overview
-          </p>
+            {t("ui.here.is.your.recall.processing.overview.d9a0a4")}</p>
         </div>
         <Link href="/lookup" className="btn-outline">
           <Search className="h-4 w-4" />
-          Track a Claim
-        </Link>
+          {t("ui.track.a.claim.735825")}</Link>
       </div>
 
       {/* Stat Cards */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Claims', value: claimsList.length, icon: ClipboardList },
-          { label: 'In Progress', value: activeClaims.length, icon: Clock },
-          { label: 'Resolved', value: resolvedClaims.length, icon: CheckCircle2 },
-          { label: DEMO_MODE ? 'Linked Orders · Demo' : 'Linked Orders', value: orders.length, icon: Package },
+          { label: "ui.total.claims.ae0267", value: claimsList.length, icon: ClipboardList },
+          { label: "ui.in.progress.f61ead", value: activeClaims.length, icon: Clock },
+          { label: "ui.resolved.d999ae", value: resolvedClaims.length, icon: CheckCircle2 },
+          { label: DEMO_MODE ? t("ui.linked.orders.demo.ce64c1") : t("ui.linked.orders.d284cf"), value: orders.length, icon: Package },
         ].map((stat) => (
           <div key={stat.label} className="card-surface p-5">
             <div className="flex items-center justify-between">
-              <p className="label-eyebrow">{stat.label}</p>
+              <p className="label-eyebrow">{t(stat.label)}</p>
               <div className="flex h-9 w-9 items-center justify-center rounded-md bg-surface-dim text-foreground">
                 <stat.icon className="h-4 w-4" />
               </div>
@@ -130,10 +131,9 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
             <h2 className="text-base font-bold text-foreground flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-secondary" />
-              Claims by Status
-            </h2>
+              {t("ui.claims.by.status.ac78dd")}</h2>
             <span className="text-sm text-secondary">
-              Resolution rate{' '}
+              {t("ui.resolution.rate.0661df")}{" "}{t(' ')}
               <span className="font-semibold text-foreground">{resolutionRate}%</span>
             </span>
           </div>
@@ -165,12 +165,9 @@ export default function DashboardPage() {
           <div className="flex items-start gap-3">
             <AlertTriangle className="h-5 w-5 text-brand mt-0.5 shrink-0" />
             <div>
-              <p className="text-sm font-semibold text-brand">Pending Claims Require Attention</p>
+              <p className="text-sm font-semibold text-brand">{t("ui.pending.claims.require.attention.3eee0f")}</p>
               <p className="text-sm text-secondary mt-1">
-                You have {pendingClaims.length} claim{pendingClaims.length > 1 ? 's' : ''} currently
-                under review. Please ensure all required evidence has been submitted to expedite
-                processing.
-              </p>
+                {t("ui.you.have.799c9f")}{" "}{pendingClaims.length} {t("count.claim.one")}{" "}{t(pendingClaims.length > 1 ? 's' : '')} {t("ui.currently.under.review.please.ensure.all.required.f15758")}</p>
             </div>
           </div>
         </div>
@@ -179,10 +176,9 @@ export default function DashboardPage() {
       {/* Recent Claims */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-foreground">Recent Claims</h2>
+          <h2 className="text-lg font-bold text-foreground">{t("ui.recent.claims.ee4138")}</h2>
           <Link href="/dashboard/claims" className="text-sm font-semibold text-brand hover:underline flex items-center gap-1">
-            View All
-            <ArrowRight className="h-3.5 w-3.5" />
+            {t("ui.view.all.efd835")}<ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
@@ -203,14 +199,14 @@ export default function DashboardPage() {
                       {claim.claimNumber}
                     </p>
                     <p className="text-xs text-secondary truncate max-w-[260px]">
-                      {claim.campaignTitle || 'Unknown Campaign'}
+                      {claim.campaignTitle || t("ui.unknown.campaign.8228fd")}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <StatusBadge variant={claim.status} />
                   <span className="text-xs text-secondary hidden sm:block">
-                    {new Date(claim.submittedAt).toLocaleDateString('en-US')}
+                    {new Date(claim.submittedAt).toLocaleDateString(locale)}
                   </span>
                 </div>
               </Link>
@@ -219,13 +215,11 @@ export default function DashboardPage() {
         ) : (
           <div className="card-surface p-12 text-center">
             <ClipboardList className="h-10 w-10 mx-auto text-secondary mb-3" />
-            <h3 className="text-base font-semibold text-foreground mb-1">No Claims Yet</h3>
+            <h3 className="text-base font-semibold text-foreground mb-1">{t("ui.no.claims.yet.62176c")}</h3>
             <p className="text-sm text-secondary mb-5">
-              You haven&apos;t submitted any recall claims. Browse active recall campaigns to get started.
-            </p>
+              {t("ui.you.haven.t.submitted.any.recall.claims.3251a9")}</p>
             <Link href="/#active-recalls" className="btn-brand">
-              Browse Active Recalls
-              <ArrowRight className="h-4 w-4" />
+              {t("ui.browse.active.recalls.1be86e")}<ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         )}
@@ -235,10 +229,9 @@ export default function DashboardPage() {
       {orders.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-foreground">Linked Orders</h2>
+            <h2 className="text-lg font-bold text-foreground">{t("ui.linked.orders.d284cf")}</h2>
             <Link href="/dashboard/orders" className="text-sm font-semibold text-brand hover:underline flex items-center gap-1">
-              View All
-              <ArrowRight className="h-3.5 w-3.5" />
+              {t("ui.view.all.efd835")}<ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
@@ -262,13 +255,12 @@ export default function DashboardPage() {
                     <Store className="h-3 w-3" />
                     {order.retailerName}
                   </span>
-                  <span>{new Date(order.purchaseDate).toLocaleDateString('en-US')}</span>
+                  <span>{new Date(order.purchaseDate).toLocaleDateString(locale)}</span>
                 </div>
                 {order.claimId && (
                   <div className="mt-3 inline-flex items-center gap-1 rounded-md bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
                     <ShieldCheck className="h-3 w-3" />
-                    Linked to claim
-                  </div>
+                    {t("ui.linked.to.claim.410bca")}</div>
                 )}
               </div>
             ))}

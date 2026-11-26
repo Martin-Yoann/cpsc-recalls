@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n/provider";
+
 
 import { useState } from "react";
 import { Search, Loader2 } from "lucide-react";
@@ -14,6 +16,7 @@ interface LookupFormProps {
 }
 
 export function LookupForm({ onSearch, isLoading }: LookupFormProps) {
+  const { t } = useI18n();
   const [caseReference, setCaseReference] = useState("");
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
@@ -26,7 +29,7 @@ export function LookupForm({ onSearch, isLoading }: LookupFormProps) {
     const trimmedEmail = email.trim();
 
     if (!CASE_REFERENCE_PATTERN.test(normalizedReference) || !EMAIL_PATTERN.test(trimmedEmail)) {
-      setError("Enter your case reference in the KOI-XXXX-XXXXXXXX format and the email you filed the claim with.");
+      setError("ui.enter.your.case.reference.in.the.koi.939c54");
       return;
     }
 
@@ -43,8 +46,7 @@ export function LookupForm({ onSearch, isLoading }: LookupFormProps) {
           htmlFor="lookup-case-reference"
           className="block text-xs font-semibold text-foreground mb-1.5"
         >
-          Case Reference
-        </label>
+          {t("ui.case.reference.4461c6")}</label>
         <input
           id="lookup-case-reference"
           className={inputClass}
@@ -56,8 +58,7 @@ export function LookupForm({ onSearch, isLoading }: LookupFormProps) {
           disabled={isLoading}
         />
         <p className="mt-1.5 text-xs text-secondary">
-          Shown on your confirmation screen and email after submitting a claim.
-        </p>
+          {t("ui.shown.on.your.confirmation.screen.and.email.c94962")}</p>
       </div>
 
       <div>
@@ -65,8 +66,7 @@ export function LookupForm({ onSearch, isLoading }: LookupFormProps) {
           htmlFor="lookup-email"
           className="block text-xs font-semibold text-foreground mb-1.5"
         >
-          Email Address
-        </label>
+          {t("ui.email.address.09ba55")}</label>
         <input
           id="lookup-email"
           className={inputClass}
@@ -78,13 +78,12 @@ export function LookupForm({ onSearch, isLoading }: LookupFormProps) {
           disabled={isLoading}
         />
         <p className="mt-1.5 text-xs text-secondary">
-          Used only to verify this combination — never displayed or stored by this page.
-        </p>
+          {t("ui.used.only.to.verify.this.combination.never.e83868")}</p>
       </div>
 
       {error && (
         <div className="rounded-md border border-brand/20 bg-brand-light p-3 text-sm text-brand">
-          {error}
+          {t(error)}
         </div>
       )}
 
@@ -101,13 +100,11 @@ export function LookupForm({ onSearch, isLoading }: LookupFormProps) {
   {isLoading ? (
     <>
       <Loader2 className="h-4 w-4 animate-spin" />
-      Searching…
-    </>
+      {t("ui.searching.1a6a5b")}</>
   ) : (
     <>
       <Search className="h-4 w-4" />
-      Check Status
-    </>
+      {t("nav.checkStatus")}</>
   )}
 </button>
     </form>

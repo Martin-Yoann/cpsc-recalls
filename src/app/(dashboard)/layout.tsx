@@ -1,4 +1,6 @@
 'use client';
+import { useI18n } from "@/lib/i18n/provider";
+
 
 // ============================================================
 // KOI Recall Platform — Dashboard Layout v4
@@ -19,10 +21,10 @@ import { useAuth } from '@/lib/auth-context';
 import { cn } from '@/lib/utils';
 
 const SIDEBAR_LINKS = [
-  { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'My Claims', href: '/dashboard/claims', icon: ClipboardList },
-  { label: 'Linked Orders', href: '/dashboard/orders', icon: Package },
-  { label: 'Profile', href: '/dashboard/profile', icon: User },
+  { label: "ui.overview.0efc2e", href: '/dashboard', icon: LayoutDashboard },
+  { label: "ui.my.claims.ed07c1", href: '/dashboard/claims', icon: ClipboardList },
+  { label: "ui.linked.orders.d284cf", href: '/dashboard/orders', icon: Package },
+  { label: "ui.profile.ff4fc0", href: '/dashboard/profile', icon: User },
 ];
 
 export default function DashboardLayout({
@@ -30,6 +32,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { t } = useI18n();
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -43,8 +46,7 @@ export default function DashboardLayout({
   if (isLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center text-secondary text-sm">
-        Loading...
-      </div>
+        {t("ui.loading.b04ba4")}</div>
     );
   }
 
@@ -73,7 +75,7 @@ export default function DashboardLayout({
               </div>
 
               <div className="pt-3">
-                <p className="label-eyebrow px-3 mb-2">Dashboard</p>
+                <p className="label-eyebrow px-3 mb-2">{t("ui.dashboard.d87f47")}</p>
                 <nav className="space-y-1">
                   {SIDEBAR_LINKS.map((link) => {
                     const Icon = link.icon;
@@ -90,7 +92,7 @@ export default function DashboardLayout({
                         )}
                       >
                         <Icon className="h-4 w-4" />
-                        {link.label}
+                        {t(link.label)}
                         {isActive && <ChevronRight className="h-3.5 w-3.5 ml-auto" />}
                       </Link>
                     );
@@ -104,8 +106,7 @@ export default function DashboardLayout({
                   className="flex items-center gap-3 px-3 py-2 text-sm text-secondary hover:text-foreground transition-colors rounded-md hover:bg-surface-dim"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  Back to Home
-                </Link>
+                  {t("ui.back.to.home.ce7472")}</Link>
               </div>
             </div>
           </aside>

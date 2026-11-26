@@ -95,6 +95,11 @@ export interface Campaign {
   remedies: Remedy[];
   manufacturerName: string;
   manufacturerContact: string;
+  support?: { email: string; phone: string; hours: string };
+  contentLocale?: "en-US" | "es-US";
+  requestedLocale?: string;
+  contentTranslationId?: string;
+  faq?: Array<{ topic: string; question: string; answer: string }>;
   estimatedUnits: number;
   hazardDescription: string;
   instructions: string;

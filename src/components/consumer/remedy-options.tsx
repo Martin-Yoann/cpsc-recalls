@@ -1,4 +1,6 @@
 'use client';
+import { useI18n } from "@/lib/i18n/provider";
+
 
 // ============================================================
 // KOI Recall Platform — Remedy Options v4.4
@@ -48,6 +50,7 @@ const DEFAULT_ICON_STYLE = {
 };
 
 export function RemedyOptions({ remedies, onSelect, busyRemedyId }: RemedyOptionsProps) {
+  const { t } = useI18n();
   const [sel, setSel] = useState<string | null>(null);
 
   const chosen = sel ? remedies.find((r) => r.id === sel) : undefined;
@@ -56,10 +59,9 @@ export function RemedyOptions({ remedies, onSelect, busyRemedyId }: RemedyOption
     <div className="overflow-hidden rounded-md border border-[#dcdfe6] bg-white">
       {/* 头部：Available resolutions */}
       <div className="border-b border-[#ebeef5] bg-[#f5f7fa] px-4 py-3 sm:px-5">
-        <p className="text-sm font-semibold text-[#303133]">Available resolutions</p>
+        <p className="text-sm font-semibold text-[#303133]">{t("ui.available.resolutions.190aad")}</p>
         <p className="mt-1 text-xs leading-5 text-[#909399]">
-          Choose one option to start your claim draft.
-        </p>
+          {t("ui.choose.one.option.to.start.your.claim.160de9")}</p>
       </div>
 
       {/* 内容区域：整体居中 */}
@@ -100,7 +102,7 @@ export function RemedyOptions({ remedies, onSelect, busyRemedyId }: RemedyOption
                     <p className="mt-1 text-xs leading-5 text-[#606266]">{r.description}</p>
                     {r.compensationAmount && (
                       <p className="mt-2 text-sm font-semibold text-[#409eff]">
-                        Up to ${r.compensationAmount.toFixed(2)}
+                        {t("ui.up.to.1a85c1")}{" "}{r.compensationAmount.toFixed(2)}
                       </p>
                     )}
                   </div>
@@ -136,9 +138,9 @@ export function RemedyOptions({ remedies, onSelect, busyRemedyId }: RemedyOption
               onClick={() => onSelect?.(chosen)}
               disabled={busyRemedyId === chosen.id}
             >
-              {busyRemedyId === chosen.id
-                ? 'Preparing draft...'
-                : 'Continue with Selected Remedy'}
+              {t(busyRemedyId === chosen.id
+                ? "ui.preparing.draft.fcd3fe"
+                : "ui.continue.with.selected.remedy.b8ad39")}
             </Button>
           </div>
         )}

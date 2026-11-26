@@ -1,4 +1,7 @@
 "use client";
+import { useI18n } from "@/lib/i18n/provider";
+import { message, type MessageInput } from '@/lib/i18n/translate';
+
 
 import { useState } from "react";
 import Link from "next/link";
@@ -12,14 +15,15 @@ import { cn } from "@/lib/utils";
 // The contract returns an identical 404 for an unknown reference and a
 // mismatched email, so both cases share one neutral message by design.
 const NOT_FOUND_MESSAGE = {
-  title: "No matching record found.",
-  body: "Check your case reference and email address and try again.",
+  title: "ui.no.matching.record.found.2fc52c",
+  body: "ui.check.your.case.reference.and.email.address.700c63",
 };
 
 export default function LookupPage() {
+  const { t } = useI18n();
   const [result, setResult] = useState<CaseStatusLookupOk | null>(null);
   const [failure, setFailure] = useState<typeof NOT_FOUND_MESSAGE | null>(null);
-  const [genericError, setGenericError] = useState<string | null>(null);
+  const [genericError, setGenericError] = useState<MessageInput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSearch = async (caseReference: string, email: string) => {
@@ -43,11 +47,11 @@ export default function LookupPage() {
 
       setGenericError(
         response.status === 429
-          ? "Too many attempts. Please wait about a minute and try again."
-          : `Something went wrong while checking your case. Please try again shortly.${response.error.requestId ? ` Request ID: ${response.error.requestId}` : ""}`,
+          ? "ui.too.many.attempts.please.wait.about.a.20c06b"
+          : message('error.lookup', { reference: response.error.requestId ?? '—' }),
       );
     } catch {
-      setGenericError("Could not reach the recall service. Please try again shortly.");
+      setGenericError("ui.could.not.reach.the.recall.service.please.ba84c6");
     } finally {
       setIsLoading(false);
     }
@@ -72,7 +76,7 @@ export default function LookupPage() {
               )}
             >
               <ShieldCheck className="h-4 w-4" />
-              <span>KOI Recall</span>
+              <span>{t("ui.koi.recall.ccd6c2")}</span>
             </div>
 
             <h1
@@ -84,8 +88,7 @@ export default function LookupPage() {
                 "sm:text-[40px]"
               )}
             >
-              Check your recall status
-            </h1>
+              {t("ui.check.your.recall.status.8f1244")}</h1>
 
             <p
               className={cn(
@@ -94,9 +97,7 @@ export default function LookupPage() {
                 "text-slate-500"
               )}
             >
-              Enter your case reference and the email you filed with
-              to view your case.
-            </p>
+              {t("ui.enter.your.case.reference.and.the.email.118b47")}</p>
           </div>
 
           {/* =================================================
@@ -137,11 +138,11 @@ export default function LookupPage() {
                     )}
                   >
                     <p className="text-[13px] font-semibold text-slate-800">
-                      {failure.title}
+                      {t(failure.title)}
                     </p>
 
                     <p className="mt-0.5 text-[12px] leading-5 text-slate-500">
-                      {failure.body}
+                      {t(failure.body)}
                     </p>
                   </div>
                 )}
@@ -157,7 +158,7 @@ export default function LookupPage() {
                     )}
                   >
                     <p className="text-[13px] leading-5 text-red-700">
-                      {genericError}
+                      {t(genericError)}
                     </p>
                   </div>
                 )}
@@ -174,9 +175,7 @@ export default function LookupPage() {
                   <LockKeyhole className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
 
                   <p className="text-[11px] leading-5 text-slate-500">
-                    Your information is encrypted and only used
-                    to locate your recall record.
-                  </p>
+                    {t("ui.your.information.is.encrypted.and.only.used.72cdc1")}</p>
                 </div>
               </>
             )}
@@ -189,8 +188,7 @@ export default function LookupPage() {
           {!result && (
             <div className="mt-6 text-center">
               <span className="text-[13px] text-slate-500">
-                Don`&apos;t have a claim yet?
-              </span>{" "}
+                {t("ui.don.t.have.a.claim.yet.c8b47a")}</span>{t(" ")}
 
               <Link
                 href="/recalls/music-lollipop-demo-2026"
@@ -202,8 +200,7 @@ export default function LookupPage() {
                   "hover:text-[#1D4F7A]"
                 )}
               >
-                File a new claim
-                <ArrowRight className="h-3.5 w-3.5" />
+                {t("ui.file.a.new.claim.29e2c2")}<ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
           )}

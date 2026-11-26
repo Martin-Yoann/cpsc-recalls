@@ -1,4 +1,6 @@
 'use client';
+import { useI18n } from "@/lib/i18n/provider";
+
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -21,6 +23,7 @@ export function ClaimsListClient({
   emptyTitle = 'No Claims Found',
   emptyDescription = 'You have not submitted or looked up any recall claims yet.',
 }: ClaimsListClientProps) {
+  const { t, locale } = useI18n();
   const { user, isAuthenticated, openAuthDrawer } = useAuth();
   const [claims, setClaims] = useState<ConsumerClaim[] | null>(null);
 
@@ -40,22 +43,19 @@ export function ClaimsListClient({
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <p className="label-eyebrow text-brand">Claim Center</p>
+          <p className="label-eyebrow text-brand">{t("ui.claim.center.45b886")}</p>
           <h1 className="mt-2 text-[28px] leading-tight font-bold text-foreground">
-            {title}
+            {t(title)}
           </h1>
           <p className="mt-1 text-secondary">
-            {claimsList.length} claim{claimsList.length !== 1 ? 's' : ''} available. Review the latest status, evidence count, and resolution path from one place.
-          </p>
+            {claimsList.length} {t("count.claim.one")}{" "}{t(claimsList.length !== 1 ? 's' : '')} {t("ui.available.review.the.latest.status.evidence.count.bbf02c")}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/lookup" className="btn-outline">
             <Search className="h-4 w-4" />
-            Check Status
-          </Link>
+            {t("nav.checkStatus")}</Link>
           <Link href="/#active-recalls" className="btn-brand">
-            Browse Active Recalls
-            <ArrowRight className="h-4 w-4" />
+            {t("ui.browse.active.recalls.1be86e")}<ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </div>
@@ -65,16 +65,14 @@ export function ClaimsListClient({
         <div className="card-surface p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <LockKeyhole className="h-4 w-4 text-secondary" />
-            Guest mode keeps claims on this device.
-          </p>
+            {t("ui.guest.mode.keeps.claims.on.this.device.15b589")}</p>
           <button
             type="button"
             onClick={() => openAuthDrawer('register')}
             className="inline-flex items-center gap-2 text-sm font-semibold text-brand hover:underline"
           >
             <UserRoundPlus className="h-4 w-4" />
-            Create an account for cross-device access
-          </button>
+            {t("ui.create.an.account.for.cross.device.access.d4b25e")}</button>
         </div>
       )}
 
@@ -95,13 +93,13 @@ export function ClaimsListClient({
                   <StatusBadge variant={claim.status} />
                 </div>
                 <p className="text-sm font-medium text-secondary">
-                  {claim.campaignTitle || 'Unknown Campaign'}
+                  {claim.campaignTitle || t("ui.unknown.campaign.8228fd")}
                 </p>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-secondary">
-                  <span>Submitted: {new Date(claim.submittedAt).toLocaleDateString('en-US')}</span>
-                  <span>Evidence: {claim.evidenceCount} file{claim.evidenceCount !== 1 ? 's' : ''}</span>
+                  <span>{t("ui.submitted.100a58")}{" "}{new Date(claim.submittedAt).toLocaleDateString(locale)}</span>
+                  <span>{t("ui.evidence.3ef354")}{" "}{claim.evidenceCount} {t("ui.file.971c41")}{" "}{t(claim.evidenceCount !== 1 ? 's' : '')}</span>
                   {claim.resolutionDate && (
-                    <span>Resolved: {new Date(claim.resolutionDate).toLocaleDateString('en-US')}</span>
+                    <span>{t("ui.resolved.5a8b9c")}{" "}{new Date(claim.resolutionDate).toLocaleDateString(locale)}</span>
                   )}
                 </div>
               </div>
@@ -112,13 +110,13 @@ export function ClaimsListClient({
       ) : (
         <div className="card-surface p-10 text-center">
           <ClipboardList className="mx-auto mb-3 h-10 w-10 text-secondary" />
-          <h3 className="text-base font-semibold text-foreground mb-1">{emptyTitle}</h3>
+          <h3 className="text-base font-semibold text-foreground mb-1">{t(emptyTitle)}</h3>
           <p className="mx-auto mb-5 max-w-lg text-sm text-secondary leading-relaxed">
-            {emptyDescription}
+            {t(emptyDescription)}
           </p>
           <div className="flex flex-wrap justify-center gap-2">
-            <Link href="/lookup" className="btn-outline">Check Existing Claim</Link>
-            <Link href="/" className="btn-brand">Browse Recalls</Link>
+            <Link href="/lookup" className="btn-outline">{t("ui.check.existing.claim.391444")}</Link>
+            <Link href="/" className="btn-brand">{t("ui.browse.recalls.4e805c")}</Link>
           </div>
         </div>
       )}

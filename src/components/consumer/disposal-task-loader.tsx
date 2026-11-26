@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n/provider";
+
 
 import { useEffect, useState } from "react";
 import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
@@ -51,6 +53,7 @@ async function readTaskState(taskId: string): Promise<LoadState> {
 }
 
 export function DisposalTaskLoader({ taskId, supportContact }: Props) {
+  const { t } = useI18n();
   const [state, setState] = useState<LoadState>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
 
@@ -71,8 +74,7 @@ export function DisposalTaskLoader({ taskId, supportContact }: Props) {
         className="flex items-center gap-2 p-6 text-sm text-[#606266]"
       >
         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-        Loading your disposal step…
-      </div>
+        {t("ui.loading.your.disposal.step.42f036")}</div>
     );
   }
 
@@ -80,14 +82,10 @@ export function DisposalTaskLoader({ taskId, supportContact }: Props) {
     return (
       <div className="space-y-3 rounded border border-[#dcdfe6] p-6 text-sm text-[#606266]">
         <p className="font-semibold text-[#303133]">
-          We cannot open this page.
-        </p>
+          {t("ui.we.cannot.open.this.page.fc9c5a")}</p>
         <p>
-          Open the link from the message we sent you about this recall, or start
-          again from the recall notice. If you have lost the link, contact us
-          and we will help.
-        </p>
-        {supportContact && <p>You can reach us at {supportContact}.</p>}
+          {t("ui.open.the.link.from.the.message.we.969cb1")}</p>
+        {supportContact && <p>{t("ui.you.can.reach.us.at.e36472")}{" "}{supportContact}.</p>}
       </div>
     );
   }
@@ -97,13 +95,10 @@ export function DisposalTaskLoader({ taskId, supportContact }: Props) {
       <div className="space-y-3 rounded border border-amber-300 bg-amber-50 p-6 text-sm text-amber-900">
         <p className="flex items-center gap-2 font-semibold">
           <AlertCircle className="h-4 w-4" aria-hidden="true" />
-          We could not load this step.
-        </p>
-        <p>{state.detail}</p>
+          {t("ui.we.could.not.load.this.step.363598")}</p>
+        <p>{t(state.detail)}</p>
         <p>
-          Nothing has changed about your claim. This is a temporary problem on
-          our side.
-        </p>
+          {t("ui.nothing.has.changed.about.your.claim.this.5be7e7")}</p>
         <Button
           type="button"
           variant="outline"
@@ -114,8 +109,7 @@ export function DisposalTaskLoader({ taskId, supportContact }: Props) {
           }}
         >
           <RefreshCw className="h-4 w-4" aria-hidden="true" />
-          Try again
-        </Button>
+          {t("ui.try.again.042c86")}</Button>
       </div>
     );
   }

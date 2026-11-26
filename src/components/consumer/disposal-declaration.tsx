@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n/provider";
+
 
 import { useState } from "react";
 import { AlertCircle, CheckCircle2, HelpCircle } from "lucide-react";
@@ -36,13 +38,13 @@ interface Props {
 const EXCEPTION_OPTIONS = [
   {
     value: "already_disposed_before_authorization" as const,
-    label: "I had already disposed of it before you asked me to",
+    label: "ui.i.had.already.disposed.of.it.before.2564da",
   },
   {
     value: "evidence_unavailable" as const,
-    label: "I could not take the photos you asked for",
+    label: "ui.i.could.not.take.the.photos.you.9edf17",
   },
-  { value: "other" as const, label: "Something else" },
+  { value: "other" as const, label: "ui.something.else.48f88a" },
 ];
 
 export function DisposalDeclaration({
@@ -51,6 +53,7 @@ export function DisposalDeclaration({
   allowedActions,
   onDeclared,
 }: Props) {
+  const { t } = useI18n();
   const mayComplete = allowedActions.includes("disposal.declare_completion");
   const mayExcept = allowedActions.includes("disposal.declare_exception");
   const [showException, setShowException] = useState(false);
@@ -69,7 +72,7 @@ export function DisposalDeclaration({
   ) => {
     const token = resolveDisposalToken(taskId);
     if (!token) {
-      setProblem("We cannot open this step from this browser.");
+      setProblem("ui.we.cannot.open.this.step.from.this.cd5178");
       return;
     }
     setBusy(true);
@@ -95,12 +98,10 @@ export function DisposalDeclaration({
           id="disposal-declaration"
           className="text-sm font-semibold text-[#303133]"
         >
-          Confirm what happened
-        </h3>
+          {t("ui.confirm.what.happened.eff775")}</h3>
         <p className="text-xs text-[#909399]">
-          This is the last step. It records your statement against version {version}{" "}
-          of the instructions above.
-        </p>
+          {t("ui.this.is.the.last.step.it.records.3fbe2e")}{" "}{version}{t(" ")}
+          {t("ui.of.the.instructions.above.7db2cf")}</p>
       </div>
 
       {mayComplete && (
@@ -113,11 +114,10 @@ export function DisposalDeclaration({
             }
           >
             <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-            {busy ? "Recording…" : "I disposed of it as instructed"}
+            {t(busy ? "ui.recording.72f9eb" : "ui.i.disposed.of.it.as.instructed.10f553")}
           </Button>
           <p className="text-xs text-[#909399]">
-            Choose this once you have followed the steps above.
-          </p>
+            {t("ui.choose.this.once.you.have.followed.the.754f82")}</p>
         </div>
       )}
 
@@ -129,16 +129,14 @@ export function DisposalDeclaration({
           onClick={() => setShowException(true)}
         >
           <HelpCircle className="h-4 w-4" aria-hidden="true" />
-          I cannot do this, or I already did something else
-        </Button>
+          {t("ui.i.cannot.do.this.or.i.already.093fac")}</Button>
       )}
 
       {mayExcept && showException && (
         <div className="space-y-3 rounded border border-[#faecd8] bg-[#fdf6ec] p-3">
           <fieldset className="space-y-2">
             <legend className="text-sm font-medium text-[#303133]">
-              What happened?
-            </legend>
+              {t("ui.what.happened.e9ef65")}</legend>
             {EXCEPTION_OPTIONS.map((option) => (
               <label
                 key={option.value}
@@ -152,15 +150,14 @@ export function DisposalDeclaration({
                   onChange={() => setExceptionType(option.value)}
                   className="mt-1"
                 />
-                <span>{option.label}</span>
+                <span>{t(option.label)}</span>
               </label>
             ))}
           </fieldset>
 
           <div className="space-y-2">
             <Label htmlFor="disposal-exception-note" className="text-sm font-medium text-[#303133]">
-              Please explain
-            </Label>
+              {t("ui.please.explain.db5632")}</Label>
             <Textarea
               id="disposal-exception-note"
               rows={3}
@@ -182,7 +179,7 @@ export function DisposalDeclaration({
                 })
               }
             >
-              {busy ? "Recording…" : "Record this"}
+              {t(busy ? "ui.recording.72f9eb" : "ui.record.this.85f817")}
             </Button>
             <Button
               type="button"
@@ -190,20 +187,17 @@ export function DisposalDeclaration({
               disabled={busy}
               onClick={() => setShowException(false)}
             >
-              Cancel
-            </Button>
+              {t("ui.cancel.77dfd2")}</Button>
           </div>
           <p className="text-xs text-[#909399]">
-            This does not change your claim or your remedy. It records what actually
-            happened, and our team follows up.
-          </p>
+            {t("ui.this.does.not.change.your.claim.or.78361a")}</p>
         </div>
       )}
 
       {problem && (
         <p role="alert" className="flex items-center gap-2 text-sm text-[#f56c6c]">
           <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-          {problem}
+          {t(problem)}
         </p>
       )}
     </section>
