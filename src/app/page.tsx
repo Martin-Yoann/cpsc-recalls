@@ -1,5 +1,6 @@
 
 import { getI18n } from "@/lib/i18n/server";
+import './landing-hero.css';
 import Link from "next/link";
 import { Search, FileText, CheckCircle2, ShieldCheck, ArrowRight, Package } from "lucide-react";
 import { fetchCampaign } from "@/lib/api-adapter";
@@ -58,23 +59,23 @@ export default async function LandingPage() {
   return (
     <>
       {/* ─── Hero — side-by-side ─── */}
-      <section className="bg-white border-b border-border">
-        <div className="container-content py-12 sm:py-16 lg:py-20">
-          <div className="grid gap-10 lg:grid-cols-2 lg:gap-12 items-start">
+      <section className="landing-hero bg-white border-b border-border">
+        <div className="container-content landing-hero-container">
+          <div className="landing-hero-grid">
             {/* Left: text + CTA */}
-            <div className="space-y-6">
+            <div className="landing-hero-copy">
               <div className="inline-flex items-center gap-2 border border-border bg-white px-3 py-1.5 rounded-full">
                 <ShieldCheck className="h-3.5 w-3.5 text-foreground" />
                 <span className="label-eyebrow !text-foreground">{t("ui.consumer.recall.portal.d8e5e6")}</span>
               </div>
 
-              <h1 className="text-[40px] sm:text-[48px] leading-[1.1] font-bold tracking-[-0.025em] text-foreground">
+              <h1 className="landing-hero-title font-bold tracking-[-0.035em] text-foreground">
                 {t("ui.product.safety.recall.submission.3caa00")}</h1>
 
-              <p className="text-[17px] leading-7 text-secondary max-w-xl">
+              <p className="landing-hero-description text-secondary">
                 {t("ui.check.whether.your.product.is.recalled.read.3d4494")}</p>
 
-              <div className="flex flex-wrap items-center gap-3 pt-2">
+              <div className="landing-hero-actions flex flex-wrap items-center gap-3">
                 <Link href="/lookup" className="btn-dark">
                   <Search className="h-4 w-4" />
                   {t("ui.check.claim.status.cf5234")}</Link>
@@ -85,7 +86,7 @@ export default async function LandingPage() {
 
               {/* Service commitments (no invented figures — facts must come
                   from the API per design §11/§16) */}
-              <div className="grid grid-cols-3 gap-3 pt-6 border-t border-border">
+              <div className="landing-hero-trust grid gap-4 border-t border-border">
                 <div className="flex items-start gap-2">
                   <ShieldCheck className="h-4 w-4 mt-1 shrink-0 text-foreground" />
                   <p className="text-xs leading-5 text-secondary">{t("ui.no.payment.details.collected.ever.3ec8c0")}</p>
@@ -102,13 +103,13 @@ export default async function LandingPage() {
             </div>
 
             {/* Right: product check moved from the recall detail page */}
-            <div className="lg:pt-2">
+            <div className="min-w-0">
               {campaign ? (
-                  <div className="card-elevated p-6 sm:p-8 space-y-5">
+                  <div className="landing-hero-card card-elevated space-y-5">
                     <div>
                       <p className="label-eyebrow text-brand">{campaign.title}</p>
-                      <h2 className="mt-2 text-xl font-bold leading-snug text-foreground">{t("ui.check.your.product.4ca974")}</h2>
-                      <p className="mt-2 text-sm leading-relaxed text-secondary">
+                      <h2 className="landing-hero-card-title mt-2 font-bold leading-snug text-foreground">{t("ui.check.your.product.4ca974")}</h2>
+                      <p className="mt-2 text-[15px] leading-relaxed text-secondary">
                         {t("ui.enter.the.product.details.from.your.package.b415f1")}</p>
                     </div>
                     <RecallCheckCard campaign={campaign} product={campaign.affectedProducts[0]} />

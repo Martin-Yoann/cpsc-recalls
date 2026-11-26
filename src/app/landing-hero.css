@@ -1,0 +1,116 @@
+.landing-hero {
+  display: flex;
+  align-items: center;
+  min-height: calc(100svh - var(--site-header-height, 121px));
+}
+
+.landing-hero-container {
+  padding-block: clamp(2rem, 6svh, 6rem);
+}
+
+.landing-hero-grid {
+  display: grid;
+  align-items: center;
+  gap: 2.5rem;
+}
+
+.landing-hero-copy {
+  display: grid;
+  justify-items: start;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.landing-hero-title {
+  font-size: clamp(2.25rem, 6vw, 3rem);
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.landing-hero-description {
+  max-width: 36rem;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+}
+
+.landing-hero-actions a {
+  min-height: 3rem;
+  padding-inline: 1.25rem;
+  font-size: 0.9375rem;
+}
+
+.landing-hero-actions .btn-dark {
+  border: 1px solid #1a1a1a;
+  border-radius: 8px;
+  background: #1a1a1a;
+  color: #fff;
+  font-weight: 600;
+}
+
+.landing-hero-actions .btn-dark:hover {
+  background: #333;
+}
+
+.landing-hero-actions a:focus-visible {
+  outline: 2px solid #1a1a1a;
+  outline-offset: 3px;
+}
+
+.landing-hero-trust {
+  width: 100%;
+  grid-template-columns: 1fr;
+  padding-top: 1.5rem;
+}
+
+.landing-hero-card {
+  padding: 1.5rem;
+}
+
+.landing-hero-card-title {
+  font-size: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .landing-hero-trust {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-hero-container {
+    max-width: 1360px;
+    padding-block: clamp(2rem, 5svh, 5rem);
+  }
+
+  .landing-hero-grid {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    gap: clamp(2.5rem, 4vw, 5rem);
+  }
+
+  .landing-hero-copy {
+    gap: clamp(1.5rem, 2.5svh, 2rem);
+  }
+
+  .landing-hero-title {
+    font-size: clamp(2.75rem, 4.2vw, 4.25rem);
+  }
+
+  .landing-hero-description {
+    font-size: clamp(1.0625rem, 1.35vw, 1.25rem);
+  }
+
+  .landing-hero-trust p {
+    font-size: 0.8125rem;
+    line-height: 1.6;
+  }
+
+  .landing-hero-card {
+    padding: clamp(1.5rem, 2.2vw, 2rem);
+  }
+}
+
+@media (min-width: 1600px) {
+  .landing-hero-container {
+    max-width: 1440px;
+  }
+}

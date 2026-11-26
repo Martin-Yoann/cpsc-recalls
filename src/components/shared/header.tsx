@@ -4,7 +4,7 @@ import { useI18n } from "@/lib/i18n/provider";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Menu, ShieldCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -69,12 +69,25 @@ export function Header() {
   const { t } = useI18n();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
   const { user, isAuthenticated, logout, openAuthDrawer } = useAuth();
+
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+    const updateHeight = () => document.documentElement.style.setProperty(
+      '--site-header-height', `${header.getBoundingClientRect().height}px`,
+    );
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, []);
 
   const initials = user?.name ? user.name.slice(0, 2).toUpperCase() : "U";
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white border-b border-border">
+    <header ref={headerRef} className="sticky top-0 z-40 w-full bg-white border-b border-border">
       <SafetyBanner />
       <nav className="container-content flex h-[64px] items-center justify-between gap-4">
         {/* Logo */}
