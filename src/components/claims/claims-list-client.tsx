@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { ArrowRight, ClipboardList, LockKeyhole, Search, UserRoundPlus } from 'lucide-react';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { useAuth } from '@/lib/auth-context';
+import { EmailVerificationGate } from '@/components/auth/email-verification-gate';
 import { getClaimsForViewer } from '@/lib/claim-access';
 import type { ConsumerClaim } from '@/lib/api-client';
 
@@ -24,17 +25,21 @@ export function ClaimsListClient({
   emptyDescription = 'You have not submitted or looked up any recall claims yet.',
 }: ClaimsListClientProps) {
   const { t, locale } = useI18n();
-  const { user, isAuthenticated, openAuthDrawer } = useAuth();
+  const { user, isAuthenticated, isLoading, openAuthDrawer } = useAuth();
   const [claims, setClaims] = useState<ConsumerClaim[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    if (isLoading || (user?.token && !user.claimsAccessVerified)) return () => { cancelled = true; };
     void getClaimsForViewer(user?.token).then((nextClaims) => {
       if (cancelled) return;
       setClaims(nextClaims);
     });
     return () => { cancelled = true; };
-  }, [user?.token]);
+  }, [user?.token, user?.claimsAccessVerified, isLoading]);
+
+  if (isLoading) return null;
+  if (user?.token && !user.claimsAccessVerified) return <EmailVerificationGate />;
 
   const claimsList = claims ?? [];
 

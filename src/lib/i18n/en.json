@@ -743,5 +743,20 @@
   "error.fileTooLarge": "The file is too large. Choose a smaller file and try again.",
   "error.fileType": "This file type is not supported. Choose a file type listed in the instructions.",
   "error.notFound": "This item is not available. Reopen your access link or contact recall support.",
-  "error.expired": "This access link has expired or is no longer valid. Reopen the latest link sent to you or contact recall support."
+  "error.expired": "This access link has expired or is no longer valid. Reopen the latest link sent to you or contact recall support.",
+  "emailVerify.title": "Confirm your email to view your claims",
+  "emailVerify.description": "For your privacy, account-linked claims are available only after you confirm that you own this email address.",
+  "emailVerify.sameSession": "Open the verification email in this same browser and login session. Verification applies to this session only; a new login requires a new email confirmation.",
+  "emailVerify.send": "Send verification email",
+  "emailVerify.resend": "Resend verification email",
+  "emailVerify.sending": "Sending…",
+  "emailVerify.sent": "Verification email sent. Check your inbox and spam folder. The link expires in 20 minutes.",
+  "emailVerify.confirm": "Confirm email ownership",
+  "emailVerify.confirming": "Confirming…",
+  "emailVerify.success": "Email confirmed for this session",
+  "emailVerify.viewClaims": "View my claims",
+  "emailVerify.loading": "Checking your login session…",
+  "emailVerify.signIn": "Sign in using the same browser and login session where you requested the email. If this is a new login, request a new verification link from My Claims.",
+  "emailVerify.invalid": "This link is invalid, expired, already used, or belongs to a different login session. Request a new email from My Claims in this browser.",
+  "emailVerify.failed": "Email confirmation could not be completed. Please try again shortly."
 }

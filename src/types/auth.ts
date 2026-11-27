@@ -14,6 +14,8 @@ export interface User {
   token?: string;
   /** ISO expiry of the session token */
   expiresAt?: string;
+  /** Mailbox proof applies only to the current bearer session. */
+  claimsAccessVerified?: boolean;
 }
 
 export interface BoundOrder {

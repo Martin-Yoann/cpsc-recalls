@@ -35,6 +35,7 @@ interface ConsumerPublic {
   displayName: string;
   avatarDataUrl: string | null;
   createdAt: string;
+  claimsAccessVerified?: boolean;
 }
 
 interface AuthSessionResponse {
@@ -80,6 +81,7 @@ function mapUser(session: AuthSessionResponse, phone = ""): User {
     avatarDataUrl: session.user.avatarDataUrl,
     token: session.token,
     expiresAt: session.expiresAt,
+    claimsAccessVerified: session.user.claimsAccessVerified === true,
   };
 }
 
@@ -233,6 +235,7 @@ export async function refreshSession(): Promise<User | null> {
     name: result.data.user.displayName,
     avatarDataUrl: result.data.user.avatarDataUrl,
     createdAt: result.data.user.createdAt,
+    claimsAccessVerified: result.data.user.claimsAccessVerified === true,
   };
   storeUser(refreshed);
   return refreshed;
@@ -255,6 +258,7 @@ export async function updateProfile(updates: {
     ...stored,
     name: result.data.user.displayName,
     avatarDataUrl: result.data.user.avatarDataUrl,
+    claimsAccessVerified: result.data.user.claimsAccessVerified === true,
   };
   storeUser(refreshed);
   return refreshed;

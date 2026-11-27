@@ -15,6 +15,7 @@ interface AuthContextType {
   register: (data: { name: string; email: string; phone: string; password: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   updateProfile: (updates: { name?: string; avatarDataUrl?: string | null }) => Promise<{ success: boolean; error?: string }>;
+  refreshUser: () => Promise<void>;
   /** Drawer control */
   authDrawerOpen: boolean;
   authDrawerMode: 'signin' | 'register';
@@ -93,9 +94,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthDrawerOpen(false);
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    setUser(await refreshSession());
+  }, []);
+
   return (
     <AuthContext.Provider value={{
-      user, isAuthenticated: !!user, isLoading,
+      user, isAuthenticated: !!user, isLoading, refreshUser,
       login, register, logout, updateProfile,
       authDrawerOpen, authDrawerMode, openAuthDrawer, closeAuthDrawer,
     }}>

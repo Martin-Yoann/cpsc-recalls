@@ -743,5 +743,20 @@
   "error.fileTooLarge": "El archivo es demasiado grande. Elija uno más pequeño e inténtelo de nuevo.",
   "error.fileType": "Este tipo de archivo no es compatible. Elija uno de los tipos indicados en las instrucciones.",
   "error.notFound": "Este elemento no está disponible. Vuelva a abrir su enlace de acceso o contacte con el equipo de retirada.",
-  "error.expired": "Este enlace ha caducado o ya no es válido. Abra el enlace más reciente que recibió o contacte con el equipo de retirada."
+  "error.expired": "Este enlace ha caducado o ya no es válido. Abra el enlace más reciente que recibió o contacte con el equipo de retirada.",
+  "emailVerify.title": "Confirme su correo para consultar sus solicitudes",
+  "emailVerify.description": "Para proteger su privacidad, las solicitudes vinculadas a su cuenta solo están disponibles tras confirmar que es titular de este correo.",
+  "emailVerify.sameSession": "Abra el correo de verificación en este mismo navegador y sesión. La verificación solo se aplica a esta sesión; si vuelve a iniciar sesión, deberá confirmar su correo de nuevo.",
+  "emailVerify.send": "Enviar correo de verificación",
+  "emailVerify.resend": "Volver a enviar el correo",
+  "emailVerify.sending": "Enviando…",
+  "emailVerify.sent": "Se ha enviado el correo de verificación. Revise su bandeja de entrada y la carpeta de correo no deseado. El enlace caduca en 20 minutos.",
+  "emailVerify.confirm": "Confirmar la titularidad del correo",
+  "emailVerify.confirming": "Confirmando…",
+  "emailVerify.success": "Correo confirmado para esta sesión",
+  "emailVerify.viewClaims": "Ver mis solicitudes",
+  "emailVerify.loading": "Comprobando su sesión…",
+  "emailVerify.signIn": "Utilice el mismo navegador y la misma sesión desde los que solicitó el correo. Si ha iniciado una sesión nueva, solicite un enlace nuevo desde Mis solicitudes.",
+  "emailVerify.invalid": "Este enlace no es válido, ha caducado, ya se ha utilizado o pertenece a otra sesión. Solicite un correo nuevo desde Mis solicitudes en este navegador.",
+  "emailVerify.failed": "No se pudo confirmar el correo. Inténtelo de nuevo en unos momentos."
 }

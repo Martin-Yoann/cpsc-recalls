@@ -323,6 +323,20 @@ export async function listConsumerClaims(
   });
 }
 
+export function requestConsumerEmailVerification(token: string, locale: string) {
+  return fetchApi<{ status: 'sent' | 'verified'; expiresAt?: string }>(
+    '/v1/consumer-auth/email-verification',
+    { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify({ locale }) },
+  );
+}
+
+export function confirmConsumerEmailVerification(token: string, verificationToken: string) {
+  return fetchApi<{ status: 'verified' }>(
+    '/v1/consumer-auth/email-verification/confirm',
+    { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify({ token: verificationToken }) },
+  );
+}
+
 export async function getConsumerClaim(
   claimNumber: string,
   token: string,

@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { useAuth } from '@/lib/auth-context';
+import { EmailVerificationGate } from '@/components/auth/email-verification-gate';
 import { getConsumerClaim, type ConsumerClaim } from '@/lib/api-client';
 import { ClaimStatus } from '@/types';
 import { cn } from '@/lib/utils';
@@ -50,7 +51,7 @@ export default function ClaimDetailPage({
 
   useEffect(() => {
     let cancelled = false;
-    if (!user?.token) {
+    if (!user?.token || !user.claimsAccessVerified) {
       return () => {
         cancelled = true;
       };
@@ -62,8 +63,9 @@ export default function ClaimDetailPage({
     return () => {
       cancelled = true;
     };
-  }, [id, user?.token]);
+  }, [id, user?.token, user?.claimsAccessVerified]);
 
+  if (user?.token && !user.claimsAccessVerified) return <EmailVerificationGate />;
   if (!user?.token || claim === undefined) return null;
   if (!claim) notFound();
   if (!claim) return null;

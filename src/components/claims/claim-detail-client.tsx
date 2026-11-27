@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft, FileText, LockKeyhole, Package, UserRoundPlus, Wallet } from 'lucide-react';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { useAuth } from '@/lib/auth-context';
+import { EmailVerificationGate } from '@/components/auth/email-verification-gate';
 import { getClaimDetailForViewer } from '@/lib/claim-access';
 import type { ClaimLookupPayload } from '@/types/claims';
 
@@ -19,17 +20,20 @@ interface ClaimDetailClientProps {
 
 export function ClaimDetailClient({ claimNumber, backHref, backLabel }: ClaimDetailClientProps) {
   const { t, locale } = useI18n();
-  const { user, isAuthenticated, openAuthDrawer } = useAuth();
+  const { user, isAuthenticated, isLoading, openAuthDrawer } = useAuth();
   const [detail, setDetail] = useState<ClaimLookupPayload | null | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
+    if (isLoading || (user?.token && !user.claimsAccessVerified)) return () => { cancelled = true; };
     void getClaimDetailForViewer(claimNumber, user?.token).then((nextDetail) => {
       if (!cancelled) setDetail(nextDetail);
     });
     return () => { cancelled = true; };
-  }, [claimNumber, user?.token]);
+  }, [claimNumber, user?.token, user?.claimsAccessVerified, isLoading]);
 
+  if (isLoading) return null;
+  if (user?.token && !user.claimsAccessVerified) return <EmailVerificationGate />;
   if (detail === undefined) return null;
   if (!detail) notFound();
 

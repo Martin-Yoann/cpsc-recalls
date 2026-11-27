@@ -23,6 +23,7 @@ import {
 import { useEffect, useState } from 'react';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { useAuth } from '@/lib/auth-context';
+import { EmailVerificationGate } from '@/components/auth/email-verification-gate';
 import { listConsumerClaims, type ConsumerClaim } from '@/lib/api-client';
 import { getOrdersByUserId } from '@/data/mock-orders';
 import { DEMO_MODE } from '@/lib/demo-mode';
@@ -62,13 +63,15 @@ export default function DashboardPage() {
 
   useEffect(() => {
     let cancelled = false;
-    if (!user?.token) return () => { cancelled = true; };
+    if (!user?.token || !user.claimsAccessVerified) return () => { cancelled = true; };
     void listConsumerClaims(user.token).then((response) => {
       if (cancelled) return;
       setClaims(response.ok ? response.data.claims : []);
     });
     return () => { cancelled = true; };
-  }, [user?.token]);
+  }, [user?.token, user?.claimsAccessVerified]);
+
+  if (user?.token && !user.claimsAccessVerified) return <EmailVerificationGate />;
 
   const claimsList = user?.token ? (claims ?? []) : [];
 
