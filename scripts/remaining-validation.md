@@ -10,13 +10,23 @@
 
 Run `npm run test:auth-races` and `npm run test:session-disposal-browser`. The browser runner defaults to a local production build on port 3105; `VERIFICATION_BASE` selects another deployment. All API traffic is simulated, including logout, deletion and private reads. No real emails, accounts, claims, photos, payments or shipments are created.
 
+## Follow-up verification completed — 2026-11-27
+
+- Native local PostgreSQL integration run: 783 tests passed, zero failed, one Neon-specific test skipped. Of the previously skipped 147 tests, 146 now passed against real SQL with all migrations and synthetic fixtures.
+- A real verification email reached the designated test mailbox's inbox, confirmed by its recipient. The actual frontend, local API and native SQL database completed session-bound confirmation; a new login remained denied until separately verified. No production account was created.
+- Actual browser file bytes were written to local private storage, reconciled into the database, shown as verified, scheduled for removal, physically deleted by the real cleanup worker, and marked deleted in SQL. This run used `scan_status=not_run`; it does not establish a real antivirus scan.
+- Database tests passed for refund completion records, replacement shipment records and their email queue events. No money moved and no shipment was purchased or dispatched.
+
+The backend now provides `pnpm test:db:local` with an explicit disposable loopback test URL. It isolates deployment credentials and installs both English and Spanish templates before testing. The obsolete escalation test now requires the independent reportability review before closure; the business gate was preserved.
+
 ## Remaining validation and content dependencies
 
-These are not established software defects and must not be reported as passed:
+These are not reported as passed:
 
-- Actual mailbox delivery and same-session verification through real mail applications: requires a designated test mailbox and review of received messages/spam placement.
-- Real private object upload, reconciliation/scanning and deletion: requires an isolated storage and database environment with disposable test files.
-- Real refund and shipment processing: requires provider sandbox credentials and designated test cases; do not trigger live financial or logistics actions for testing.
-- Database-dependent API integration suites (previously 147 skipped tests): require an isolated database and the integration opt-in switches. The Neon pooled transaction test additionally needs its dedicated test URL. Do not point these suites at production.
-- Legal and accessibility statements: the misleading footer links have been removed; approved text is needed before publishing corresponding pages.
-- Published Spanish business content: the language selector remains hidden pending the previously requested content review. Spanish UI strings do not substitute for approval of translated recall/disposal content.
+- The single real Neon pooled/WebSocket transaction test requires a dedicated Neon test database URL. The current Neon login did not expose the application project, so no unrelated cloud project or branch was created.
+- Vercel private Blob upload, signed callback, reconciliation and deletion still require isolated cloud storage and database targets. Local storage completion does not establish cloud-provider completion.
+- A real antivirus service and its result-return path have not been verified. The successful local upload used the explicit no-scan policy; it must not be described as malware-clean.
+- Actual payment and shipping-provider operations require selected providers and their sandbox configuration. The tested record/queue flows do not establish a payment settlement or parcel dispatch.
+- Legal and accessibility statements require approved text before their footer entries can be published.
+- Spanish recall/disposal business content remains subject to the previously requested content review. The language selector stays hidden.
+- Delivery to the designated mailbox passed; Gmail/Outlook, real mobile mail applications and cross-browser opening behavior have not all been tested.
