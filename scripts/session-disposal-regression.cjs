@@ -1,0 +1,32 @@
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+const base=process.env.VERIFICATION_BASE||'http://localhost:3105',taskId='00000000-0000-4000-8000-000000000099';
+const task={taskId,status:'open',eligibilityStatus:'confirmed_eligible',allowedActions:['disposal.submit_evidence'],blockingReasons:[],evidenceReviewStatus:null,evidenceReviewReasonCode:null,authorizationStatus:'active',holdActive:false,version:1,products:[],instruction:null,declarationTextVersion:'v1',expiresAt:'2099-01-01T00:00:00Z'};
+const photo={documentId:'00000000-0000-4000-8000-000000000098',fileName:'existing-photo.jpg',status:'rejected',statusReason:null,uploadedAt:'2026-11-27T01:00:00Z',lastStatusChangedAt:'2026-11-27T01:00:00Z'};
+const user={id:'old-user',email:'owner@example.invalid',name:'Old Owner',token:'old-token',expiresAt:'2099-01-01T00:00:00Z',claimsAccessVerified:true};
+(async()=>{const b=await chromium.launch({channel:'chrome',headless:true});try{
+ const ctx=await b.newContext(),p=await ctx.newPage();p.setDefaultTimeout(15000);let mode='failure',deleted=false,release,started;let waiting=new Promise(r=>release=r),pending=new Promise(r=>started=r);const runtime=[];p.on('pageerror',e=>runtime.push(e.message));
+ await ctx.route('**/*',async route=>{const req=route.request(),u=new URL(req.url());if(u.origin===base)return route.continue();const headers={'access-control-allow-origin':base,'access-control-allow-methods':'*','access-control-allow-headers':'*'};if(req.method()==='OPTIONS')return route.fulfill({status:204,headers});let status=200,data;
+  if(u.pathname==='/v1/disposal-tasks/'+taskId)data=task;
+  else if(req.method()==='DELETE'){deleted=true;data={};}
+  else if(u.pathname.endsWith('/documents')){
+   if(mode==='failure'){status=503;data={status,type:'about:blank',title:'Unavailable',detail:'RAW_BACKEND_TEXT'};}
+   else if(mode==='delayed'){mode='ready';started();await waiting;data={documents:[photo]};}
+   else data={documents:deleted?[]:[{...photo,status:mode==='verified'?'verified':'rejected'}]};
+  }else{status=401;data={status,type:'about:blank',title:'Blocked',detail:'Blocked by regression test'};}
+  return route.fulfill({status,headers,contentType:'application/json',body:JSON.stringify(data)});
+ });
+ await p.goto(base+'/recalls/music-lollipop-demo-2026/disposal/'+taskId+'?lang=en#token='+'local-test-token-'.repeat(4));
+ await p.getByRole('button',{name:'Try again',exact:true}).waitFor();assert.equal(await p.getByText('RAW_BACKEND_TEXT',{exact:true}).count(),0);mode='verified';await p.getByRole('button',{name:'Try again',exact:true}).click();await p.getByText(photo.fileName,{exact:true}).waitFor();assert.equal(await p.getByRole('button',{name:'Send for review',exact:true}).isEnabled(),true);console.log('PASS initial disposal photo read failure remains visible and can retry');
+ mode='failure';await p.getByRole('button',{name:'Refresh status',exact:true}).click();await p.getByRole('button',{name:'Try again',exact:true}).waitFor();assert.equal(await p.getByText(photo.fileName,{exact:true}).isVisible(),true);assert.equal(await p.getByRole('button',{name:'Send for review',exact:true}).isDisabled(),true);mode='ready';await p.getByRole('button',{name:'Try again',exact:true}).click();await p.getByRole('button',{name:'Remove',exact:true}).waitFor();console.log('PASS failed refresh retains known photos, blocks stale submission and offers retry');
+ mode='delayed';await p.getByRole('button',{name:'Refresh status',exact:true}).click();await pending;await p.getByRole('button',{name:'Remove',exact:true}).click();await p.getByText(photo.fileName,{exact:true}).waitFor({state:'hidden'});release();await p.waitForTimeout(250);assert.equal(await p.getByText(photo.fileName,{exact:true}).count(),0);console.log('PASS stale photo response cannot restore a successfully removed document');assert.deepEqual(runtime,[]);await ctx.close();
+ const auth=await b.newContext(),page=await auth.newPage();let releaseMe,releaseLogout,meStarted,logoutStarted;const meWait=new Promise(r=>releaseMe=r),logoutWait=new Promise(r=>releaseLogout=r),mePending=new Promise(r=>meStarted=r),logoutPending=new Promise(r=>logoutStarted=r);
+ await auth.addInitScript(user=>{if(!localStorage.getItem('koi_auth_user'))localStorage.setItem('koi_auth_user',JSON.stringify(user));},user);
+ await auth.route('**/*',async route=>{const req=route.request(),u=new URL(req.url());if(u.origin===base)return route.continue();const headers={'access-control-allow-origin':base,'access-control-allow-methods':'*','access-control-allow-headers':'*'};if(req.method()==='OPTIONS')return route.fulfill({status:204,headers});let status=200,data;
+  if(u.pathname.endsWith('/me')){meStarted();await meWait;data={user:{consumerUserId:user.id,email:user.email,displayName:user.name,claimsAccessVerified:true}};}
+  else if(u.pathname.endsWith('/logout')){logoutStarted();await logoutWait;data={};}
+  else {status=401;data={status,type:'about:blank',title:'Blocked',detail:'Blocked by regression test'};}return route.fulfill({status,headers,contentType:'application/json',body:JSON.stringify(data)});
+ });
+ await page.goto(base+'/?lang=en');await mePending;await page.locator('header [aria-haspopup="menu"]').click();await page.getByRole('menuitem',{name:'Sign Out',exact:false}).click();await logoutPending;await page.locator('header').getByRole('button',{name:'Sign In',exact:true}).waitFor();assert.equal(await page.evaluate(()=>localStorage.getItem('koi_auth_user')),null);releaseMe();releaseLogout();await page.waitForTimeout(250);assert.equal(await page.evaluate(()=>localStorage.getItem('koi_auth_user')),null);assert.equal(await page.locator('header').getByRole('button',{name:'Sign In',exact:true}).isVisible(),true);console.log('PASS logout immediately clears local access while requests are pending; late refresh cannot restore account');
+ const next={...user,id:'new-user',name:'New Owner',token:'new-token'};await page.evaluate(next=>{localStorage.setItem('koi_auth_user',JSON.stringify(next));dispatchEvent(new StorageEvent('storage',{key:'koi_auth_user'}));},next);await page.locator('header [aria-haspopup="menu"]').waitFor();await page.evaluate(()=>{localStorage.removeItem('koi_auth_user');dispatchEvent(new StorageEvent('storage',{key:'koi_auth_user'}));});await page.locator('header').getByRole('button',{name:'Sign In',exact:true}).waitFor();console.log('PASS cross-tab session changes update the current UI');await auth.close();
+}finally{await b.close();}})().catch(e=>{console.error(e);process.exitCode=1});

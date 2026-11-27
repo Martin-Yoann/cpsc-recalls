@@ -55,6 +55,10 @@ async function readTaskState(taskId: string): Promise<LoadState> {
 }
 
 export function DisposalTaskLoader({ taskId, supportContact }: Props) {
+  return <DisposalTaskContent key={taskId} taskId={taskId} supportContact={supportContact} />;
+}
+
+function DisposalTaskContent({ taskId, supportContact }: Props) {
   const { t } = useI18n();
   const [state, setState] = useState<LoadState>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);

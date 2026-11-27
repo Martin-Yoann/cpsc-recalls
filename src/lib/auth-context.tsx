@@ -69,8 +69,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await authLogout();
+    const request = authLogout();
     setUser(null);
+    setIsLoading(false);
+    await request;
+  }, []);
+
+  useEffect(() => {
+    const sync = (event: StorageEvent) => {
+      if (event.key === 'koi_auth_user' || event.key === null) setUser(getStoredUser());
+    };
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
   }, []);
 
   const updateProfile = useCallback(async (updates: { name?: string; avatarDataUrl?: string | null }) => {

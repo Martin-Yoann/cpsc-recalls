@@ -8,6 +8,7 @@
 import type { User, RegisterData } from "@/types/auth";
 
 const STORAGE_KEY = "koi_auth_user";
+let credentialRevision = 0;
 
 const ONLINE_API_BASE = "https://koi-recall-backend.vercel.app";
 
@@ -170,10 +171,13 @@ export async function login(
   email: string,
   password: string,
 ): Promise<AuthActionResult> {
+  const revision = ++credentialRevision;
+  const previousToken = getToken();
   const result = await postJson<AuthSessionResponse>(
     "/v1/consumer-auth/login",
     { email, password },
   );
+  if (revision !== credentialRevision || getToken() !== previousToken) return { user: null, error: 'auth.sessionChanged' };
   if (!result.ok) return { user: null, error: result.detail };
   const user = mapUser(result.data);
   storeUser(user);
@@ -181,6 +185,8 @@ export async function login(
 }
 
 export async function register(data: RegisterData): Promise<AuthActionResult> {
+  const revision = ++credentialRevision;
+  const previousToken = getToken();
   const result = await postJson<AuthSessionResponse>(
     "/v1/consumer-auth/register",
     {
@@ -189,6 +195,7 @@ export async function register(data: RegisterData): Promise<AuthActionResult> {
       displayName: data.name,
     },
   );
+  if (revision !== credentialRevision || getToken() !== previousToken) return { user: null, error: 'auth.sessionChanged' };
   if (!result.ok) return { user: null, error: result.detail };
   const user = mapUser(result.data, data.phone);
   storeUser(user);
@@ -197,10 +204,11 @@ export async function register(data: RegisterData): Promise<AuthActionResult> {
 
 export async function logout(): Promise<void> {
   const token = getToken();
+  credentialRevision += 1;
+  removeStoredUser();
   if (token) {
     await postJson("/v1/consumer-auth/logout", {}, token).catch(() => {});
   }
-  removeStoredUser();
 }
 
 /**
@@ -211,6 +219,7 @@ export async function logout(): Promise<void> {
  * an expired token or an explicit authentication failure clears the cache.
  */
 export async function refreshSession(): Promise<User | null> {
+  const revision = credentialRevision;
   const stored = getStoredUser();
   if (!stored?.token) return null;
   if (stored.expiresAt) {
@@ -224,6 +233,7 @@ export async function refreshSession(): Promise<User | null> {
     "/v1/consumer-auth/me",
     stored.token,
   );
+  if (revision !== credentialRevision || getStoredUser()?.token !== stored.token) return getStoredUser();
   if (!result.ok) {
     if (result.status === 401 || result.status === 403) removeStoredUser();
     return getStoredUser();
@@ -246,6 +256,7 @@ export async function updateProfile(updates: {
   displayName?: string;
   avatarDataUrl?: string | null;
 }): Promise<User | null> {
+  const revision = credentialRevision;
   const stored = getStoredUser();
   if (!stored?.token) return null;
   const result = await patchJson<{ user: ConsumerPublic }>(
@@ -253,6 +264,7 @@ export async function updateProfile(updates: {
     updates,
     stored.token,
   );
+  if (revision !== credentialRevision || getStoredUser()?.token !== stored.token) return null;
   if (!result.ok) return null;
   const refreshed: User = {
     ...stored,

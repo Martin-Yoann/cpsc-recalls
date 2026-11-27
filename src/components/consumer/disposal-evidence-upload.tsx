@@ -107,45 +107,54 @@ export function DisposalEvidenceUpload({
   const [message, setMessage] = useState<string | null>(null);
   const [problem, setProblem] = useState<MessageInput | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const requestRevision = useRef(0);
+  const [loadProblem, setLoadProblem] = useState<MessageInput | null>(null);
 
   const mayUpload =
     allowedActions.includes("disposal.submit_evidence") ||
     allowedActions.includes("disposal.resubmit_evidence");
 
   const load = useCallback(async () => {
+    const revision = ++requestRevision.current;
     const token = resolveDisposalToken(taskId);
-    if (!token) return [];
-    const result = await refreshDisposalEvidence(taskId, token);
-    return result.ok ? result.data : [];
+    try {
+      const result = token ? await refreshDisposalEvidence(taskId, token) : null;
+      if (revision !== requestRevision.current) return;
+      if (result?.ok) {
+        setDocuments(result.data);
+        setLoadProblem(null);
+      } else setLoadProblem(problemMessage(result ? { ...result.error, status: result.status } : { status: 401 }));
+    } catch {
+      if (revision === requestRevision.current) setLoadProblem(problemMessage({ status: 0 }));
+    } finally {
+      if (revision === requestRevision.current) setIsLoading(false);
+    }
   }, [taskId]);
 
   useEffect(() => {
     let cancelled = false;
-    void load().then((next) => {
-      if (cancelled) return;
-      setDocuments(next);
-      setIsLoading(false);
-    });
-    return () => {
-      cancelled = true;
-    };
+    void Promise.resolve().then(() => { if (!cancelled) void load(); });
+    return () => { cancelled = true; requestRevision.current += 1; };
   }, [load]);
 
-  // Poll only while something is genuinely in flight, so a settled list is not
-  // re-fetched forever.
   const hasPending = documents.some(isDisposalDocumentPending);
   useEffect(() => {
-    if (!hasPending) return;
-    const timer = setInterval(() => {
-      void load().then((next) => setDocuments(next));
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [hasPending, load]);
+    if (!hasPending || isUploading || removingId) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async () => {
+      await load();
+      if (!cancelled) timer = setTimeout(() => void poll(), 4000);
+    };
+    timer = setTimeout(() => void poll(), 4000);
+    return () => { cancelled = true; clearTimeout(timer); requestRevision.current += 1; };
+  }, [hasPending, load, isUploading, removingId]);
 
   const onFiles = async (files: FileList | null) => {
     const token = resolveDisposalToken(taskId);
     if (!token || !files?.length) return;
 
+    requestRevision.current += 1;
     setIsUploading(true);
     setMessage(null);
     setProblem(null);
@@ -156,7 +165,7 @@ export function DisposalEvidenceUpload({
         break;
       }
     }
-    setDocuments(await load());
+    await load();
     setIsUploading(false);
     onChanged();
   };
@@ -164,6 +173,7 @@ export function DisposalEvidenceUpload({
   const onSendForReview = async () => {
     const token = resolveDisposalToken(taskId);
     if (!token) return;
+    requestRevision.current += 1;
     setIsUploading(true);
     setMessage(null);
     setProblem(null);
@@ -191,16 +201,19 @@ export function DisposalEvidenceUpload({
   const onRemove = async (documentId: string) => {
     const token = resolveDisposalToken(taskId);
     if (!token) return;
+    requestRevision.current += 1;
     setRemovingId(documentId);
     setMessage(null);
     setProblem(null);
     const result = await removeDisposalEvidence(taskId, token, documentId);
-    setRemovingId(null);
     if (!result.ok) {
+      setRemovingId(null);
       setProblem(problemMessage({ ...result.error, status: result.status }));
       return;
     }
-    setDocuments(await load());
+    setDocuments((current) => current.filter((document) => document.documentId !== documentId));
+    await load();
+    setRemovingId(null);
     onChanged();
   };
 
@@ -209,7 +222,7 @@ export function DisposalEvidenceUpload({
   // Nothing to offer and nothing to report: the section hides itself rather than
   // rendering a heading over an empty list. Mirrors DisposalDeclaration, so the two
   // sections decide alike — and what they decide from is the server's actions.
-  if (!mayUpload && documents.length === 0) return null;
+  if (!mayUpload && documents.length === 0 && !isLoading && !loadProblem) return null;
 
   return (
     <section
@@ -305,7 +318,7 @@ export function DisposalEvidenceUpload({
             <Button
               type="button"
               variant="outline"
-              disabled={isUploading}
+              disabled={isUploading || removingId !== null}
               onClick={() => inputRef.current?.click()}
             >
               <Upload className="h-4 w-4" aria-hidden="true" />
@@ -313,7 +326,7 @@ export function DisposalEvidenceUpload({
             {mayUpload && documents.length > 0 && (
               <Button
                 type="button"
-                disabled={isUploading || !ready}
+                disabled={isUploading || removingId !== null || isLoading || !!loadProblem || !ready}
                 onClick={() => void onSendForReview()}
               >
                 {t(isUploading ? "ui.sending.cf7655" : "ui.send.for.review.ddc873")}
@@ -333,6 +346,10 @@ export function DisposalEvidenceUpload({
           {t(message)}
         </p>
       )}
+      {loadProblem && <div role="alert" className="space-y-2 text-sm text-[#f56c6c]">
+        <p>{t(loadProblem)}</p>
+        <Button type="button" variant="outline" disabled={isUploading || removingId !== null} onClick={() => void load()}>{t("claims.retry")}</Button>
+      </div>}
       {problem && (
         <p
           role="alert"
@@ -347,12 +364,12 @@ export function DisposalEvidenceUpload({
           type="button"
           variant="ghost"
           size="sm"
-          disabled={isUploading}
+          disabled={isUploading || removingId !== null}
           onClick={() => {
             // The document list is this component's own state, but the review
             // banners above come from the task: "Refresh" refreshes both, or a
             // consumer who just got their photos accepted sees nothing change.
-            void load().then(setDocuments);
+            void load();
             onChanged();
           }}
         >

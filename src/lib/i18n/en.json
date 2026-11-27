@@ -766,5 +766,6 @@
   "claims.retry": "Try again",
   "claims.signIn": "Sign in again",
   "evidence.remove": "Remove {file}",
-  "claimDetail.loadFailed": "Your claim details could not be loaded."
+  "claimDetail.loadFailed": "Your claim details could not be loaded.",
+  "auth.sessionChanged": "Your login session changed. Please sign in again."
 }
