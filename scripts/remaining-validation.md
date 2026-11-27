@@ -15,7 +15,8 @@ Run `npm run test:auth-races` and `npm run test:session-disposal-browser`. The b
 - Native local PostgreSQL integration run: 783 tests passed, zero failed, one Neon-specific test skipped. Of the previously skipped 147 tests, 146 now passed against real SQL with all migrations and synthetic fixtures.
 - A real verification email reached the designated test mailbox's inbox, confirmed by its recipient. The actual frontend, local API and native SQL database completed session-bound confirmation; a new login remained denied until separately verified. No production account was created.
 - Actual browser file bytes were written to local private storage, reconciled into the database, shown as verified, scheduled for removal, physically deleted by the real cleanup worker, and marked deleted in SQL. This run used `scan_status=not_run`; it does not establish a real antivirus scan.
-- Database tests passed for refund completion records, replacement shipment records and their email queue events. No money moved and no shipment was purchased or dispatched.
+- Database tests passed for refund completion records, replacement shipment records and their email queue events. No money moved and no shipment was purchased or dispatched. External providers are not yet selected, so their integration remains deferred.
+- A later isolated Vercel private Blob check passed: real scoped client upload, exact signed download, denied anonymous read, real provider completion callback verification through the application adapter, tampered callback rejection and physical cloud deletion. Both the empty test store and temporary callback project were deleted. It did not continuously forward the callback into a cloud database.
 
 The backend now provides `pnpm test:db:local` with an explicit disposable loopback test URL. It isolates deployment credentials and installs both English and Spanish templates before testing. The obsolete escalation test now requires the independent reportability review before closure; the business gate was preserved.
 
@@ -24,7 +25,7 @@ The backend now provides `pnpm test:db:local` with an explicit disposable loopba
 These are not reported as passed:
 
 - The single real Neon pooled/WebSocket transaction test requires a dedicated Neon test database URL. The current Neon login did not expose the application project, so no unrelated cloud project or branch was created.
-- Vercel private Blob upload, signed callback, reconciliation and deletion still require isolated cloud storage and database targets. Local storage completion does not establish cloud-provider completion.
+- Continuous cloud callback-to-application-database forwarding remains separate from the completed real Blob provider/adapter check. Native SQL reconciliation passed independently; a combined cloud database environment is still needed for that continuous path.
 - A real antivirus service and its result-return path have not been verified. The successful local upload used the explicit no-scan policy; it must not be described as malware-clean.
 - Actual payment and shipping-provider operations require selected providers and their sandbox configuration. The tested record/queue flows do not establish a payment settlement or parcel dispatch.
 - Legal and accessibility statements require approved text before their footer entries can be published.
