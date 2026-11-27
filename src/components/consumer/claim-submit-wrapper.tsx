@@ -4,7 +4,7 @@ import { message, type MessageInput } from '@/lib/i18n/translate';
 import { problemMessage } from '@/lib/i18n/problem';
 
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
@@ -299,8 +299,10 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
   );
   const [pendingRemedyId, setPendingRemedyId] = useState<string | null>(null);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [bootstrapAttempt, setBootstrapAttempt] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const uploadGeneration = useRef(0);
   // Filtered, not narrowed by type: a campaign may declare a disposal-evidence
   // requirement so the upload endpoint accepts it, but that evidence belongs to
   // the disposal task, which may never be offered to this consumer.
@@ -352,7 +354,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [campaign.slug, firstProduct, session]);
+  }, [campaign.slug, firstProduct, session, bootstrapAttempt]);
 
   const selectedRemedy = useMemo(
     () => campaign.remedies.find((remedy) => remedy.id === session?.remedyCode),
@@ -459,29 +461,16 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
     setPendingRemedyId(null);
   };
 
-  const bootstrapFreshDraft = async () => {
-    const result = await claimFlowModule.start(campaign.slug);
-    if (result.ok) {
-      const seeded = claimFlowModule.save({
-        ...result.data,
-        form: buildDefaultForm(firstProduct),
-      });
-      setSession(seeded);
-      setProblem(null);
-    } else {
-      setProblem(result.error);
-    }
-    setIsBootstrapping(false);
-  };
-
   const handleReset = () => {
+    uploadGeneration.current += 1;
+    setIsUploading(false);
     claimFlowModule.abandon(campaign.slug);
     setSession(null);
     setSubmitted(null);
     setProblem(null);
     setValidationMessage(null);
     setIsBootstrapping(true);
-    void bootstrapFreshDraft();
+    setBootstrapAttempt((attempt) => attempt + 1);
   };
 
   const validateEvidenceRequirements = (
@@ -629,6 +618,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
         return;
       }
     }
+    const generation = ++uploadGeneration.current;
     setIsUploading(true);
     setValidationMessage(null);
     setProblem(null);
@@ -640,6 +630,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
         file,
         category,
       );
+      if (generation !== uploadGeneration.current) return;
       if (!result.ok) {
         setProblem(result.error);
         setIsUploading(false);
@@ -790,6 +781,11 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
           <AlertCircle className="h-4 w-4" />
           {t("ui.claim.flow.unavailable.ed60bc")}</p>
         <p className="text-sm text-[#606266]">{t(problemMessage(problem))}</p>
+        <Button type="button" variant="outline" onClick={() => {
+          setProblem(null);
+          setIsBootstrapping(true);
+          setBootstrapAttempt((attempt) => attempt + 1);
+        }}>{t('claims.retry')}</Button>
         {problem.requestId && (
           <p className="text-xs text-[#909399]">
             {t("ui.request.id.364dc5")}{" "}{problem.requestId}
@@ -1746,6 +1742,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
         <Button
           variant="outline"
           onClick={handleReset}
+          disabled={isSubmitting}
           className="border-[#dcdfe6] text-[#606266] hover:border-[#409eff] hover:text-[#409eff]"
         >
           {t("ui.reset.draft.cc26b5")}</Button>
@@ -1797,6 +1794,8 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                 setProblem(null);
                 return;
               }
+              setProblem(renewed.error);
+              return;
             }
             setIsSubmitting(false);
             setProblem(result.error);

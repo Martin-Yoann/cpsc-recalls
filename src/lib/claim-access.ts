@@ -15,7 +15,10 @@ export async function getClaimsForViewer(token?: string): Promise<ConsumerClaim[
 export async function getClaimDetailForViewer(claimNumber: string, token?: string): Promise<ClaimLookupPayload | null> {
   if (token) {
     const response = await getConsumerClaim(claimNumber, token);
-    if (!response.ok) return null;
+    if (!response.ok) {
+      if (response.status === 404) return null;
+      throw Object.assign(new Error('Could not load claim detail'), { problem: { ...response.error, status: response.status } });
+    }
 
     return consumerClaimToLookupPayload(response.data.claim);
   }

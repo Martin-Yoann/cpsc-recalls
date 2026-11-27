@@ -3,14 +3,13 @@ import { useI18n } from "@/lib/i18n/provider";
 
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useViewerClaimDetail } from '@/lib/use-viewer-claim-detail';
+import { ClaimsLoadNotice } from '@/components/claims/claims-load-notice';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, FileText, LockKeyhole, Package, UserRoundPlus, Wallet } from 'lucide-react';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { useAuth } from '@/lib/auth-context';
 import { EmailVerificationGate } from '@/components/auth/email-verification-gate';
-import { getClaimDetailForViewer } from '@/lib/claim-access';
-import type { ClaimLookupPayload } from '@/types/claims';
 
 interface ClaimDetailClientProps {
   claimNumber: string;
@@ -21,20 +20,11 @@ interface ClaimDetailClientProps {
 export function ClaimDetailClient({ claimNumber, backHref, backLabel }: ClaimDetailClientProps) {
   const { t, locale } = useI18n();
   const { user, isAuthenticated, isLoading, openAuthDrawer } = useAuth();
-  const [detail, setDetail] = useState<ClaimLookupPayload | null | undefined>(undefined);
-
-  useEffect(() => {
-    let cancelled = false;
-    if (isLoading || (user?.token && !user.claimsAccessVerified)) return () => { cancelled = true; };
-    void getClaimDetailForViewer(claimNumber, user?.token).then((nextDetail) => {
-      if (!cancelled) setDetail(nextDetail);
-    });
-    return () => { cancelled = true; };
-  }, [claimNumber, user?.token, user?.claimsAccessVerified, isLoading]);
+  const { detail, loading, error, retry } = useViewerClaimDetail(claimNumber);
 
   if (isLoading) return null;
   if (user?.token && !user.claimsAccessVerified) return <EmailVerificationGate />;
-  if (detail === undefined) return null;
+  if (loading || error) return <ClaimsLoadNotice loading={loading} error={error} retry={retry} title='claimDetail.loadFailed' />;
   if (!detail) notFound();
 
   const claim = detail.claim;

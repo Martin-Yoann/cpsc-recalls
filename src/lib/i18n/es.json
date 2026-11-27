@@ -765,5 +765,6 @@
   "claims.loadFailed": "No se pudieron cargar sus solicitudes.",
   "claims.retry": "Reintentar",
   "claims.signIn": "Volver a iniciar sesión",
-  "evidence.remove": "Eliminar {file}"
+  "evidence.remove": "Eliminar {file}",
+  "claimDetail.loadFailed": "No se pudieron cargar los detalles de su solicitud."
 }

@@ -6,7 +6,9 @@ import { useI18n } from "@/lib/i18n/provider";
 // KOI Recall Platform — Claim Detail (Dashboard)
 // ============================================================
 
-import { use, useEffect, useState } from 'react';
+import { use } from 'react';
+import { useViewerClaimDetail } from '@/lib/use-viewer-claim-detail';
+import { ClaimsLoadNotice } from '@/components/claims/claims-load-notice';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -25,7 +27,6 @@ import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { useAuth } from '@/lib/auth-context';
 import { EmailVerificationGate } from '@/components/auth/email-verification-gate';
-import { getConsumerClaim, type ConsumerClaim } from '@/lib/api-client';
 import { ClaimStatus } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -47,28 +48,11 @@ export default function ClaimDetailPage({
   const { t, locale } = useI18n();
   const { id } = use(params);
   const { user } = useAuth();
-  const [claim, setClaim] = useState<ConsumerClaim | null | undefined>(undefined);
-
-  useEffect(() => {
-    let cancelled = false;
-    if (!user?.token || !user.claimsAccessVerified) {
-      return () => {
-        cancelled = true;
-      };
-    }
-    void getConsumerClaim(id, user.token).then((response) => {
-      if (cancelled) return;
-      setClaim(response.ok ? response.data.claim : null);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [id, user?.token, user?.claimsAccessVerified]);
-
+  const { detail, loading, error, retry } = useViewerClaimDetail(id);
   if (user?.token && !user.claimsAccessVerified) return <EmailVerificationGate />;
-  if (!user?.token || claim === undefined) return null;
-  if (!claim) notFound();
-  if (!claim) return null;
+  if (loading || error) return <ClaimsLoadNotice loading={loading} error={error} retry={retry} title='claimDetail.loadFailed' />;
+  if (!detail) notFound();
+  const claim = detail.claim;
 
   const rawStatusIdx = STATUS_ORDER.indexOf(claim.status as ClaimStatus);
   // action_required (and any unknown status) keeps the pipeline at "Submitted
