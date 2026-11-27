@@ -758,5 +758,12 @@
   "emailVerify.loading": "Comprobando su sesión…",
   "emailVerify.signIn": "Utilice el mismo navegador y la misma sesión desde los que solicitó el correo. Si ha iniciado una sesión nueva, solicite un enlace nuevo desde Mis solicitudes.",
   "emailVerify.invalid": "Este enlace no es válido, ha caducado, ya se ha utilizado o pertenece a otra sesión. Solicite un correo nuevo desde Mis solicitudes en este navegador.",
-  "emailVerify.failed": "No se pudo confirmar el correo. Inténtelo de nuevo en unos momentos."
+  "emailVerify.failed": "No se pudo confirmar el correo. Inténtelo de nuevo en unos momentos.",
+  "evidence.add": "Añadir {category}",
+  "draft.renewed": "Su borrador caducó y se ha reemplazado. Revise sus datos y vuelva a cargar los documentos antes de enviar la solicitud.",
+  "claims.loading": "Cargando sus solicitudes…",
+  "claims.loadFailed": "No se pudieron cargar sus solicitudes.",
+  "claims.retry": "Reintentar",
+  "claims.signIn": "Volver a iniciar sesión",
+  "evidence.remove": "Eliminar {file}"
 }

@@ -758,5 +758,12 @@
   "emailVerify.loading": "Checking your login session…",
   "emailVerify.signIn": "Sign in using the same browser and login session where you requested the email. If this is a new login, request a new verification link from My Claims.",
   "emailVerify.invalid": "This link is invalid, expired, already used, or belongs to a different login session. Request a new email from My Claims in this browser.",
-  "emailVerify.failed": "Email confirmation could not be completed. Please try again shortly."
+  "emailVerify.failed": "Email confirmation could not be completed. Please try again shortly.",
+  "evidence.add": "Add {category}",
+  "draft.renewed": "Your draft expired and has been replaced. Review your information and upload your evidence again before submitting.",
+  "claims.loading": "Loading your claims…",
+  "claims.loadFailed": "Your claims could not be loaded.",
+  "claims.retry": "Try again",
+  "claims.signIn": "Sign in again",
+  "evidence.remove": "Remove {file}"
 }

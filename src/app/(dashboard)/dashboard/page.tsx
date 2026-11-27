@@ -20,11 +20,11 @@ import {
   Store,
   TrendingUp,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useViewerClaims } from '@/lib/use-viewer-claims';
+import { ClaimsLoadNotice } from '@/components/claims/claims-load-notice';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { useAuth } from '@/lib/auth-context';
 import { EmailVerificationGate } from '@/components/auth/email-verification-gate';
-import { listConsumerClaims, type ConsumerClaim } from '@/lib/api-client';
 import { getOrdersByUserId } from '@/data/mock-orders';
 import { DEMO_MODE } from '@/lib/demo-mode';
 
@@ -57,23 +57,12 @@ const STATUS_BAR_COLORS: Record<ClaimStatusKey, string> = {
 export default function DashboardPage() {
   const { t, locale } = useI18n();
   const { user } = useAuth();
-  const [claims, setClaims] = useState<ConsumerClaim[] | null>(null);
+  const { claims: claimsList, loading, error, retry } = useViewerClaims();
   // Design §9/§14: mock orders are demo-only fixtures.
   const orders = DEMO_MODE && user ? getOrdersByUserId(user.id) : [];
 
-  useEffect(() => {
-    let cancelled = false;
-    if (!user?.token || !user.claimsAccessVerified) return () => { cancelled = true; };
-    void listConsumerClaims(user.token).then((response) => {
-      if (cancelled) return;
-      setClaims(response.ok ? response.data.claims : []);
-    });
-    return () => { cancelled = true; };
-  }, [user?.token, user?.claimsAccessVerified]);
-
   if (user?.token && !user.claimsAccessVerified) return <EmailVerificationGate />;
-
-  const claimsList = user?.token ? (claims ?? []) : [];
+  if ((loading || error) && claimsList.length === 0) return <ClaimsLoadNotice loading={loading} error={error} retry={retry} />;
 
   const activeClaims = claimsList.filter((c) =>
     ['submitted', 'under_review', 'verified', 'remedy_issued'].includes(c.status)
@@ -93,6 +82,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      <ClaimsLoadNotice loading={loading} error={error} retry={retry} />
       {/* Welcome */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>

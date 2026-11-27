@@ -3,13 +3,12 @@ import { useI18n } from "@/lib/i18n/provider";
 
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useViewerClaims } from '@/lib/use-viewer-claims';
+import { ClaimsLoadNotice } from '@/components/claims/claims-load-notice';
 import { ArrowRight, ClipboardList, LockKeyhole, Search, UserRoundPlus } from 'lucide-react';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { useAuth } from '@/lib/auth-context';
 import { EmailVerificationGate } from '@/components/auth/email-verification-gate';
-import { getClaimsForViewer } from '@/lib/claim-access';
-import type { ConsumerClaim } from '@/lib/api-client';
 
 interface ClaimsListClientProps {
   detailBasePath: string;
@@ -26,22 +25,12 @@ export function ClaimsListClient({
 }: ClaimsListClientProps) {
   const { t, locale } = useI18n();
   const { user, isAuthenticated, isLoading, openAuthDrawer } = useAuth();
-  const [claims, setClaims] = useState<ConsumerClaim[] | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    if (isLoading || (user?.token && !user.claimsAccessVerified)) return () => { cancelled = true; };
-    void getClaimsForViewer(user?.token).then((nextClaims) => {
-      if (cancelled) return;
-      setClaims(nextClaims);
-    });
-    return () => { cancelled = true; };
-  }, [user?.token, user?.claimsAccessVerified, isLoading]);
+  const { claims: claimsList, loading, error, retry } = useViewerClaims();
 
   if (isLoading) return null;
   if (user?.token && !user.claimsAccessVerified) return <EmailVerificationGate />;
 
-  const claimsList = claims ?? [];
+  if ((loading || error) && claimsList.length === 0) return <ClaimsLoadNotice loading={loading} error={error} retry={retry} />;
 
   return (
     <div className="space-y-6">
@@ -81,6 +70,7 @@ export function ClaimsListClient({
         </div>
       )}
 
+      <ClaimsLoadNotice loading={loading} error={error} retry={retry} />
       {/* Claims list */}
       {claimsList.length > 0 ? (
         <div className="space-y-2">

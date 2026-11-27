@@ -357,7 +357,12 @@ function toSession(
   };
 }
 
-function readSession(campaignSlug: string): ClaimFlowSession | null {
+export function isDraftExpired(session: Pick<ClaimFlowSession, 'expiresAt'>): boolean {
+  const expires = Date.parse(session.expiresAt);
+  return !Number.isFinite(expires) || expires <= Date.now();
+}
+
+function readSession(campaignSlug: string, includeExpired = false): ClaimFlowSession | null {
   if (typeof window === "undefined") return null;
   const raw = sessionStorage.getItem(sessionStorageKey(campaignSlug));
   if (!raw) return null;
@@ -366,6 +371,7 @@ function readSession(campaignSlug: string): ClaimFlowSession | null {
     // Only the non-sensitive snapshot is ever persisted; identity, contact,
     // address, purchase order details, and incident narrative start empty.
     const parsed = JSON.parse(raw) as Partial<ClaimFlowSessionSnapshot>;
+    if (!parsed.draftId || !parsed.draftToken || (!includeExpired && isDraftExpired({ expiresAt: parsed.expiresAt ?? '' }))) return null;
     const defaults = createDefaultForm();
     return {
       sessionKey: sessionStorageKey(campaignSlug),
@@ -424,8 +430,8 @@ export class ClaimFlowModule {
   async start(
     campaignSlug: string,
   ): Promise<ClaimFlowResult<ClaimFlowSession>> {
-    const existing = readSession(campaignSlug);
-    if (existing) return { ok: true, data: existing };
+    const existing = readSession(campaignSlug, true);
+    if (existing && !isDraftExpired(existing)) return { ok: true, data: existing };
 
     const draft = await submitClaimDraft(campaignSlug);
     if (!draft.ok) return draft;
@@ -437,6 +443,17 @@ export class ClaimFlowModule {
 
   resume(campaignSlug: string): ClaimFlowSession | null {
     return readSession(campaignSlug);
+  }
+
+  hasExpiredDraft(campaignSlug: string): boolean {
+    const saved = readSession(campaignSlug, true);
+    return !!saved && isDraftExpired(saved);
+  }
+
+  async renew(session: ClaimFlowSession): Promise<ClaimFlowResult<ClaimFlowSession>> {
+    const draft = await submitClaimDraft(session.campaignSlug);
+    if (!draft.ok) return draft;
+    return { ok: true, data: { ...session, ...draft.data, documents: [], idempotencyKey: makeIdempotencyKey() } };
   }
 
   save(session: ClaimFlowSession): ClaimFlowSession {
@@ -502,7 +519,6 @@ export class ClaimFlowModule {
         ...session,
         documents: [...session.documents, receipt],
       };
-      writeSession(nextSession);
       // `ok` because the attempt resolved: its outcome is the receipt's status, which the
       // consumer can act on. A failure to obtain a token stays an error above, because
       // there is no receipt to record.
@@ -521,7 +537,6 @@ export class ClaimFlowModule {
       ...session,
       documents: [...session.documents, receipt],
     };
-    writeSession(nextSession);
     return { ok: true, data: { session: nextSession, receipt } };
   }
 
@@ -549,7 +564,6 @@ export class ClaimFlowModule {
         (document) => document.documentId !== documentId,
       ),
     };
-    writeSession(nextSession);
     return { ok: true, data: nextSession };
   }
 
@@ -609,8 +623,7 @@ export class ClaimFlowModule {
         );
       });
     const nextSession = { ...session, documents: merged };
-    if (changed) writeSession(nextSession);
-    return { ok: true, data: nextSession };
+    return { ok: true, data: changed ? nextSession : session };
   }
 
   /**

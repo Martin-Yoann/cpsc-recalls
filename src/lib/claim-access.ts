@@ -8,7 +8,8 @@ export async function getClaimsForViewer(token?: string): Promise<ConsumerClaim[
   }
 
   const response = await listConsumerClaims(token);
-  return response.ok ? response.data.claims : [];
+  if (!response.ok) throw Object.assign(new Error('Could not load claims'), { problem: response.error, status: response.status });
+  return response.data.claims;
 }
 
 export async function getClaimDetailForViewer(claimNumber: string, token?: string): Promise<ClaimLookupPayload | null> {

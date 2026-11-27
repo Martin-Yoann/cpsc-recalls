@@ -29,6 +29,7 @@ import {
   CLAIM_FLOW_FORM_VERSION,
   createDefaultForm,
   isPendingDocument,
+  isDraftExpired,
   type ClaimConfirmation,
   type ClaimFlowDocumentReceipt,
   type ClaimFlowDraftState,
@@ -330,9 +331,11 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
       }
 
       setIsBootstrapping(true);
+      const expiredDraft = claimFlowModule.hasExpiredDraft(campaign.slug);
       return claimFlowModule.start(campaign.slug).then((result) => {
         if (cancelled) return;
         if (result.ok) {
+          if (expiredDraft) setValidationMessage('draft.renewed');
           const seeded = claimFlowModule.save({
             ...result.data,
             form: buildDefaultForm(firstProduct),
@@ -369,13 +372,14 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
       const result = await claimFlowModule.refreshDocuments(session);
       if (cancelled || !result.ok) return;
       setSession((current) => {
-        if (!current) return current;
+        if (!current || current.draftId !== session.draftId) return current;
         if (
           JSON.stringify(current.documents) ===
           JSON.stringify(result.data.documents)
         )
           return current;
-        return result.data;
+        const updates = new Map(result.data.documents.map((document) => [document.documentId, document]));
+        return claimFlowModule.save({ ...current, documents: current.documents.map((document) => updates.get(document.documentId) ?? document) });
       });
     };
 
@@ -393,7 +397,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
     setProblem(null);
     const result = await claimFlowModule.removeDocument(session, documentId);
     if (result.ok) {
-      setSession(result.data);
+      setSession((current) => !current || current.draftId !== session.draftId ? current : claimFlowModule.save({ ...current, documents: current.documents.filter((document) => document.documentId !== documentId) }));
     } else {
       setProblem(result.error);
     }
@@ -403,7 +407,11 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
     if (!session) return;
     const result = await claimFlowModule.refreshDocuments(session);
     if (result.ok) {
-      setSession(result.data);
+      setSession((current) => {
+        if (!current || current.draftId !== session.draftId) return current;
+        const updates = new Map(result.data.documents.map((document) => [document.documentId, document]));
+        return claimFlowModule.save({ ...current, documents: current.documents.map((document) => updates.get(document.documentId) ?? document) });
+      });
     } else {
       setProblem(result.error);
     }
@@ -638,9 +646,10 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
         return;
       }
       nextSession = result.data.session;
+      const receipt = result.data.receipt;
+      setSession((current) => !current || current.draftId !== session.draftId ? current : claimFlowModule.save({ ...current, documents: [...current.documents.filter((document) => document.documentId !== receipt.documentId), receipt] }));
     }
 
-    setSession(nextSession);
     setIsUploading(false);
   };
 
@@ -792,11 +801,14 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
 
   if (!session || !selectedRemedy) {
     return (
+      <div className="space-y-4">
+      {validationMessage && <p role="status" className="rounded border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">{t(validationMessage)}</p>}
       <RemedyOptions
         remedies={campaign.remedies}
         onSelect={handleSelect}
         busyRemedyId={pendingRemedyId}
       />
+      </div>
     );
   }
 
@@ -1586,7 +1598,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                       ? "ui.uploading.070e32"
                       : limitReached
                         ? "ui.limit.reached.068bb7"
-                        : `Add ${formatDocumentCategory(rule.category)}`)}
+                        : message('evidence.add', { category: message(formatDocumentCategory(rule.category)) }))}
                     <input
                       type="file"
                       className="hidden"
@@ -1641,6 +1653,7 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label={t('evidence.remove', { file: document.fileName })}
                   onClick={() => void handleRemoveDocument(document.documentId)}
                   className="text-[#909399] hover:text-[#409eff]"
                 >
@@ -1738,9 +1751,19 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
           {t("ui.reset.draft.cc26b5")}</Button>
         <Button
           className="bg-[#409eff] text-white hover:bg-[#337ecc] border-0 disabled:bg-[#a0cfff]"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isUploading}
           onClick={async () => {
             const current = session;
+            if (isDraftExpired(current)) {
+              setIsSubmitting(true);
+              const renewed = await claimFlowModule.renew(current);
+              setIsSubmitting(false);
+              if (renewed.ok) {
+                setSession((latest) => !latest || latest.draftId !== current.draftId ? latest : claimFlowModule.save({ ...renewed.data, form: latest.form, remedyCode: latest.remedyCode }));
+                setValidationMessage('draft.renewed');
+              } else setProblem(renewed.error);
+              return;
+            }
             const validationError = validateBeforeSubmit(current);
             if (validationError) {
               setValidationMessage(validationError);
@@ -1758,14 +1781,24 @@ export function ClaimSubmitWrapper({ campaign }: Props) {
                 ),
               }),
             );
-            setIsSubmitting(false);
-
             if (result.ok) {
+              setIsSubmitting(false);
               setSubmitted(result.data);
               setProblem(null);
               return;
             }
 
+            if (result.status === 410) {
+              const renewed = await claimFlowModule.renew(current);
+              setIsSubmitting(false);
+              if (renewed.ok) {
+                setSession((latest) => !latest || latest.draftId !== current.draftId ? latest : claimFlowModule.save({ ...renewed.data, form: latest.form, remedyCode: latest.remedyCode }));
+                setValidationMessage('draft.renewed');
+                setProblem(null);
+                return;
+              }
+            }
+            setIsSubmitting(false);
             setProblem(result.error);
           }}
         >

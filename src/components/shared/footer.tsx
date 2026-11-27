@@ -15,9 +15,7 @@ const FOOTER_LINKS = [
 
 const FOOTER_LEGAL = [
   { label: "ui.privacy.policy.9db108", href: "/privacy" },
-  { label: "ui.terms.of.service.0c8a9a", href: "/faq" },
-  { label: "ui.accessibility.d66004", href: "/faq" },
-  { label: "ui.contact.support.fe1a29", href: "/faq" },
+  { label: "ui.contact.support.fe1a29", href: "/#active-recalls" },
 ];
 
 export function Footer() {

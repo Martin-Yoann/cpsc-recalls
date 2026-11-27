@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "test:recall-support": "node --test scripts/recall-support.test.mjs",
-    "test:i18n": "node --test scripts/i18n.test.mjs"
+    "test:i18n": "node --test scripts/i18n.test.mjs",
+    "test:claim-flow": "node --test scripts/claim-flow.test.cjs",
+    "test:p2-browser": "node scripts/p2-regression.cjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
